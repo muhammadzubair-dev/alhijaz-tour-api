@@ -12,14 +12,17 @@ import {
   Query,
 } from '@nestjs/common';
 import {
-  ListUserMenuRequest,
+  ListAgentRequest,
+  ListMenuRequest,
   ListUserRequest,
-  ListUserRoleRequest,
+  ListRoleRequest,
   RegisterUserRequest,
-  RegisterUserRoleRequest,
-  UserMenuResponse,
+  RegisterRoleRequest,
+  AgentResponse,
+  MenuResponse,
   UserResponse,
-  UserRoleResponse,
+  RoleResponse,
+  RegisterAgentRequest,
 } from 'src/common/dto/user.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { UserService } from './user.service';
@@ -34,7 +37,7 @@ import {
 export class UserController {
   constructor(private userService: UserService) { }
 
-  // USER
+  // User
   @Post()
   @UserSwaggerRegister()
   @HttpCode(HttpStatus.CREATED)
@@ -77,22 +80,22 @@ export class UserController {
     };
   }
 
-  // USER MENU
+  // Menu
   @Get('menus')
   @HttpCode(HttpStatus.OK)
-  async listUserMenu(
-    @Query() request: ListUserMenuRequest,
-  ): Promise<WebResponse<UserMenuResponse[]>> {
-    const result = await this.userService.listUserMenu(request);
+  async listMenu(
+    @Query() request: ListMenuRequest,
+  ): Promise<WebResponse<MenuResponse[]>> {
+    const result = await this.userService.listMenu(request);
     return result;
   }
 
-  // USER ROLE
+  // Role
   @Post('role')
   @HttpCode(HttpStatus.CREATED)
   async registerRole(
-    @Body() request: RegisterUserRoleRequest,
-  ): Promise<WebResponse<UserRoleResponse>> {
+    @Body() request: RegisterRoleRequest,
+  ): Promise<WebResponse<RoleResponse>> {
     const result = await this.userService.registerRole(request);
     return {
       data: result,
@@ -101,20 +104,20 @@ export class UserController {
 
   @Get('roles')
   @HttpCode(HttpStatus.OK)
-  async listUserRole(
-    @Query() request: ListUserRoleRequest,
-  ): Promise<WebResponse<UserRoleResponse[]>> {
-    const result = await this.userService.listUserRole(request);
+  async listRole(
+    @Query() request: ListRoleRequest,
+  ): Promise<WebResponse<RoleResponse[]>> {
+    const result = await this.userService.listRole(request);
     return result;
   }
 
   @Patch('role/:id')
   @HttpCode(HttpStatus.OK)
-  async updateUserRole(
+  async updateRole(
     @Param('id') id: number,
-    @Body() request: Partial<RegisterUserRoleRequest>,
-  ): Promise<WebResponse<UserRoleResponse>> {
-    const result = await this.userService.updateUserRole(id, request);
+    @Body() request: Partial<RegisterRoleRequest>,
+  ): Promise<WebResponse<RoleResponse>> {
+    const result = await this.userService.updateRole(id, request);
     return {
       data: result,
     };
@@ -122,7 +125,27 @@ export class UserController {
 
   @Delete('role/:id')
   @HttpCode(HttpStatus.OK)
-  deleteRole(@Param('id') id: number): Promise<{ message: string }> {
-    return this.userService.deleteUserRole(id);
+  async deleteRole(@Param('id') id: number): Promise<{ message: string }> {
+    return this.userService.deleteRole(id);
+  }
+
+  // User Agent
+  @Post('agent')
+  @HttpCode(HttpStatus.CREATED)
+  async registerAgent(
+    @Body() request: RegisterAgentRequest,
+  ): Promise<{ message: string }> {
+    const result = await this.userService.registerAgent(request);
+    return result
+
+  }
+
+  @Get('agents')
+  @HttpCode(HttpStatus.OK)
+  async listAgent(
+    @Query() request: ListAgentRequest,
+  ): Promise<WebResponse<AgentResponse[]>> {
+    const result = await this.userService.listAgent(request);
+    return result;
   }
 }

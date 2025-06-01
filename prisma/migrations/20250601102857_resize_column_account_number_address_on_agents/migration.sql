@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "agents" ALTER COLUMN "account_number" SET DATA TYPE VARCHAR(20),
+ALTER COLUMN "address" SET DATA TYPE VARCHAR(200);

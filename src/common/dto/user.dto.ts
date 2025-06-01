@@ -2,16 +2,19 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsEmail,
   IsIn,
   IsNumber,
   IsOptional,
   IsString,
+  Length,
+  Matches,
   MaxLength,
   Min,
   MinLength,
 } from 'class-validator';
 
-// Users
+// User
 export class RegisterUserRequest {
   @IsString()
   @MinLength(4)
@@ -26,7 +29,7 @@ export class RegisterUserRequest {
 
   @IsString()
   @MinLength(4)
-  @MaxLength(20)
+  @MaxLength(50)
   @ApiProperty({
     description: 'Nama pengguna',
     example: 'Jane Doe',
@@ -124,8 +127,8 @@ export class UserResponse {
   type?: string;
 }
 
-// Users Menu
-export class ListUserMenuRequest {
+// Menu
+export class ListMenuRequest {
   @IsOptional()
   @IsString()
   @ApiPropertyOptional({ description: 'Filter name (like)' })
@@ -159,7 +162,7 @@ export class ListUserMenuRequest {
   limit?: number;
 }
 
-export class UserMenuResponse {
+export class MenuResponse {
   @ApiProperty({
     example: 'user|view',
   })
@@ -171,8 +174,8 @@ export class UserMenuResponse {
   desc: string;
 }
 
-// Users Roles
-export class RegisterUserRoleRequest {
+// Role
+export class RegisterRoleRequest {
   @IsString()
   @MinLength(4)
   @MaxLength(20)
@@ -217,7 +220,7 @@ export class RegisterUserRoleRequest {
   isActive?: boolean;
 }
 
-export class ListUserRoleRequest {
+export class ListRoleRequest {
   @IsOptional()
   @IsString()
   @ApiPropertyOptional({ description: 'Filter name (like)' })
@@ -281,7 +284,7 @@ export class ListUserRoleRequest {
   limit?: number;
 }
 
-export class UserRoleResponse {
+export class RoleResponse {
   @ApiProperty({
     example: '21',
   })
@@ -311,4 +314,230 @@ export class UserRoleResponse {
     example: '0',
   })
   platform: string;
+}
+
+// Agent
+export class RegisterAgentRequest {
+  @IsString()
+  @Length(36, 36) // UUID standard format: 36 chars
+  @ApiProperty({
+    description: 'ID user (UUID)',
+    example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    minLength: 3,
+    maxLength: 20,
+  })
+  userId: string;
+
+  @IsString()
+  @Length(1, 1)
+  @IsIn(['0', '1'])
+  @ApiProperty({
+    description: 'ID user (UUID)',
+    example: '0',
+    minLength: 1,
+    maxLength: 1,
+  })
+  identityType: string;
+
+  @IsNumber()
+  @ApiProperty({
+    description: 'ID Bank',
+    example: '76',
+  })
+  bankId: number;
+
+  @IsString()
+  @Length(5, 20)
+  @ApiProperty({
+    description: 'No Rekening',
+    example: '63456732',
+  })
+  accountNumber: string;
+
+  @IsString()
+  @Matches(/^[0-9]+$/)
+  @ApiProperty({
+    description: 'No Handphone',
+    example: '081212071871',
+  })
+  phone: string;
+
+  @IsEmail()
+  @Length(5, 100)
+  @ApiProperty({
+    description: 'Alamat Email',
+    example: 'email@gmail.com',
+  })
+  email: string;
+
+  @IsString()
+  @Length(5, 20)
+  @ApiProperty({
+    description: 'Alamat Agent',
+    example: 'Jl Rasuna Said',
+    minLength: 5,
+    maxLength: 200,
+  })
+  address: string;
+
+  @IsOptional()
+  @IsNumber()
+  @ApiPropertyOptional({
+    description: 'Lead Agent',
+    example: '21',
+  })
+  leadId?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @ApiPropertyOptional({
+    description: 'Koordinator Agent',
+    example: '21',
+  })
+  coordinatorId?: number;
+
+  @IsBoolean()
+  @ApiProperty({
+    description: 'isActive: true = active, false = Inactive',
+    example: true,
+  })
+  isActive: boolean;
+}
+
+export class ListAgentRequest {
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'Filter name (like)' })
+  name?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @ApiPropertyOptional({ description: 'Filter phone (like)' })
+  phone?: number;
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'Filter email (like)' })
+  email?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true')
+  @ApiPropertyOptional({
+    description: 'Filter aktif (true atau false)',
+    example: true,
+  })
+  isActive?: boolean;
+
+  @IsOptional()
+  @IsIn([
+    'name',
+    'phone',
+    'email',
+    'isActive',
+    'createdBy',
+    'createdAt',
+    'updatedBy',
+    'updatedAt',
+  ])
+  @ApiPropertyOptional({
+    description: 'Sort by field',
+    enum: [
+      'name',
+      'phone',
+      'email',
+      'isActive',
+      'createdBy',
+      'createdAt',
+      'updatedBy',
+      'updatedAt',
+    ],
+  })
+  sortBy?: string;
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  @ApiPropertyOptional({ description: 'Sort direction', enum: ['asc', 'desc'] })
+  sortOrder?: 'asc' | 'desc';
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @ApiPropertyOptional({ default: 1, description: 'Halaman ke-' })
+  page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @ApiPropertyOptional({ default: 10, description: 'Jumlah data per halaman' })
+  limit?: number;
+}
+
+export class AgentResponse {
+  @ApiProperty({
+    example: '21',
+  })
+  id: number;
+
+  @ApiPropertyOptional({
+    example: 'Rizki Setyawan',
+  })
+  name?: string;
+
+  @ApiProperty({
+    example: '0',
+  })
+  identityType: string;
+
+  @ApiPropertyOptional({
+    example: 'BCA',
+  })
+  bankName?: string;
+
+  @ApiProperty({
+    example: '64837324',
+  })
+  accountNumber: string;
+
+  @ApiProperty({
+    example: '081212071871',
+  })
+  phone: string;
+
+  @ApiProperty({
+    example: 'email@gmail.com',
+  })
+  email: string;
+
+  @ApiProperty({
+    example: 0,
+  })
+  balance: number;
+
+  @ApiProperty({
+    example: 'Jl Rasuna Said',
+  })
+  address: string;
+
+  @ApiPropertyOptional({
+    example: 'UUID',
+  })
+  leadId?: number;
+
+  @ApiPropertyOptional({
+    example: 'UUID',
+  })
+  coordinatorId?: number;
+
+  @ApiProperty({
+    example: '5',
+  })
+  targetRemaining: number;
+
+  @ApiPropertyOptional({
+    example: true,
+  })
+  isActive?: boolean;
 }

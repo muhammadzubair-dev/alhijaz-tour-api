@@ -11,8 +11,8 @@ import {
   MinLength,
 } from 'class-validator';
 
-// MASTER BANK
-export class RegisterMasterBankRequest {
+// Bank
+export class RegisterBankRequest {
   @IsString()
   @MinLength(3)
   @MaxLength(10)
@@ -43,7 +43,7 @@ export class RegisterMasterBankRequest {
   isActive?: boolean;
 }
 
-export class ListMasterBankRequest {
+export class ListBankRequest {
   @IsOptional()
   @IsString()
   @ApiPropertyOptional({ description: 'Filter bank_code (like)' })
@@ -107,7 +107,7 @@ export class ListMasterBankRequest {
   limit?: number;
 }
 
-export class MasterBankResponse {
+export class BankResponse {
   @ApiProperty({
     example: '21',
   })
@@ -129,8 +129,8 @@ export class MasterBankResponse {
   isActive?: boolean;
 }
 
-// MASTER SOSMED
-export class RegisterMasterSosmedRequest {
+// Sosmed
+export class RegisterSosmedRequest {
   @IsString()
   @MinLength(3)
   @MaxLength(20)
@@ -150,7 +150,7 @@ export class RegisterMasterSosmedRequest {
   isActive?: boolean;
 }
 
-export class ListMasterSosmedRequest {
+export class ListSosmedRequest {
   @IsOptional()
   @IsString()
   @ApiPropertyOptional({ description: 'Filter name (like)' })
@@ -207,7 +207,7 @@ export class ListMasterSosmedRequest {
   limit?: number;
 }
 
-export class MasterSosmedResponse {
+export class SosmedResponse {
   @ApiProperty({
     example: '21',
   })
@@ -219,7 +219,7 @@ export class MasterSosmedResponse {
   name: string;
 
   @ApiProperty({
-    example: 'true',
+    example: true,
   })
   isActive?: boolean;
 }

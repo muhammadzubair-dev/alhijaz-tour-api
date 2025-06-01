@@ -10,17 +10,21 @@ import * as bcrypt from 'bcrypt';
 import { nanoid } from 'nanoid';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import {
-  ListUserMenuRequest,
+  AgentResponse,
+  ListAgentRequest,
+  ListMenuRequest,
+  ListRoleRequest,
   ListUserRequest,
-  ListUserRoleRequest,
+  MenuResponse,
+  RegisterAgentRequest,
+  RegisterRoleRequest,
   RegisterUserRequest,
-  RegisterUserRoleRequest,
-  UserMenuResponse,
-  UserResponse,
-  UserRoleResponse,
+  RoleResponse,
+  UserResponse
 } from 'src/common/dto/user.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
+import { camelToSnakeCase } from 'src/common/utils/camelToSnakeCase';
 import { Logger } from 'winston';
 
 @Injectable()
@@ -204,10 +208,10 @@ export class UserService {
     };
   }
 
-  // User Menu
-  async listUserMenu(
-    request: ListUserMenuRequest,
-  ): Promise<WebResponse<UserMenuResponse[]>> {
+  // Menu
+  async listMenu(
+    request: ListMenuRequest,
+  ): Promise<WebResponse<MenuResponse[]>> {
     const { name, sortBy, sortOrder, page = 1, limit = 10 } = request;
 
     const where = Object.fromEntries(
@@ -249,10 +253,10 @@ export class UserService {
     };
   }
 
-  // User Role
-  async listUserRole(
-    request: ListUserRoleRequest,
-  ): Promise<WebResponse<UserRoleResponse[]>> {
+  // Role
+  async listRole(
+    request: ListRoleRequest,
+  ): Promise<WebResponse<RoleResponse[]>> {
     const {
       name,
       description,
@@ -311,7 +315,7 @@ export class UserService {
     };
   }
 
-  async registerRole(request: RegisterUserRoleRequest): Promise<UserRoleResponse> {
+  async registerRole(request: RegisterRoleRequest): Promise<RoleResponse> {
     this.logger.info(`Registering new role: ${request.name}`);
 
     const existingRole = await this.prisma.roles.findFirst({
@@ -345,10 +349,10 @@ export class UserService {
     };
   }
 
-  async updateUserRole(
+  async updateRole(
     roleId: number,
-    payload: Partial<RegisterUserRoleRequest>,
-  ): Promise<UserRoleResponse> {
+    payload: Partial<RegisterRoleRequest>,
+  ): Promise<RoleResponse> {
     const existingUser = await this.prisma.roles.findUnique({
       where: { id: roleId },
     });
@@ -412,7 +416,7 @@ export class UserService {
     };
   }
 
-  async deleteUserRole(id: number): Promise<{ message: string }> {
+  async deleteRole(id: number): Promise<{ message: string }> {
     const existingRole = await this.prisma.roles.findUnique({
       where: { id },
     });
@@ -426,5 +430,142 @@ export class UserService {
     });
 
     return { message: `Role with ID ${id} deleted successfully.` };
+  }
+
+  // Agent
+  async listAgent(
+    request: ListAgentRequest,
+  ): Promise<WebResponse<AgentResponse[]>> {
+    const {
+      name,
+      phone,
+      email,
+      isActive,
+      sortBy,
+      sortOrder,
+      page = 1,
+      limit = 10,
+    } = request;
+
+    const where = Object.fromEntries(
+      Object.entries({
+        ...(name && {
+          user: {
+            name: {
+              contains: name,
+              mode: 'insensitive',
+            },
+          },
+        }),
+        phone: phone ? { contains: phone, mode: 'insensitive' } : undefined,
+        email: email ? { contains: email, mode: 'insensitive' } : undefined,
+        isActive: isActive !== undefined ? isActive : undefined,
+      }).filter(([_, value]) => value !== undefined),
+    );
+
+    const total = await this.prisma.agents.count({ where });
+    const totalPages = Math.ceil(total / limit);
+
+    let orderBy: any = undefined;
+
+    if (sortBy) {
+      if (sortBy === 'name') {
+        orderBy = {
+          user: {
+            name: sortOrder ?? 'asc',
+          },
+        };
+      } else if (sortBy === 'bankName') {
+        orderBy = {
+          bank: {
+            name: sortOrder ?? 'asc',
+          },
+        };
+      } else {
+        orderBy = {
+          [camelToSnakeCase(sortBy, ['isActive'])]: sortOrder ?? 'asc',
+        };
+      }
+    }
+
+    const agents = await this.prisma.agents.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            name: true,
+          },
+        },
+        bank: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy,
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return {
+      data: agents.map((agent) => ({
+        id: agent.id,
+        name: agent.user.name,
+        identityType: agent.identity_type,
+        bankName: agent.bank.name,
+        accountNumber: agent.account_number,
+        phone: agent.phone,
+        email: agent.email,
+        balance: agent.balance,
+        address: agent.address,
+        leadId: agent.lead_id,
+        coordinatorId: agent.coordinator_id,
+        targetRemaining: agent.target_remaining,
+        isActive: agent.isActive,
+        createdBy: agent.created_by,
+        createdAt: agent.created_at,
+        updatedBy: agent.updated_by,
+        updatedAt: agent.updated_at,
+      })),
+      paging: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
+  }
+
+  async registerAgent(request: RegisterAgentRequest): Promise<{ message: string }> {
+    this.logger.info(`Registering new agent: ${request.userId}`);
+
+    const existingAgent = await this.prisma.agents.findFirst({
+      where: { user_id: request.userId },
+    });
+
+    if (existingAgent) {
+      this.logger.warn(`Agent already exists: ${request.userId}`);
+      throw new BadRequestException('Agent already exists');
+    }
+
+    const agent = await this.prisma.agents.create({
+      data: {
+        user_id: request.userId,
+        identity_type: request.identityType,
+        bank_id: request.bankId,
+        account_number: request.accountNumber,
+        phone: request.phone,
+        email: request.email,
+        balance: 0,
+        address: request.address,
+        lead_id: request.leadId,
+        coordinator_id: request.coordinatorId,
+        target_remaining: 0,
+        isActive: request.isActive
+      },
+    });
+
+    this.logger.info(`Agent registered: ${agent.user_id}`);
+    return { message: `Agent registered: ${agent.user_id}` }
   }
 }

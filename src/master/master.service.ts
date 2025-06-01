@@ -2,7 +2,7 @@
 /* eslint-disable prettier/prettier */
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { ListMasterBankRequest, ListMasterSosmedRequest, MasterBankResponse, MasterSosmedResponse, RegisterMasterBankRequest, RegisterMasterSosmedRequest } from 'src/common/dto/master.dto';
+import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest } from 'src/common/dto/master.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import { camelToSnakeCase } from 'src/common/utils/camelToSnakeCase';
@@ -15,10 +15,10 @@ export class MasterService {
     private readonly prisma: PrismaService,
   ) { }
 
-  // MASTER BANK
+  // Bank
   async listMasterBank(
-    request: ListMasterBankRequest,
-  ): Promise<WebResponse<MasterBankResponse[]>> {
+    request: ListBankRequest,
+  ): Promise<WebResponse<BankResponse[]>> {
     const {
       bankCode,
       name,
@@ -71,7 +71,7 @@ export class MasterService {
     };
   }
 
-  async registerMasterBank(request: RegisterMasterBankRequest): Promise<MasterBankResponse> {
+  async registerMasterBank(request: RegisterBankRequest): Promise<BankResponse> {
     this.logger.info(`Registering new bank: ${request.name}`);
 
     const existingBank = await this.prisma.banks.findFirst({
@@ -115,8 +115,8 @@ export class MasterService {
 
   async updateMasterBank(
     bankId: number,
-    payload: Partial<RegisterMasterBankRequest>,
-  ): Promise<MasterBankResponse> {
+    payload: Partial<RegisterBankRequest>,
+  ): Promise<BankResponse> {
     const existingMaster = await this.prisma.banks.findUnique({
       where: { id: bankId },
     });
@@ -208,10 +208,10 @@ export class MasterService {
     return { message: `Bank with ID ${id} deleted successfully.` };
   }
 
-  // MASTER SOSMED
+  // Sosmed
   async listMasterSosmed(
-    request: ListMasterSosmedRequest,
-  ): Promise<WebResponse<MasterSosmedResponse[]>> {
+    request: ListSosmedRequest,
+  ): Promise<WebResponse<SosmedResponse[]>> {
     const {
       name,
       isActive,
@@ -261,7 +261,7 @@ export class MasterService {
     };
   }
 
-  async registerMasterSosmed(request: RegisterMasterSosmedRequest): Promise<MasterSosmedResponse> {
+  async registerMasterSosmed(request: RegisterSosmedRequest): Promise<SosmedResponse> {
     this.logger.info(`Registering new sosmed: ${request.name}`);
 
     const existingSosmed = await this.prisma.social_media.findFirst({
@@ -291,8 +291,8 @@ export class MasterService {
 
   async updateMasterSosmed(
     sosmedId: number,
-    payload: Partial<RegisterMasterSosmedRequest>,
-  ): Promise<MasterSosmedResponse> {
+    payload: Partial<RegisterSosmedRequest>,
+  ): Promise<SosmedResponse> {
     const existingMaster = await this.prisma.social_media.findUnique({
       where: { id: sosmedId },
     });

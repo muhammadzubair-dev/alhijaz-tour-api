@@ -36,11 +36,11 @@ model agents {
   user_id          String
   identity_type    String   @default("0") @db.Char(1)
   bank_id          Int
-  account_number   Int
+  account_number   String   @db.VarChar(20)
   phone            String   @db.VarChar(20)
-  email            String   @db.VarChar(15)
+  email            String   @db.VarChar(100)
   balance          Int      @default(0)
-  address          String   @db.VarChar(20)
+  address          String   @db.VarChar(200)
   lead_id          Int?
   coordinator_id   Int?
   target_remaining Int      @default(0)
