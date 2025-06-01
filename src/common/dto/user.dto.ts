@@ -47,6 +47,33 @@ export class RegisterUserRequest {
   type: string;
 }
 
+export class LoginUserRequest {
+  @IsString()
+  @Length(4, 20)
+  @ApiProperty({
+    description: 'Username pengguna',
+    example: 'JaneDoe',
+    minLength: 4,
+    maxLength: 20,
+  })
+  username: string;
+
+  @IsString()
+  @Length(8, 100)
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/, {
+    message:
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+  })
+  @ApiProperty({
+    description:
+      'Password pengguna dengan huruf besar, kecil, angka, dan simbol',
+    example: 'P@ssw0rd123',
+    minLength: 8,
+    maxLength: 100,
+  })
+  password: string;
+}
+
 export class ListUserRequest {
   @IsOptional()
   @IsString()

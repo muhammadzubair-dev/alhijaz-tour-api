@@ -23,6 +23,7 @@ import {
   UserResponse,
   RoleResponse,
   RegisterAgentRequest,
+  LoginUserRequest,
 } from 'src/common/dto/user.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { UserService } from './user.service';
@@ -32,12 +33,25 @@ import {
   UserSwaggerRegister,
   UserSwaggerUpdate,
 } from './user.swagger';
+import { Auth } from 'src/common/auth.decorator';
+import { users } from '@prisma/client';
 
 @Controller('/api/users')
 export class UserController {
   constructor(private userService: UserService) { }
 
   // User
+  @Post('login')
+  @HttpCode(HttpStatus.CREATED)
+  async loginUser(
+    @Body() request: LoginUserRequest,
+  ): Promise<WebResponse<{ token: string }>> {
+    const result = await this.userService.loginUser(request);
+    return {
+      data: result,
+    };
+  }
+
   @Post()
   @UserSwaggerRegister()
   @HttpCode(HttpStatus.CREATED)
@@ -54,6 +68,7 @@ export class UserController {
   @UserSwaggerList()
   @HttpCode(HttpStatus.OK)
   async listUser(
+    @Auth() _: users,
     @Query() request: ListUserRequest,
   ): Promise<WebResponse<UserResponse[]>> {
     const result = await this.userService.listUser(request);

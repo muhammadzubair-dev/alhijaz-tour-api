@@ -5,9 +5,10 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { nanoid } from 'nanoid';
+import * as generatePassword from 'generate-password';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import {
   AgentResponse,
@@ -15,6 +16,7 @@ import {
   ListMenuRequest,
   ListRoleRequest,
   ListUserRequest,
+  LoginUserRequest,
   MenuResponse,
   RegisterAgentRequest,
   RegisterRoleRequest,
@@ -23,7 +25,9 @@ import {
   UserResponse
 } from 'src/common/dto/user.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
+import { JwtService } from 'src/common/jwt.service';
 import { PrismaService } from 'src/common/prisma.service';
+import { RedisService } from 'src/common/redis.service';
 import { camelToSnakeCase } from 'src/common/utils/camelToSnakeCase';
 import { Logger } from 'winston';
 
@@ -32,6 +36,8 @@ export class UserService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+    private readonly jwt: JwtService
   ) { }
 
   // User
@@ -47,8 +53,15 @@ export class UserService {
       throw new BadRequestException('Username already exists');
     }
 
-    const generatedPassword = nanoid(10);
-    const hashedPassword = await bcrypt.hash(generatedPassword, 10);
+    const randomPassword = generatePassword.generate({
+      length: 10,
+      numbers: true,
+      symbols: true,
+      uppercase: true,
+      lowercase: true,
+      strict: true,
+    });
+    const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
     const user = await this.prisma.users.create({
       data: {
@@ -64,7 +77,7 @@ export class UserService {
     return {
       username: user.username,
       name: user.name,
-      password: generatedPassword,
+      password: randomPassword,
     };
   }
 
@@ -206,6 +219,31 @@ export class UserService {
       name: updatedUser.name,
       type: updatedUser.type,
     };
+  }
+
+  async loginUser(request: LoginUserRequest): Promise<{ token: string }> {
+    const { username, password } = request
+    const user = await this.prisma.users.findFirst({
+      where: { username },
+    });
+
+    if (!user) {
+      this.logger.warn(`Login failed. User not found: ${username}`);
+      throw new UnauthorizedException('Invalid username or password');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      this.logger.warn(`Login failed. Invalid password for user: ${username}`);
+      throw new UnauthorizedException('Invalid username or password');
+    }
+
+    const payload = { id: user.id }
+    const token = this.jwt.sign(payload)
+
+    await this.redis.set(`auth_token:${user.id}`, token);
+
+    return { token }
   }
 
   // Menu
