@@ -1,0 +1,225 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
+
+// MASTER BANK
+export class RegisterMasterBankRequest {
+  @IsString()
+  @MinLength(3)
+  @MaxLength(10)
+  @ApiProperty({
+    description: 'Kode Bank',
+    example: '014',
+    minLength: 4,
+    maxLength: 10,
+  })
+  bankCode: string;
+
+  @IsString()
+  @MinLength(3)
+  @MaxLength(20)
+  @ApiProperty({
+    description: 'Nama Bank',
+    example: 'BCA',
+    minLength: 3,
+    maxLength: 20,
+  })
+  name: string;
+
+  @IsBoolean()
+  @ApiProperty({
+    description: 'isActive: true = active, false = Inactive',
+    example: true,
+  })
+  isActive?: boolean;
+}
+
+export class ListMasterBankRequest {
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'Filter bank_code (like)' })
+  bankCode?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'Filter name (like)' })
+  name?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true')
+  @ApiPropertyOptional({
+    description: 'Filter aktif (true atau false)',
+    example: true,
+  })
+  isActive?: boolean;
+
+  @IsOptional()
+  @IsIn([
+    'bankCode',
+    'name',
+    'isActive',
+    'createdBy',
+    'createdAt',
+    'updatedBy',
+    'updatedAt',
+  ])
+  @ApiPropertyOptional({
+    description: 'Sort by field',
+    enum: [
+      'bankCode',
+      'name',
+      'isActive',
+      'createdBy',
+      'createdAt',
+      'updatedBy',
+      'updatedAt',
+    ],
+  })
+  sortBy?: string;
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  @ApiPropertyOptional({ description: 'Sort direction', enum: ['asc', 'desc'] })
+  sortOrder?: 'asc' | 'desc';
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @ApiPropertyOptional({ default: 1, description: 'Halaman ke-' })
+  page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @ApiPropertyOptional({ default: 10, description: 'Jumlah data per halaman' })
+  limit?: number;
+}
+
+export class MasterBankResponse {
+  @ApiProperty({
+    example: '21',
+  })
+  id: number;
+
+  @ApiProperty({
+    example: '014',
+  })
+  bankCode: string;
+
+  @ApiProperty({
+    example: 'BCA',
+  })
+  name: string;
+
+  @ApiProperty({
+    example: 'true',
+  })
+  isActive?: boolean;
+}
+
+// MASTER SOSMED
+export class RegisterMasterSosmedRequest {
+  @IsString()
+  @MinLength(3)
+  @MaxLength(20)
+  @ApiProperty({
+    description: 'Nama Social Media',
+    example: 'Facebook',
+    minLength: 3,
+    maxLength: 20,
+  })
+  name: string;
+
+  @IsBoolean()
+  @ApiProperty({
+    description: 'isActive: true = active, false = Inactive',
+    example: true,
+  })
+  isActive?: boolean;
+}
+
+export class ListMasterSosmedRequest {
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'Filter name (like)' })
+  name?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === 'true')
+  @ApiPropertyOptional({
+    description: 'Filter aktif (true atau false)',
+    example: true,
+  })
+  isActive?: boolean;
+
+  @IsOptional()
+  @IsIn([
+    'name',
+    'isActive',
+    'createdBy',
+    'createdAt',
+    'updatedBy',
+    'updatedAt',
+  ])
+  @ApiPropertyOptional({
+    description: 'Sort by field',
+    enum: [
+      'name',
+      'isActive',
+      'createdBy',
+      'createdAt',
+      'updatedBy',
+      'updatedAt',
+    ],
+  })
+  sortBy?: string;
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  @ApiPropertyOptional({ description: 'Sort direction', enum: ['asc', 'desc'] })
+  sortOrder?: 'asc' | 'desc';
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @ApiPropertyOptional({ default: 1, description: 'Halaman ke-' })
+  page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @ApiPropertyOptional({ default: 10, description: 'Jumlah data per halaman' })
+  limit?: number;
+}
+
+export class MasterSosmedResponse {
+  @ApiProperty({
+    example: '21',
+  })
+  id: number;
+
+  @ApiProperty({
+    example: 'BCA',
+  })
+  name: string;
+
+  @ApiProperty({
+    example: 'true',
+  })
+  isActive?: boolean;
+}

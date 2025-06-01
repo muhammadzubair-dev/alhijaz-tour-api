@@ -78,8 +78,6 @@ export class UserService {
       limit = 10,
     } = request;
 
-    console.log('ahayyyy >>>>>>> ', isActive)
-
     const where = Object.fromEntries(
       Object.entries({
         username: username
@@ -382,10 +380,7 @@ export class UserService {
       (payload.platform ?? existingUser.platform) === existingUser.platform &&
       (payload.type ?? existingUser.type) === existingUser.type &&
       (payload.isActive ?? existingUser.isActive) === existingUser.isActive;
-    console.log('===========> ', payload.isActive)
-    console.log('===========> ', existingUser.isActive)
-    console.log('===========> ', (payload.isActive ?? existingUser.isActive) === existingUser.isActive)
-    console.log('===========> ', isSameData)
+
     if (isSameData) {
       if (isSameData) {
         throw new BadRequestException(

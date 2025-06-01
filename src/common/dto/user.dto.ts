@@ -210,8 +210,7 @@ export class RegisterUserRoleRequest {
   type: string;
 
   @IsBoolean()
-  @Transform(({ value }) => value === 'true')
-  @ApiPropertyOptional({
+  @ApiProperty({
     description: 'isActive: true = active, false = Inactive',
     example: true,
   })

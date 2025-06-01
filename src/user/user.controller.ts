@@ -34,7 +34,7 @@ import {
 export class UserController {
   constructor(private userService: UserService) { }
 
-  // POST /api/users
+  // USER
   @Post()
   @UserSwaggerRegister()
   @HttpCode(HttpStatus.CREATED)
@@ -47,7 +47,6 @@ export class UserController {
     };
   }
 
-  // GET /api/users
   @Get()
   @UserSwaggerList()
   @HttpCode(HttpStatus.OK)
@@ -58,7 +57,6 @@ export class UserController {
     return result;
   }
 
-  // PATCH /api/users/:id/deactivate
   @Patch(':id/deactivate')
   @UserSwaggerDeactivate()
   @HttpCode(HttpStatus.OK)
@@ -66,7 +64,6 @@ export class UserController {
     return this.userService.deactivateUser(id);
   }
 
-  // PATCH /api/users/:id
   @Patch(':id')
   @UserSwaggerUpdate()
   @HttpCode(HttpStatus.OK)
@@ -80,7 +77,7 @@ export class UserController {
     };
   }
 
-  // GET /api/users/menu
+  // USER MENU
   @Get('menus')
   @HttpCode(HttpStatus.OK)
   async listUserMenu(
@@ -90,7 +87,7 @@ export class UserController {
     return result;
   }
 
-  // POST /api/users/role
+  // USER ROLE
   @Post('role')
   @HttpCode(HttpStatus.CREATED)
   async registerRole(
@@ -102,7 +99,6 @@ export class UserController {
     };
   }
 
-  // GET /api/users/roles
   @Get('roles')
   @HttpCode(HttpStatus.OK)
   async listUserRole(
@@ -112,7 +108,6 @@ export class UserController {
     return result;
   }
 
-  // PATCH /api/users/role/:id
   @Patch('role/:id')
   @HttpCode(HttpStatus.OK)
   async updateUserRole(
@@ -125,7 +120,6 @@ export class UserController {
     };
   }
 
-  // DELETE /api/users/role/:id
   @Delete('role/:id')
   @HttpCode(HttpStatus.OK)
   deleteRole(@Param('id') id: number): Promise<{ message: string }> {
