@@ -16,7 +16,7 @@ export class MasterService {
   ) { }
 
   // Bank
-  async listMasterBank(
+  async listBank(
     request: ListBankRequest,
   ): Promise<WebResponse<BankResponse[]>> {
     const {
@@ -71,7 +71,7 @@ export class MasterService {
     };
   }
 
-  async registerMasterBank(request: RegisterBankRequest): Promise<BankResponse> {
+  async registerBank(request: RegisterBankRequest): Promise<BankResponse> {
     this.logger.info(`Registering new bank: ${request.name}`);
 
     const existingBank = await this.prisma.banks.findFirst({
@@ -113,7 +113,7 @@ export class MasterService {
     };
   }
 
-  async updateMasterBank(
+  async updateBank(
     bankId: number,
     payload: Partial<RegisterBankRequest>,
   ): Promise<BankResponse> {
@@ -192,7 +192,7 @@ export class MasterService {
     };
   }
 
-  async deleteMasterBank(id: number): Promise<{ message: string }> {
+  async deleteBank(id: number): Promise<{ message: string }> {
     const existingBank = await this.prisma.banks.findUnique({
       where: { id },
     });
@@ -209,7 +209,7 @@ export class MasterService {
   }
 
   // Sosmed
-  async listMasterSosmed(
+  async listSosmed(
     request: ListSosmedRequest,
   ): Promise<WebResponse<SosmedResponse[]>> {
     const {
@@ -261,7 +261,7 @@ export class MasterService {
     };
   }
 
-  async registerMasterSosmed(request: RegisterSosmedRequest): Promise<SosmedResponse> {
+  async registerSosmed(request: RegisterSosmedRequest): Promise<SosmedResponse> {
     this.logger.info(`Registering new sosmed: ${request.name}`);
 
     const existingSosmed = await this.prisma.social_media.findFirst({
@@ -289,7 +289,7 @@ export class MasterService {
     };
   }
 
-  async updateMasterSosmed(
+  async updateSosmed(
     sosmedId: number,
     payload: Partial<RegisterSosmedRequest>,
   ): Promise<SosmedResponse> {
@@ -344,7 +344,7 @@ export class MasterService {
     };
   }
 
-  async deleteMasterSosmed(id: number): Promise<{ message: string }> {
+  async deleteSosmed(id: number): Promise<{ message: string }> {
     const existingSosmed = await this.prisma.social_media.findUnique({
       where: { id },
     });

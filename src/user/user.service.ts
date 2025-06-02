@@ -7,6 +7,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { users } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as generatePassword from 'generate-password';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
@@ -41,7 +42,7 @@ export class UserService {
   ) { }
 
   // User
-  async registerUser(request: RegisterUserRequest): Promise<UserResponse> {
+  async registerUser(request: RegisterUserRequest, authUser: users): Promise<UserResponse> {
     this.logger.info(`Registering new user: ${request.username}`);
 
     const existingUser = await this.prisma.users.findFirst({
@@ -69,6 +70,9 @@ export class UserService {
         name: request.name,
         type: request.type,
         password: hashedPassword,
+        created_by: authUser.id,
+        updated_by: null,
+        updated_at: null
       },
     });
 
@@ -111,6 +115,20 @@ export class UserService {
     const totalPages = Math.ceil(total / limit);
 
     const users = await this.prisma.users.findMany({
+      include: {
+        createdByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
       where,
       orderBy: sortBy
         ? {
@@ -130,9 +148,9 @@ export class UserService {
         isDefaultPassword: user.isDefaultPassword,
         isActive: user.isActive,
         type: user.type,
-        createdBy: user.created_by,
+        createdBy: user.createdByUser?.name || '-',
         createdAt: user.created_at,
-        updatedBy: user.updated_by,
+        updatedBy: user.updatedByUser?.name || '-',
         updatedAt: user.updated_at,
       })),
       paging: {
@@ -168,6 +186,7 @@ export class UserService {
   async updateUser(
     userId: string,
     payload: Partial<RegisterUserRequest>,
+    authUser: users
   ): Promise<UserResponse> {
     const existingUser = await this.prisma.users.findUnique({
       where: { id: userId },
@@ -211,6 +230,8 @@ export class UserService {
         username: payload.username ?? existingUser.username,
         name: payload.name ?? existingUser.name,
         type: payload.type ?? existingUser.type,
+        updated_by: authUser.id,
+        updated_at: new Date()
       },
     });
 
@@ -429,8 +450,6 @@ export class UserService {
           'No changes detected in the update request',
         );
       }
-
-
     }
 
     const updatedRole = await this.prisma.roles.update({

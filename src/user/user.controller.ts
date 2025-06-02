@@ -52,13 +52,22 @@ export class UserController {
     };
   }
 
+  @Get('current')
+  @HttpCode(HttpStatus.OK)
+  async currentUser(
+    @Auth() user: users,
+  ): Promise<WebResponse<UserResponse>> {
+    return { data: user };
+  }
+
   @Post()
   @UserSwaggerRegister()
   @HttpCode(HttpStatus.CREATED)
   async registerUser(
+    @Auth() user: users,
     @Body() request: RegisterUserRequest,
   ): Promise<WebResponse<UserResponse>> {
-    const result = await this.userService.registerUser(request);
+    const result = await this.userService.registerUser(request, user);
     return {
       data: result,
     };
@@ -86,10 +95,11 @@ export class UserController {
   @UserSwaggerUpdate()
   @HttpCode(HttpStatus.OK)
   async updateUser(
+    @Auth() user: users,
     @Param('id') id: string,
     @Body() request: Partial<RegisterUserRequest>,
   ): Promise<WebResponse<UserResponse>> {
-    const result = await this.userService.updateUser(id, request);
+    const result = await this.userService.updateUser(id, request, user);
     return {
       data: result,
     };

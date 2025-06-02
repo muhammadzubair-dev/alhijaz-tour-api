@@ -14,7 +14,7 @@ export class MasterController {
   async registermasterBank(
     @Body() request: RegisterBankRequest,
   ): Promise<WebResponse<BankResponse>> {
-    const result = await this.masterService.registerMasterBank(request);
+    const result = await this.masterService.registerBank(request);
     return {
       data: result,
     };
@@ -22,11 +22,11 @@ export class MasterController {
 
   @Patch('bank/:id')
   @HttpCode(HttpStatus.OK)
-  async updateMasterBank(
+  async updateBank(
     @Param('id') id: number,
     @Body() request: Partial<RegisterBankRequest>,
   ): Promise<WebResponse<BankResponse>> {
-    const result = await this.masterService.updateMasterBank(id, request);
+    const result = await this.masterService.updateBank(id, request);
     return {
       data: result,
     };
@@ -37,23 +37,23 @@ export class MasterController {
   async listMasterBanks(
     @Query() request: ListBankRequest,
   ): Promise<WebResponse<BankResponse[]>> {
-    const result = await this.masterService.listMasterBank(request);
+    const result = await this.masterService.listBank(request);
     return result;
   }
 
   @Delete('bank/:id')
   @HttpCode(HttpStatus.OK)
   async deleteBank(@Param('id') id: number): Promise<{ message: string }> {
-    return this.masterService.deleteMasterBank(id);
+    return this.masterService.deleteBank(id);
   }
 
   // MASTER SOSMED
   @Post('sosmed')
   @HttpCode(HttpStatus.CREATED)
-  async registerMasterSosmed(
+  async registerSosmed(
     @Body() request: RegisterSosmedRequest,
   ): Promise<WebResponse<SosmedResponse>> {
-    const result = await this.masterService.registerMasterSosmed(request);
+    const result = await this.masterService.registerSosmed(request);
     return {
       data: result,
     };
@@ -61,11 +61,11 @@ export class MasterController {
 
   @Patch('sosmed/:id')
   @HttpCode(HttpStatus.OK)
-  async updateMasterSosmed(
+  async updateSosmed(
     @Param('id') id: number,
     @Body() request: Partial<RegisterSosmedRequest>,
   ): Promise<WebResponse<SosmedResponse>> {
-    const result = await this.masterService.updateMasterSosmed(id, request);
+    const result = await this.masterService.updateSosmed(id, request);
     return {
       data: result,
     };
@@ -73,16 +73,16 @@ export class MasterController {
 
   @Get('sosmeds')
   @HttpCode(HttpStatus.OK)
-  async listMasterSosmed(
+  async listSosmed(
     @Query() request: ListSosmedRequest,
   ): Promise<WebResponse<SosmedResponse[]>> {
-    const result = await this.masterService.listMasterSosmed(request);
+    const result = await this.masterService.listSosmed(request);
     return result;
   }
 
   @Delete('sosmed/:id')
   @HttpCode(HttpStatus.OK)
   deleteRole(@Param('id') id: number): Promise<{ message: string }> {
-    return this.masterService.deleteMasterSosmed(id);
+    return this.masterService.deleteSosmed(id);
   }
 }

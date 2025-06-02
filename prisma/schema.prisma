@@ -22,33 +22,44 @@ model users {
   isDefaultPassword Boolean   @default(true)
   isActive          Boolean   @default(true)
   type              String    @default("0") @db.Char(1)
-  created_by        String    @default("system")
-  created_at        DateTime  @default(now())
-  updated_by        String    @default("system")
-  updated_at        DateTime  @default(now())
+  created_by        String?   @default("system")
+  created_at        DateTime? @default(now())
+  updated_by        String?   @default("system")
+  updated_at        DateTime? @default(now())
+
+  // Self-relations
+  createdByUser users? @relation("CreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("UpdatedBy", fields: [updated_by], references: [id])
+
+  createdUsers users[] @relation("CreatedBy")
+  updatedUsers users[] @relation("UpdatedBy")
+
+  // Explicit reverse relations from roles
+  rolesCreated roles[] @relation("RoleCreatedBy")
+  rolesUpdated roles[] @relation("RoleUpdatedBy")
 
   agents     agents[]
   user_roles user_roles[]
 }
 
 model agents {
-  id               Int      @id @default(autoincrement())
+  id               Int       @id @default(autoincrement())
   user_id          String
-  identity_type    String   @default("0") @db.Char(1)
+  identity_type    String    @default("0") @db.Char(1)
   bank_id          Int
-  account_number   String   @db.VarChar(20)
-  phone            String   @db.VarChar(20)
-  email            String   @db.VarChar(100)
-  balance          Int      @default(0)
-  address          String   @db.VarChar(200)
+  account_number   String    @db.VarChar(20)
+  phone            String    @db.VarChar(20)
+  email            String    @db.VarChar(100)
+  balance          Int       @default(0)
+  address          String    @db.VarChar(200)
   lead_id          Int?
   coordinator_id   Int?
-  target_remaining Int      @default(0)
-  isActive         Boolean  @default(true)
-  created_by       String   @default("system")
-  created_at       DateTime @default(now())
-  updated_by       String   @default("system")
-  updated_at       DateTime @default(now())
+  target_remaining Int       @default(0)
+  isActive         Boolean   @default(true)
+  created_by       String?   @default("system")
+  created_at       DateTime? @default(now())
+  updated_by       String?   @default("system")
+  updated_at       DateTime? @default(now())
 
   user             users                   @relation(fields: [user_id], references: [id])
   bank             banks                   @relation(fields: [bank_id], references: [id])
@@ -63,83 +74,83 @@ model agents {
 }
 
 model fees {
-  id         Int      @id @default(autoincrement())
-  name       String   @db.VarChar(20)
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(20)
   amount     Int
-  desc       String   @db.VarChar(100)
-  isActive   Boolean  @default(true)
-  created_by String   @default("system")
-  created_at DateTime @default(now())
-  updated_by String   @default("system")
-  updated_at DateTime @default(now())
+  desc       String    @db.VarChar(100)
+  isActive   Boolean   @default(true)
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
 }
 
 model agent_fee_transaction {
-  id           Int      @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   agent_id     Int
   amount       Int
-  type         String   @db.Char(1)
+  type         String    @db.Char(1)
   description  String
   trx_date     DateTime
   refrence_id  Int
-  category     String   @db.Char(1)
-  last_balance Int      @default(0)
-  created_by   String   @default("system")
-  created_at   DateTime @default(now())
-  updated_by   String   @default("system")
-  updated_at   DateTime @default(now())
+  category     String    @db.Char(1)
+  last_balance Int       @default(0)
+  created_by   String?   @default("system")
+  created_at   DateTime? @default(now())
+  updated_by   String?   @default("system")
+  updated_at   DateTime? @default(now())
 
   agent agents @relation(fields: [agent_id], references: [id])
 }
 
 model agent_sosmed {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   agent_id   Int
   social_id  Int
-  url        String   @db.VarChar(50)
-  isActive   Boolean  @default(true)
-  created_by String   @default("system")
-  created_at DateTime @default(now())
-  updated_by String   @default("system")
-  updated_at DateTime @default(now())
+  url        String    @db.VarChar(50)
+  isActive   Boolean   @default(true)
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
 
   agent        agents       @relation(fields: [agent_id], references: [id])
   social_media social_media @relation(fields: [social_id], references: [id])
 }
 
 model social_media {
-  id         Int      @id @default(autoincrement())
-  name       String   @db.VarChar(20)
-  isActive   Boolean  @default(true)
-  created_by String   @default("system")
-  created_at DateTime @default(now())
-  updated_by String   @default("system")
-  updated_at DateTime @default(now())
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(20)
+  isActive   Boolean   @default(true)
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
 
   agent_sosmed agent_sosmed[]
 }
 
 model banks {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   bank_code  String
-  name       String   @db.VarChar(20)
-  isActive   Boolean  @default(true)
-  created_by String   @default("system")
-  created_at DateTime @default(now())
-  updated_by String   @default("system")
-  updated_at DateTime @default(now())
+  name       String    @db.VarChar(20)
+  isActive   Boolean   @default(true)
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
 
   agents agents[]
 }
 
 model user_roles {
-  id         String   @id @default(uuid())
+  id         String    @id @default(uuid())
   user_id    String
   roles_id   Int
-  created_by String   @default("system")
-  created_at DateTime @default(now())
-  updated_by String   @default("system")
-  updated_at DateTime @default(now())
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
 
   user       users             @relation(fields: [user_id], references: [id])
   role       roles             @relation(fields: [roles_id], references: [id])
@@ -147,57 +158,61 @@ model user_roles {
 }
 
 model roles {
-  id          Int      @id @default(autoincrement())
-  name        String   @db.VarChar(50)
-  description String   @db.VarChar(100)
-  isActive    Boolean  @default(true)
-  platform    String   @default("0") @db.VarChar(1)
-  type        String   @default("0") @db.Char(1)
-  created_by  String   @default("system")
-  created_at  DateTime @default(now())
-  updated_by  String   @default("system")
-  updated_at  DateTime @default(now())
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(50)
+  description String    @db.VarChar(100)
+  isActive    Boolean   @default(true)
+  platform    String    @default("0") @db.VarChar(1)
+  type        String    @default("0") @db.Char(1)
+  created_by  String?   @default("system")
+  created_at  DateTime? @default(now())
+  updated_by  String?   @default("system")
+  updated_at  DateTime? @default(now())
+
+  // Relations
+  createdByUser users? @relation("RoleCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("RoleUpdatedBy", fields: [updated_by], references: [id])
 
   user_roles user_roles[]
 }
 
 model user_roles_menu {
-  id           Int      @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   user_role_id String
   menu_id      Int
-  created_by   String   @default("system")
-  created_at   DateTime @default(now())
-  updated_by   String   @default("system")
-  updated_at   DateTime @default(now())
+  created_by   String?   @default("system")
+  created_at   DateTime? @default(now())
+  updated_by   String?   @default("system")
+  updated_at   DateTime? @default(now())
 
   user_role user_roles @relation(fields: [user_role_id], references: [id])
   menu      menus      @relation(fields: [menu_id], references: [id])
 }
 
 model menus {
-  id         Int      @id @default(autoincrement())
-  name       String   @db.VarChar(50)
-  desc       String   @db.VarChar(50)
-  created_by String   @default("system")
-  created_at DateTime @default(now())
-  updated_by String   @default("system")
-  updated_at DateTime @default(now())
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(50)
+  desc       String    @db.VarChar(50)
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
 
   user_roles_menus user_roles_menu[]
   list_apis        list_api[]
 }
 
 model list_api {
-  id         Int      @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   menu_id    Int
-  name       String   @db.VarChar(50)
-  url        String   @db.VarChar(50)
+  name       String    @db.VarChar(50)
+  url        String    @db.VarChar(50)
   parent_id  Int
   order      Int
-  created_by String   @default("system")
-  created_at DateTime @default(now())
-  updated_by String   @default("system")
-  updated_at DateTime @default(now())
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
 
   menu menus @relation(fields: [menu_id], references: [id])
 }
