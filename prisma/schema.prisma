@@ -38,6 +38,10 @@ model users {
   rolesCreated roles[] @relation("RoleCreatedBy")
   rolesUpdated roles[] @relation("RoleUpdatedBy")
 
+  // Explicit reverse relations from agents
+  agentsCreated agents[] @relation("AgentCreatedBy")
+  agentsUpdated agents[] @relation("AgentUpdatedBy")
+
   agents     agents[]
   user_roles user_roles[]
 }
@@ -61,16 +65,21 @@ model agents {
   updated_by       String?   @default("system")
   updated_at       DateTime? @default(now())
 
+  // Relations to other tables
   user             users                   @relation(fields: [user_id], references: [id])
   bank             banks                   @relation(fields: [bank_id], references: [id])
   fee_transactions agent_fee_transaction[]
   social_accounts  agent_sosmed[]
 
-  lead        agents? @relation("Lead", fields: [lead_id], references: [id])
-  coordinator agents? @relation("Coordinator", fields: [coordinator_id], references: [id])
-
+  // Self-relations
+  lead                  agents?  @relation("Lead", fields: [lead_id], references: [id])
+  coordinator           agents?  @relation("Coordinator", fields: [coordinator_id], references: [id])
   lead_relations        agents[] @relation("Lead")
   coordinator_relations agents[] @relation("Coordinator")
+
+  // Relasi ke users (created_by & updated_by)
+  createdByUser users? @relation("AgentCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("AgentUpdatedBy", fields: [updated_by], references: [id])
 }
 
 model fees {

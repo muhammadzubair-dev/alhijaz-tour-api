@@ -87,7 +87,7 @@ export class UserController {
   @Patch(':id/deactivate')
   @UserSwaggerDeactivate()
   @HttpCode(HttpStatus.OK)
-  async deactivateUser(@Param('id') id: string) {
+  async deactivateUser(@Auth() _: users, @Param('id') id: string) {
     return this.userService.deactivateUser(id);
   }
 
@@ -109,6 +109,7 @@ export class UserController {
   @Get('menus')
   @HttpCode(HttpStatus.OK)
   async listMenu(
+    @Auth() _: users,
     @Query() request: ListMenuRequest,
   ): Promise<WebResponse<MenuResponse[]>> {
     const result = await this.userService.listMenu(request);
@@ -119,9 +120,10 @@ export class UserController {
   @Post('role')
   @HttpCode(HttpStatus.CREATED)
   async registerRole(
+    @Auth() user: users,
     @Body() request: RegisterRoleRequest,
   ): Promise<WebResponse<RoleResponse>> {
-    const result = await this.userService.registerRole(request);
+    const result = await this.userService.registerRole(request, user);
     return {
       data: result,
     };
@@ -130,6 +132,7 @@ export class UserController {
   @Get('roles')
   @HttpCode(HttpStatus.OK)
   async listRole(
+    @Auth() _: users,
     @Query() request: ListRoleRequest,
   ): Promise<WebResponse<RoleResponse[]>> {
     const result = await this.userService.listRole(request);
@@ -139,10 +142,11 @@ export class UserController {
   @Patch('role/:id')
   @HttpCode(HttpStatus.OK)
   async updateRole(
+    @Auth() user: users,
     @Param('id') id: number,
     @Body() request: Partial<RegisterRoleRequest>,
   ): Promise<WebResponse<RoleResponse>> {
-    const result = await this.userService.updateRole(id, request);
+    const result = await this.userService.updateRole(id, request, user);
     return {
       data: result,
     };
@@ -150,17 +154,18 @@ export class UserController {
 
   @Delete('role/:id')
   @HttpCode(HttpStatus.OK)
-  async deleteRole(@Param('id') id: number): Promise<{ message: string }> {
+  async deleteRole(@Auth() _: users, @Param('id') id: number): Promise<{ message: string }> {
     return this.userService.deleteRole(id);
   }
 
-  // User Agent
+  // Agent
   @Post('agent')
   @HttpCode(HttpStatus.CREATED)
   async registerAgent(
+    @Auth() user: users,
     @Body() request: RegisterAgentRequest,
   ): Promise<{ message: string }> {
-    const result = await this.userService.registerAgent(request);
+    const result = await this.userService.registerAgent(request, user);
     return result
 
   }
@@ -168,6 +173,7 @@ export class UserController {
   @Get('agents')
   @HttpCode(HttpStatus.OK)
   async listAgent(
+    @Auth() _: users,
     @Query() request: ListAgentRequest,
   ): Promise<WebResponse<AgentResponse[]>> {
     const result = await this.userService.listAgent(request);

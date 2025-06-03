@@ -342,6 +342,20 @@ export class UserService {
     const totalPages = Math.ceil(total / limit);
 
     const roles = await this.prisma.roles.findMany({
+      include: {
+        createdByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
       where,
       orderBy: sortBy
         ? {
@@ -360,9 +374,9 @@ export class UserService {
         type: role.type,
         platform: role.platform,
         isActive: role.isActive,
-        createdBy: role.created_by,
+        createdBy: role.createdByUser?.name || '-',
         createdAt: role.created_at,
-        updatedBy: role.updated_by,
+        updatedBy: role.updatedByUser?.name || '-',
         updatedAt: role.updated_at,
       })),
       paging: {
@@ -374,7 +388,7 @@ export class UserService {
     };
   }
 
-  async registerRole(request: RegisterRoleRequest): Promise<RoleResponse> {
+  async registerRole(request: RegisterRoleRequest, authUser: users): Promise<RoleResponse> {
     this.logger.info(`Registering new role: ${request.name}`);
 
     const existingRole = await this.prisma.roles.findFirst({
@@ -393,6 +407,9 @@ export class UserService {
         platform: request.platform,
         type: request.type,
         isActive: request.isActive,
+        created_by: authUser.id,
+        updated_by: null,
+        updated_at: null
       },
     });
 
@@ -411,6 +428,7 @@ export class UserService {
   async updateRole(
     roleId: number,
     payload: Partial<RegisterRoleRequest>,
+    authUser: users
   ): Promise<RoleResponse> {
     const existingUser = await this.prisma.roles.findUnique({
       where: { id: roleId },
@@ -460,6 +478,8 @@ export class UserService {
         platform: payload.platform ?? existingUser.platform,
         type: payload.type ?? existingUser.type,
         isActive: payload.isActive ?? existingUser.isActive,
+        updated_by: authUser.id,
+        updated_at: new Date()
       },
     });
 
@@ -558,6 +578,18 @@ export class UserService {
             name: true,
           },
         },
+        createdByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy,
       skip: (page - 1) * limit,
@@ -593,7 +625,7 @@ export class UserService {
     };
   }
 
-  async registerAgent(request: RegisterAgentRequest): Promise<{ message: string }> {
+  async registerAgent(request: RegisterAgentRequest, authUser: users): Promise<{ message: string }> {
     this.logger.info(`Registering new agent: ${request.userId}`);
 
     const existingAgent = await this.prisma.agents.findFirst({
@@ -618,7 +650,10 @@ export class UserService {
         lead_id: request.leadId,
         coordinator_id: request.coordinatorId,
         target_remaining: 0,
-        isActive: request.isActive
+        isActive: request.isActive,
+        created_by: authUser.id,
+        updated_by: null,
+        updated_at: null
       },
     });
 
