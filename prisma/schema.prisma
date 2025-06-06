@@ -34,16 +34,116 @@ model users {
   createdUsers users[] @relation("CreatedBy")
   updatedUsers users[] @relation("UpdatedBy")
 
-  // Explicit reverse relations from roles
+  // Roles relations
   rolesCreated roles[] @relation("RoleCreatedBy")
   rolesUpdated roles[] @relation("RoleUpdatedBy")
 
-  // Explicit reverse relations from agents
+  // Agents relations
   agentsCreated agents[] @relation("AgentCreatedBy")
   agentsUpdated agents[] @relation("AgentUpdatedBy")
 
   agents     agents[]
   user_roles user_roles[]
+
+  // Relations from jamaah table
+  jamaahCreated jamaah[] @relation("JamaahCreatedBy")
+  jamaahUpdated jamaah[] @relation("JamaahUpdatedBy")
+
+  // Relations from documents table
+  documentsCreated documents[] @relation("DocumentsCreatedBy")
+  documentsUpdated documents[] @relation("DocumentsUpdatedBy")
+
+  // Relations from jamaah_documents table
+  jamaahDocumentsCreated jamaah_documents[] @relation("JamaahDocumentsCreatedBy")
+  jamaahDocumentsUpdated jamaah_documents[] @relation("JamaahDocumentsUpdatedBy")
+
+  // Relations from citys table
+  citysCreated citys[] @relation("CitysCreatedBy")
+  citysUpdated citys[] @relation("CitysUpdatedBy")
+
+  // Relations from hotels table
+  hotelsCreated hotels[] @relation("HotelsCreatedBy")
+  hotelsUpdated hotels[] @relation("HotelsUpdatedBy")
+
+  // Relations from airlines table
+  airlinesCreated airlines[] @relation("AirlinesCreatedBy")
+  airlinesUpdated airlines[] @relation("AirlinesUpdatedBy")
+
+  // Relations from transportations table
+  transportationsCreated transportations[] @relation("TransportationsCreatedBy")
+  transportationsUpdated transportations[] @relation("TransportationsUpdatedBy")
+
+  // Relations from partners table
+  partnersCreated partners[] @relation("PartnersCreatedBy")
+  partnersUpdated partners[] @relation("PartnersUpdatedBy")
+
+  // Relations from product_types table
+  productTypesCreated product_types[] @relation("ProductTypesCreatedBy")
+  productTypesUpdated product_types[] @relation("ProductTypesUpdatedBy")
+
+  // Relations from provinces table
+  provincesCreated provinces[] @relation("ProvincesCreatedBy")
+  provincesUpdated provinces[] @relation("ProvincesUpdatedBy")
+
+  // Relations from districts table
+  districtsCreated districts[] @relation("DistrictsCreatedBy")
+  districtsUpdated districts[] @relation("DistrictsUpdatedBy")
+
+  // Relations from sub_districts table
+  subDistrictsCreated sub_districts[] @relation("SubDistrictsCreatedBy")
+  subDistrictsUpdated sub_districts[] @relation("SubDistrictsUpdatedBy")
+
+  // Relations from neighborhoods table
+  neighborhoodsCreated neighborhoods[] @relation("NeighborhoodsCreatedBy")
+  neighborhoodsUpdated neighborhoods[] @relation("NeighborhoodsUpdatedBy")
+
+  // Relations from tickets table
+  ticketsCreated tickets[] @relation("TicketsCreatedBy")
+  ticketsUpdated tickets[] @relation("TicketsUpdatedBy")
+
+  // Relations from ticket_details table
+  ticketDetailsCreated ticket_details[] @relation("TicketDetailsCreatedBy")
+  ticketDetailsUpdated ticket_details[] @relation("TicketDetailsUpdatedBy")
+
+  // Relations from airport table
+  airportCreated airport[] @relation("AirportCreatedBy")
+  airportUpdated airport[] @relation("AirportUpdatedBy")
+
+  // Relations from ticket_transaction table
+  ticketTransactionCreated ticket_transaction[] @relation("TicketTransactionCreatedBy")
+  ticketTransactionUpdated ticket_transaction[] @relation("TicketTransactionUpdatedBy")
+
+  // Relations from packages table
+  packagesCreated packages[] @relation("PackagesCreatedBy")
+  packagesUpdated packages[] @relation("PackagesUpdatedBy")
+
+  // Relations from package_types table
+  packageTypesCreated package_types[] @relation("PackageTypesCreatedBy")
+  packageTypesUpdated package_types[] @relation("PackageTypesUpdatedBy")
+
+  // Relations from room_types table
+  roomTypesCreated room_types[] @relation("RoomTypesCreatedBy")
+  roomTypesUpdated room_types[] @relation("RoomTypesUpdatedBy")
+
+  // Relations from package_hotels table
+  packageHotelsCreated package_hotels[] @relation("PackageHotelsCreatedBy")
+  packageHotelsUpdated package_hotels[] @relation("PackageHotelsUpdatedBy")
+
+  // Relations from package_rooms table
+  packageRoomsCreated package_rooms[] @relation("PackageRoomsCreatedBy")
+  packageRoomsUpdated package_rooms[] @relation("PackageRoomsUpdatedBy")
+
+  // Relations from package_room_prices table
+  packageRoomPricesCreated package_room_prices[] @relation("PackageRoomPricesCreatedBy")
+  packageRoomPricesUpdated package_room_prices[] @relation("PackageRoomPricesUpdatedBy")
+
+  // Relations from umrah_registers table
+  umrahRegistersCreated umrah_registers[] @relation("UmrahRegistersCreatedBy")
+  umrahRegistersUpdated umrah_registers[] @relation("UmrahRegistersUpdatedBy")
+
+  // Relations from umrah_payments table
+  umrahPaymentsCreated umrah_payments[] @relation("UmrahPaymentsCreatedBy")
+  umrahPaymentsUpdated umrah_payments[] @relation("UmrahPaymentsUpdatedBy")
 }
 
 model agents {
@@ -224,4 +324,530 @@ model list_api {
   updated_at DateTime? @default(now())
 
   menu menus @relation(fields: [menu_id], references: [id])
+}
+
+model jamaah {
+  jamaah_code       String   @id @db.VarChar(25)
+  first_name        String   @db.VarChar(25)
+  mid_name          String?  @db.VarChar(25)
+  last_name         String?  @db.VarChar(25)
+  identity_number   String   @db.VarChar(10)
+  birth_place       String   @db.VarChar(10)
+  birth_date        DateTime
+  gender            Int // enum: 0: laki-laki, 1: perempuan
+  married_status    Int // 0: Menikah 1: Belum Menikah 2: Janda 3: Duda
+  father_name       String   @db.VarChar(25)
+  mother_name       String   @db.VarChar(25)
+  phone_number      String   @db.VarChar(25)
+  province          Int
+  district          Int
+  sub_district      Int
+  neighborhoods     Int
+  address           String   @db.VarChar(100)
+  home_phone_number String?  @db.VarChar(25)
+  medical_condition String?  @db.Text
+  self_photo        String?  @db.VarChar(50)
+  photo_identity    String?  @db.VarChar(50)
+  notes             String?  @db.Text
+  status            String   @db.Char(1)
+  agents_id         String?  @db.Uuid
+  staff_id          String?  @db.Uuid
+
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
+
+  jamaah_documents jamaah_documents[]
+
+  // Relasi ke users
+  createdByUser users? @relation("JamaahCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("JamaahUpdatedBy", fields: [updated_by], references: [id])
+
+  packages packages[]
+
+  umrah_registers umrah_registers[]
+
+  umrah_payments umrah_payments[]
+}
+
+model documents {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(15)
+  status     String    @db.Char(1)
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
+
+  // Relasi ke users
+  createdByUser users? @relation("DocumentsCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("DocumentsUpdatedBy", fields: [updated_by], references: [id])
+
+  // Relasi ke jamaah_documents
+  jamaah_documents jamaah_documents[]
+}
+
+model jamaah_documents {
+  id          Int       @id @default(autoincrement())
+  jamaah_id   String    @db.VarChar(25)
+  document_id Int
+  status      String    @db.Char(1) // 0: Sudah diterima, 1: Belum diterima
+  created_by  String?   @default("system")
+  created_at  DateTime? @default(now())
+  updated_by  String?   @default("system")
+  updated_at  DateTime? @default(now())
+
+  // Relasi ke jamaah
+  jamaah jamaah @relation(fields: [jamaah_id], references: [jamaah_code])
+
+  // Relasi ke documents
+  document documents @relation(fields: [document_id], references: [id])
+
+  // Relasi ke users?
+  createdByUser users? @relation("JamaahDocumentsCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("JamaahDocumentsUpdatedBy", fields: [updated_by], references: [id])
+}
+
+model citys {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(100)
+  status     String    @db.Char(1)
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
+
+  // Relasi ke users?
+  createdByUser users? @relation("CitysCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("CitysUpdatedBy", fields: [updated_by], references: [id])
+
+  // Relasi ke hotels
+  hotels hotels[]
+
+  package_hotels package_hotels[]
+}
+
+model hotels {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(25)
+  stars      String?   @db.VarChar(5)
+  photo      String?   @db.VarChar(100)
+  city_id    Int
+  status     String    @db.Char(1)
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
+
+  // Relasi ke citys
+  city citys @relation(fields: [city_id], references: [id])
+
+  // Relasi ke users?
+  createdByUser users? @relation("HotelsCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("HotelsUpdatedBy", fields: [updated_by], references: [id])
+
+  package_hotels package_hotels[]
+}
+
+model airlines {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(50)
+  display_name String    @db.VarChar(40)
+  status       String    @db.Char(1)
+  created_by   String?   @default("system")
+  created_at   DateTime? @default(now())
+  updated_by   String?   @default("system")
+  updated_at   DateTime? @default(now())
+
+  createdByUser users? @relation("AirlinesCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("AirlinesUpdatedBy", fields: [updated_by], references: [id])
+
+  ticket_details ticket_details[]
+}
+
+model transportations {
+  id           Int       @id @default(autoincrement())
+  company_name String    @db.VarChar(50)
+  type         String    @db.Char(1)
+  status       String    @db.Char(1)
+  created_by   String?   @default("system")
+  created_at   DateTime? @default(now())
+  updated_by   String?   @default("system")
+  updated_at   DateTime? @default(now())
+
+  createdByUser users? @relation("TransportationsCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("TransportationsUpdatedBy", fields: [updated_by], references: [id])
+}
+
+model partners {
+  id            Int       @id @default(autoincrement())
+  name          String    @db.VarChar(50)
+  ppiu_number   String    @db.VarChar(50)
+  phone_pic     String    @db.VarChar(50)
+  phone_presdir String    @db.VarChar(50)
+  phone_office  String    @db.VarChar(50)
+  pic_name      String    @db.VarChar(50)
+  email         String    @db.VarChar(50)
+  address       String    @db.VarChar(100)
+  product_type  Int
+  categories    String    @db.Char(1) // 0: supplier 1: customer
+  status        String    @db.Char(1)
+  created_by    String?   @default("system")
+  created_at    DateTime? @default(now())
+  updated_by    String?   @default("system")
+  updated_at    DateTime? @default(now())
+
+  tickets       tickets[]
+  productType   product_types @relation(fields: [product_type], references: [id])
+  createdByUser users?        @relation("PartnersCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users?        @relation("PartnersUpdatedBy", fields: [updated_by], references: [id])
+
+  ticket_transaction ticket_transaction[]
+}
+
+model product_types {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(20)
+  description String    @db.VarChar(20)
+  status      String    @db.Char(1)
+  created_by  String?   @default("system")
+  created_at  DateTime? @default(now())
+  updated_by  String?   @default("system")
+  updated_at  DateTime? @default(now())
+
+  createdByUser users? @relation("ProductTypesCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("ProductTypesUpdatedBy", fields: [updated_by], references: [id])
+
+  partners partners[]
+}
+
+model provinces {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(20)
+  status     String    @db.Char(1)
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
+
+  createdByUser users? @relation("ProvincesCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("ProvincesUpdatedBy", fields: [updated_by], references: [id])
+
+  districts     districts[]
+  sub_districts sub_districts[]
+  neighborhoods neighborhoods[]
+}
+
+model districts {
+  id          Int       @id @default(autoincrement())
+  province_id Int
+  name        String    @db.VarChar(20)
+  status      String    @db.Char(1)
+  created_by  String?   @default("system")
+  created_at  DateTime? @default(now())
+  updated_by  String?   @default("system")
+  updated_at  DateTime? @default(now())
+
+  province      provinces @relation(fields: [province_id], references: [id])
+  createdByUser users?    @relation("DistrictsCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users?    @relation("DistrictsUpdatedBy", fields: [updated_by], references: [id])
+
+  sub_districts sub_districts[]
+  neighborhoods neighborhoods[]
+}
+
+model sub_districts {
+  id          Int       @id @default(autoincrement())
+  province_id Int
+  district_id Int
+  name        String    @db.VarChar(20)
+  status      String    @db.Char(1)
+  created_by  String?   @default("system")
+  created_at  DateTime? @default(now())
+  updated_by  String?   @default("system")
+  updated_at  DateTime? @default(now())
+
+  province      provinces @relation(fields: [province_id], references: [id])
+  district      districts @relation(fields: [district_id], references: [id])
+  createdByUser users?    @relation("SubDistrictsCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users?    @relation("SubDistrictsUpdatedBy", fields: [updated_by], references: [id])
+
+  neighborhoods neighborhoods[]
+}
+
+model neighborhoods {
+  id              Int       @id @default(autoincrement())
+  province_id     Int
+  district_id     Int
+  sub_district_id Int
+  name            String    @db.VarChar(20)
+  status          String    @db.Char(1)
+  created_by      String?   @default("system")
+  created_at      DateTime? @default(now())
+  updated_by      String?   @default("system")
+  updated_at      DateTime? @default(now())
+
+  province      provinces     @relation(fields: [province_id], references: [id])
+  district      districts     @relation(fields: [district_id], references: [id])
+  sub_district  sub_districts @relation(fields: [sub_district_id], references: [id])
+  createdByUser users?        @relation("NeighborhoodsCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users?        @relation("NeighborhoodsUpdatedBy", fields: [updated_by], references: [id])
+}
+
+model tickets {
+  id               Int       @id @default(autoincrement())
+  booking_code     String    @unique @db.VarChar(10)
+  partner_id       Int
+  day_pack         Int
+  seat_pack        Int
+  materialisasi    Int
+  cancel           Int
+  transaction_date DateTime
+  status           String    @db.Char(1)
+  created_by       String?   @default("system")
+  created_at       DateTime? @default(now())
+  updated_by       String?   @default("system")
+  updated_at       DateTime? @default(now())
+
+  partner       partners @relation(fields: [partner_id], references: [id])
+  createdByUser users?   @relation("TicketsCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users?   @relation("TicketsUpdatedBy", fields: [updated_by], references: [id])
+
+  ticket_details     ticket_details[]
+  ticket_transaction ticket_transaction[]
+
+  packages packages[]
+}
+
+model ticket_details {
+  id             Int       @id @default(autoincrement())
+  ticket_id      Int
+  type           Int // 0: Departure, 1: Return
+  ticket_date    DateTime
+  ticket_airline Int
+  flight_no      String? // varchar, bisa nullable jika perlu
+  ticket_from    String    @db.VarChar(5)
+  ticket_etd     Int
+  ticket_to      String    @db.VarChar(5)
+  ticket_eta     Int
+  created_by     String?   @default("system")
+  created_at     DateTime? @default(now())
+  updated_by     String?   @default("system")
+  updated_at     DateTime? @default(now())
+
+  ticket        tickets  @relation(fields: [ticket_id], references: [id])
+  airline       airlines @relation(fields: [ticket_airline], references: [id])
+  airport_from  airport  @relation("AirportFrom", fields: [ticket_from], references: [code])
+  airport_to    airport  @relation("AirportTo", fields: [ticket_to], references: [code])
+  createdByUser users?   @relation("TicketDetailsCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users?   @relation("TicketDetailsUpdatedBy", fields: [updated_by], references: [id])
+}
+
+model airport {
+  code       String    @id @db.VarChar(5)
+  name       String    @db.VarChar(25)
+  status     String    @db.Char(1)
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
+
+  createdByUser users? @relation("AirportCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("AirportUpdatedBy", fields: [updated_by], references: [id])
+
+  ticketDetailsFrom ticket_details[] @relation("AirportFrom")
+  ticketDetailsTo   ticket_details[] @relation("AirportTo")
+}
+
+model ticket_transaction {
+  id           Int       @id @default(autoincrement())
+  booking_code String    @db.VarChar(10)
+  partner_id   Int
+  trx_number   String
+  created_by   String?   @default("system")
+  created_at   DateTime? @default(now())
+  updated_by   String?   @default("system")
+  updated_at   DateTime? @default(now())
+
+  ticket        tickets  @relation(fields: [booking_code], references: [booking_code])
+  partner       partners @relation(fields: [partner_id], references: [id])
+  createdByUser users?   @relation("TicketTransactionCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users?   @relation("TicketTransactionUpdatedBy", fields: [updated_by], references: [id])
+}
+
+model packages {
+  id                         String    @id @db.VarChar(20)
+  name                       String    @db.VarChar(20)
+  itinerary                  String?   @db.VarChar(50) // file pdf
+  manasik_invitation         String?   @db.VarChar(50) // file pdf
+  brochure                   String?   @db.VarChar(50) // file pdf
+  departure_info             String?   @db.VarChar(50) // file pdf
+  ticket                     Int?
+  maturity_passport_delivery DateTime?
+  maturity_repayment         DateTime?
+  manasik_date               DateTime?
+  manasik_time               DateTime? // Prisma tidak punya time type, pakai DateTime atau String
+  manasik_price              Int?
+  admin_price                Int?
+  equipment_handling_price   Int?
+  pcr_price                  Int?
+  airport_rally_point        String?   @db.VarChar(50)
+  gathering_time             DateTime? // sama seperti manasik_time
+  tour_lead                  String?   @db.VarChar(25)
+  checkin_madinah            DateTime?
+  checkout_madinah           DateTime?
+  checkin_mekkah             DateTime?
+  checkout_mekkah            DateTime?
+  isPromo                    Boolean   @default(false)
+  wa_group                   String?   @db.VarChar(10)
+  notes                      String?   @db.Text
+  status                     String    @db.Char(1)
+  created_by                 String?   @default("system")
+  created_at                 DateTime? @default(now())
+  updated_by                 String?   @default("system")
+  updated_at                 DateTime? @default(now())
+
+  ticket_rel    tickets? @relation(fields: [ticket], references: [id])
+  tourLeadUser  jamaah?  @relation(fields: [tour_lead], references: [jamaah_code])
+  createdByUser users?   @relation("PackagesCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users?   @relation("PackagesUpdatedBy", fields: [updated_by], references: [id])
+
+  package_hotels      package_hotels[]
+  package_room_prices package_room_prices[]
+  umrah_registers     umrah_registers[]
+}
+
+model package_types {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(20)
+  desc       String    @db.VarChar(20)
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
+
+  createdByUser users? @relation("PackageTypesCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("PackageTypesUpdatedBy", fields: [updated_by], references: [id])
+
+  package_hotels package_hotels[]
+  package_rooms  package_rooms[]
+}
+
+model room_types {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(20)
+  desc       String    @db.VarChar(20)
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
+
+  createdByUser users? @relation("RoomTypesCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("RoomTypesUpdatedBy", fields: [updated_by], references: [id])
+
+  package_rooms package_rooms[]
+}
+
+model package_hotels {
+  id              Int       @id @default(autoincrement())
+  package_id      String
+  package_type_id Int
+  city_id         Int
+  hotel_id        Int
+  created_by      String?   @default("system")
+  created_at      DateTime? @default(now())
+  updated_by      String?   @default("system")
+  updated_at      DateTime? @default(now())
+
+  package       packages      @relation(fields: [package_id], references: [id])
+  package_type  package_types @relation(fields: [package_type_id], references: [id])
+  city          citys         @relation(fields: [city_id], references: [id])
+  hotel         hotels        @relation(fields: [hotel_id], references: [id])
+  createdByUser users?        @relation("PackageHotelsCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users?        @relation("PackageHotelsUpdatedBy", fields: [updated_by], references: [id])
+}
+
+model package_rooms {
+  id              Int       @id @default(autoincrement())
+  package_type_id Int
+  room_type_id    Int
+  status          String    @db.Char(1)
+  created_by      String?   @default("system")
+  created_at      DateTime? @default(now())
+  updated_by      String?   @default("system")
+  updated_at      DateTime? @default(now())
+
+  package_type        package_types         @relation(fields: [package_type_id], references: [id])
+  room_type           room_types            @relation(fields: [room_type_id], references: [id])
+  createdByUser       users?                @relation("PackageRoomsCreatedBy", fields: [created_by], references: [id])
+  updatedByUser       users?                @relation("PackageRoomsUpdatedBy", fields: [updated_by], references: [id])
+  package_room_prices package_room_prices[]
+}
+
+model package_room_prices {
+  id               Int       @id @default(autoincrement())
+  packages_id      String
+  package_rooms_id Int
+  price            Int
+  created_by       String?   @default("system")
+  created_at       DateTime? @default(now())
+  updated_by       String?   @default("system")
+  updated_at       DateTime? @default(now())
+
+  package         packages          @relation(fields: [packages_id], references: [id])
+  package_room    package_rooms     @relation(fields: [package_rooms_id], references: [id])
+  createdByUser   users?            @relation("PackageRoomPricesCreatedBy", fields: [created_by], references: [id])
+  updatedByUser   users?            @relation("PackageRoomPricesUpdatedBy", fields: [updated_by], references: [id])
+  umrah_registers umrah_registers[]
+}
+
+model umrah_registers {
+  id                 String    @id @default(uuid())
+  umroh_code         String    @unique @db.VarChar(20)
+  jamaah             String    @db.VarChar(25)
+  remarks            Int
+  mahram             String?   @db.VarChar(20)
+  package            String
+  package_room_price Int
+  office_discount    Int
+  agent_discount     Int
+  agent_id           Int?
+  register_name      String    @db.VarChar(20)
+  register_phone     String    @db.VarChar(20)
+  notes              String?   @db.VarChar(100)
+  pin                Int
+  status             String    @db.Char(1)
+  created_by         String?   @default("system")
+  created_at         DateTime? @default(now())
+  updated_by         String?   @default("system")
+  updated_at         DateTime? @default(now())
+
+  jamaahRel        jamaah              @relation(fields: [jamaah], references: [jamaah_code])
+  packageRel       packages            @relation(fields: [package], references: [id])
+  packageRoomPrice package_room_prices @relation(fields: [package_room_price], references: [id])
+  createdByUser    users?              @relation("UmrahRegistersCreatedBy", fields: [created_by], references: [id])
+  updatedByUser    users?              @relation("UmrahRegistersUpdatedBy", fields: [updated_by], references: [id])
+  umrah_payments   umrah_payments[]
+}
+
+model umrah_payments {
+  id                          String    @id @default(uuid())
+  jamaah                      String    @db.VarChar(25)
+  umrah_register_code         String    @db.VarChar(20)
+  remaining_package_payment   Int
+  remaining_equipment_payment Int
+  remaining_pcr_payment       Int
+  remaining_other_payment     Int
+  status                      String    @db.Char(1)
+  trx_number                  String?
+  created_by                  String?   @default("system")
+  created_at                  DateTime? @default(now())
+  updated_by                  String?   @default("system")
+  updated_at                  DateTime? @default(now())
+
+  jamaahRel        jamaah          @relation(fields: [jamaah], references: [jamaah_code])
+  umrahRegisterRel umrah_registers @relation(fields: [umrah_register_code], references: [umroh_code])
+  createdByUser    users?          @relation("UmrahPaymentsCreatedBy", fields: [created_by], references: [id])
+  updatedByUser    users?          @relation("UmrahPaymentsUpdatedBy", fields: [updated_by], references: [id])
 }
