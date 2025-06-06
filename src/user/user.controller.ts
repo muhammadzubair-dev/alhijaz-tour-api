@@ -167,7 +167,6 @@ export class UserController {
   ): Promise<{ message: string }> {
     const result = await this.userService.registerAgent(request, user);
     return result
-
   }
 
   @Get('agents')

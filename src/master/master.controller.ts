@@ -8,10 +8,10 @@ import { MasterService } from "./master.service";
 export class MasterController {
   constructor(private masterService: MasterService) { }
 
-  // MASTER BANK
+  // BANK
   @Post('bank')
   @HttpCode(HttpStatus.CREATED)
-  async registermasterBank(
+  async registerBank(
     @Body() request: RegisterBankRequest,
   ): Promise<WebResponse<BankResponse>> {
     const result = await this.masterService.registerBank(request);
@@ -34,7 +34,7 @@ export class MasterController {
 
   @Get('banks')
   @HttpCode(HttpStatus.OK)
-  async listMasterBanks(
+  async listBanks(
     @Query() request: ListBankRequest,
   ): Promise<WebResponse<BankResponse[]>> {
     const result = await this.masterService.listBank(request);
@@ -47,7 +47,7 @@ export class MasterController {
     return this.masterService.deleteBank(id);
   }
 
-  // MASTER SOSMED
+  // SOSMED
   @Post('sosmed')
   @HttpCode(HttpStatus.CREATED)
   async registerSosmed(
@@ -82,7 +82,7 @@ export class MasterController {
 
   @Delete('sosmed/:id')
   @HttpCode(HttpStatus.OK)
-  deleteRole(@Param('id') id: number): Promise<{ message: string }> {
+  async deleteSosmed(@Param('id') id: number): Promise<{ message: string }> {
     return this.masterService.deleteSosmed(id);
   }
 }
