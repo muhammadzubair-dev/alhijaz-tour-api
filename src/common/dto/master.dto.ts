@@ -540,12 +540,6 @@ export class CreatePackageRequestDto {
   @MinLength(1)
   @MaxLength(20)
   @ApiProperty()
-  id: string;
-
-  @IsString()
-  @MinLength(1)
-  @MaxLength(20)
-  @ApiProperty()
   name: string;
 
   @Type(() => Number)
@@ -641,8 +635,6 @@ export class CreatePackageRequestDto {
 
   @Expose()
   @Transform(({ value }) => {
-    console.log('value ====> ', value);
-    console.log('2.value ====> ', JSON.parse(value));
     try {
       if (Array.isArray(value)) return value;
       return JSON.parse(value);

@@ -9,6 +9,7 @@ import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import { UploadService } from 'src/common/upload.service';
 import { camelToSnakeCase } from 'src/common/utils/camelToSnakeCase';
+import { generateAutoId } from 'src/common/utils/generateAutoId';
 import { Logger } from 'winston';
 
 @Injectable()
@@ -393,10 +394,16 @@ export class MasterService {
 
       // Jalankan transaksi Prisma
       const result = await this.prisma.$transaction(async (tx) => {
+        // Generate ID
+        const newId = await generateAutoId(this.prisma, {
+          model: 'packages',
+          prefix: 'JBU',
+          padding: 4,
+        });
         // Insert ke tabel `packages`
         const createdPackage = await tx.packages.create({
           data: {
-            id: data.id,
+            id: newId,
             name: data.name,
             itinerary: uploadedFiles['itinerary'] ?? null,
             manasik_invitation: uploadedFiles['manasikInvitation'] ?? null,

@@ -119,7 +119,6 @@ export class MasterController {
   @Post('upload-avatar')
   @UseInterceptors(FileInterceptor('file')) // Mengambil file dari form-data
   async uploadAvatar(@UploadedFile() file: Express.Multer.File, @Body() body: { name: string; age: number },) {
-    console.log('====> ', body)
     return this.masterService.uploadAvatar(file.buffer, file.originalname);
   }
 }
