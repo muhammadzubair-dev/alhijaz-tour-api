@@ -7,6 +7,7 @@ import { JwtService } from './jwt.service';
 import { PrismaService } from './prisma.service';
 import { RedisService } from './redis.service';
 import { AuthMiddleware } from './auth.middleware';
+import { UploadService } from './upload.service';
 
 @Global()
 @Module({
@@ -19,8 +20,8 @@ import { AuthMiddleware } from './auth.middleware';
       isGlobal: true,
     }),
   ],
-  providers: [PrismaService, RedisService, JwtService],
-  exports: [PrismaService, RedisService, JwtService],
+  providers: [PrismaService, RedisService, JwtService, UploadService],
+  exports: [PrismaService, RedisService, JwtService, UploadService],
 })
 export class CommonModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

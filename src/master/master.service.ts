@@ -1,10 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { users } from '@prisma/client';
+import moment from 'moment';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse } from 'src/common/dto/master.dto';
+import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest } from 'src/common/dto/master.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
+import { UploadService } from 'src/common/upload.service';
 import { camelToSnakeCase } from 'src/common/utils/camelToSnakeCase';
 import { Logger } from 'winston';
 
@@ -13,6 +16,7 @@ export class MasterService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly prisma: PrismaService,
+    private readonly uploadService: UploadService
   ) { }
 
   // Bank
@@ -358,5 +362,98 @@ export class MasterService {
     });
 
     return { message: `Sosmed with ID ${id} deleted successfully.` };
+  }
+
+  // Paket
+  async registerPackage(
+    authUser: users,
+    data: RegisterPackageRequest,
+    files: {
+      itinerary?: Express.Multer.File[];
+      manasikInvitation?: Express.Multer.File[];
+      brochure?: Express.Multer.File[];
+      departureInfo?: Express.Multer.File[];
+    },
+  ) {
+    const uploadedFiles = {};
+
+    // Simpan setiap file jika ada
+    if (files.itinerary?.[0]) {
+      uploadedFiles['itinerary'] = await this.uploadService.saveFile(
+        files.itinerary[0].buffer,
+        files.itinerary[0].originalname,
+      );
+    }
+
+    if (files.manasikInvitation?.[0]) {
+      uploadedFiles['manasikInvitation'] = await this.uploadService.saveFile(
+        files.manasikInvitation[0].buffer,
+        files.manasikInvitation[0].originalname,
+      );
+    }
+
+    if (files.brochure?.[0]) {
+      uploadedFiles['brochure'] = await this.uploadService.saveFile(
+        files.brochure[0].buffer,
+        files.brochure[0].originalname,
+      );
+    }
+
+    if (files.departureInfo?.[0]) {
+      uploadedFiles['departureInfo'] = await this.uploadService.saveFile(
+        files.departureInfo[0].buffer,
+        files.departureInfo[0].originalname,
+      );
+    }
+
+    const createdPackage = await this.prisma.packages.create({
+      data: {
+        id: data.id,
+        name: data.name,
+        itinerary: uploadedFiles['itinerary'] ?? null,
+        manasik_invitation: uploadedFiles['manasikInvitation'] ?? null,
+        brochure: uploadedFiles['brochure'] ?? null,
+        departure_info: uploadedFiles['departureInfo'] ?? null,
+        ticket: data.ticket,
+        seat: data.seat,
+        maturity_passport_delivery: data.maturityPassportDelivery,
+        maturity_repayment: data.maturityRepayment,
+        manasik_date: data.manasikDateTime,
+        manasik_time: data.manasikDateTime,
+        manasik_price: data.manasikPrice,
+        admin_price: data.adminPrice,
+        equipment_handling_price: data.equipmentHandlingPrice,
+        pcr_price: data.pcrPrice,
+        airport_rally_point: data.airportRallyPoint,
+        gathering_time: data.gatheringTime,
+        tour_lead: data.tourLead,
+        checkin_madinah: data.checkInMadinah,
+        checkout_madinah: data.checkOutMadinah,
+        checkin_mekkah: data.checkInMekkah,
+        checkout_mekkah: data.checkoutMekkah,
+        isPromo: data.isPromo,
+        wa_group: data.waGroup,
+        notes: data.notes,
+        status: data.status,
+        created_by: authUser.id,
+        updated_by: null,
+        updated_at: null
+      },
+    });
+
+    // - Insert ke table packages
+    // - Insert ke table package_room_prices
+    // - Insert ke table package_hotels
+
+    return { message: `Package registered: ${createdPackage.id}` }
+  }
+
+  async uploadAvatar(buffer: Buffer, originalName: string) {
+    const uploaded = await this.uploadService.saveFile(buffer, originalName);
+    // Contoh: bisa tambahkan logic simpan ke DB juga di sini
+    return {
+      message: 'Avatar uploaded',
+      // ...uploaded,
+    };
   }
 }

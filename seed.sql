@@ -59,3 +59,34 @@ INSERT INTO hotels (name, stars, photo, city_id, status, created_by, updated_by,
 ('Kempinski Nile Hotel', '5', 'https://example.com/hotel23.jpg', 8, '1', null, null, NOW(), NOW()),
 ('Fairmont Nile City', '5', 'https://example.com/hotel24.jpg', 8, '1', null, null, NOW(), NOW());
 
+INSERT INTO package_rooms (package_type_id, room_type_id, status, created_by, updated_by, created_at, updated_at)
+VALUES
+  (6, 1, '1', null, null, NOW(), NOW()),
+  (6, 2, '1', null, null, NOW(), NOW()),
+  (6, 3, '1', null, null, NOW(), NOW()),
+  (6, 4, '1', null, null, NOW(), NOW()),
+  (6, 5, '1', null, null, NOW(), NOW()),
+
+  (7, 1, '1', null, null, NOW(), NOW()),
+  (7, 2, '1', null, null, NOW(), NOW()),
+  (7, 3, '1', null, null, NOW(), NOW()),
+  (7, 4, '1', null, null, NOW(), NOW()),
+  (7, 5, '1', null, null, NOW(), NOW()),
+
+  (8, 1, '1', null, null, NOW(), NOW()),
+  (8, 2, '1', null, null, NOW(), NOW()),
+  (8, 3, '1', null, null, NOW(), NOW()),
+  (8, 4, '1', null, null, NOW(), NOW()),
+  (8, 5, '1', null, null, NOW(), NOW()),
+
+  (9, 1, '1', null, null, NOW(), NOW()),
+  (9, 2, '1', null, null, NOW(), NOW()),
+  (9, 3, '1', null, null, NOW(), NOW()),
+  (9, 4, '1', null, null, NOW(), NOW()),
+  (9, 5, '1', null, null, NOW(), NOW()),
+
+  (10, 1, '1', null, null, NOW(), NOW()),
+  (10, 2, '1', null, null, NOW(), NOW()),
+  (10, 3, '1', null, null, NOW(), NOW()),
+  (10, 4, '1', null, null, NOW(), NOW()),
+  (10, 5, '1', null, null, NOW(), NOW());

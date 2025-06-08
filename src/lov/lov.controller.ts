@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from "@nestjs/common";
-import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RoomTypeResponse } from "src/common/dto/master.dto";
+import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RoomTypeResponse, PackageRoomResponse } from "src/common/dto/master.dto";
 import { WebResponse } from "src/common/dto/web.dto";
 import { LovService } from "./lov.service";
 import { Auth } from "src/common/auth.decorator";
@@ -35,6 +35,16 @@ export class LovController {
     @Auth() _: users,
   ): Promise<WebResponse<PackageTypeResponse[]>> {
     const result = await this.lovService.listCity();
+    return result;
+  }
+
+  @Get('package/:packageId/rooms')
+  @HttpCode(HttpStatus.OK)
+  async listPackageRoom(
+    @Auth() _: users,
+    @Param('packageId') packageId: number,
+  ): Promise<WebResponse<PackageRoomResponse[]>> {
+    const result = await this.lovService.listPackageRoom(packageId);
     return result;
   }
 

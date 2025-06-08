@@ -1,17 +1,18 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from "@nestjs/common";
-import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse } from "src/common/dto/master.dto";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
+import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RegisterPackageRequest } from "src/common/dto/master.dto";
 import { WebResponse } from "src/common/dto/web.dto";
 import { MasterService } from "./master.service";
 import { Auth } from "src/common/auth.decorator";
 import { users } from "@prisma/client";
+import { FileFieldsInterceptor, FileInterceptor } from "@nestjs/platform-express";
 
 @Controller('/api/master')
 export class MasterController {
   constructor(private masterService: MasterService) { }
 
-  // BANK
+  // bank
   @Post('bank')
   @HttpCode(HttpStatus.CREATED)
   async registerBank(
@@ -50,7 +51,7 @@ export class MasterController {
     return this.masterService.deleteBank(id);
   }
 
-  // SOSMED
+  // Sosmed
   @Post('sosmed')
   @HttpCode(HttpStatus.CREATED)
   async registerSosmed(
@@ -87,5 +88,38 @@ export class MasterController {
   @HttpCode(HttpStatus.OK)
   async deleteSosmed(@Param('id') id: number): Promise<{ message: string }> {
     return this.masterService.deleteSosmed(id);
+  }
+
+  // Package
+  @Post('package')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'itinerary', maxCount: 1 },
+      { name: 'manasikInvitation', maxCount: 1 },
+      { name: 'brochure', maxCount: 1 },
+      { name: 'departureinfo', maxCount: 1 },
+    ]),
+  )
+  async registerPackage(
+    @Auth() user: users,
+    @UploadedFiles()
+    files: {
+      itinerary?: Express.Multer.File[];
+      manasikInvitation?: Express.Multer.File[];
+      brochure?: Express.Multer.File[];
+      departureInfo?: Express.Multer.File[];
+    },
+    @Body() body: RegisterPackageRequest
+  ) {
+    const result = await this.masterService.registerPackage(user, body, files)
+    return result
+  }
+
+  // Testing Upload
+  @Post('upload-avatar')
+  @UseInterceptors(FileInterceptor('file')) // Mengambil file dari form-data
+  async uploadAvatar(@UploadedFile() file: Express.Multer.File, @Body() body: { name: string; age: number },) {
+    console.log('====> ', body)
+    return this.masterService.uploadAvatar(file.buffer, file.originalname);
   }
 }

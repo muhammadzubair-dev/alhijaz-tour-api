@@ -2,7 +2,7 @@
 /* eslint-disable prettier/prettier */
 import { Inject, Injectable } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { CityResponse, HotelResponse, PackageTypeResponse, RoomTypeResponse } from 'src/common/dto/master.dto';
+import { CityResponse, HotelResponse, PackageRoomResponse, PackageTypeResponse, RoomTypeResponse } from 'src/common/dto/master.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import { Logger } from 'winston';
@@ -33,6 +33,47 @@ export class LovService {
     return {
       data: rooms
     }
+  }
+
+  async listPackageRoom(packageId: number): Promise<WebResponse<PackageRoomResponse[]>> {
+    const rooms = await this.prisma.package_rooms.findMany({
+      where: {
+        package_type_id: packageId,   // opsional, bisa dihapus kalau mau semua room type
+        status: '1',       // status harus '1'
+      },
+      include: {
+        room_type: {
+          select: {
+            name: true,
+          },
+        },
+        createdByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+    return {
+      data: rooms.map(room => ({
+        id: room.id,
+        packageTypeId: room.package_type_id,
+        roomTypeId: room.room_type_id,
+        status: room.status,
+        name: room.room_type?.name ?? null, // fix: akses nama dari relasi
+        createdBy: room.createdByUser?.name ?? null,
+        createdAt: room.created_at,
+        updatedBy: room.updatedByUser?.name ?? null,
+        updatedAt: room.updated_at,
+      })),
+    };
   }
 
   async listHotel(cityId: number): Promise<WebResponse<HotelResponse[]>> {

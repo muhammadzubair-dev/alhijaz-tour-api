@@ -684,6 +684,7 @@ model packages {
   brochure                   String?   @db.VarChar(50) // file pdf
   departure_info             String?   @db.VarChar(50) // file pdf
   ticket                     Int?
+  seat                       Int?
   maturity_passport_delivery DateTime?
   maturity_repayment         DateTime?
   manasik_date               DateTime?
