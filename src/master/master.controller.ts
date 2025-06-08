@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
-import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RegisterPackageRequest } from "src/common/dto/master.dto";
+import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RegisterPackageRequest, CreatePackageRequestDto } from "src/common/dto/master.dto";
 import { WebResponse } from "src/common/dto/web.dto";
 import { MasterService } from "./master.service";
 import { Auth } from "src/common/auth.decorator";
@@ -97,7 +97,7 @@ export class MasterController {
       { name: 'itinerary', maxCount: 1 },
       { name: 'manasikInvitation', maxCount: 1 },
       { name: 'brochure', maxCount: 1 },
-      { name: 'departureinfo', maxCount: 1 },
+      { name: 'departureInfo', maxCount: 1 },
     ]),
   )
   async registerPackage(
@@ -109,7 +109,7 @@ export class MasterController {
       brochure?: Express.Multer.File[];
       departureInfo?: Express.Multer.File[];
     },
-    @Body() body: RegisterPackageRequest
+    @Body() body: CreatePackageRequestDto
   ) {
     const result = await this.masterService.registerPackage(user, body, files)
     return result

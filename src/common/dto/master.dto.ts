@@ -1,15 +1,18 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import {
+  IsArray,
   IsBoolean,
   IsDate,
   IsIn,
+  IsISO8601,
   IsNumber,
   IsOptional,
   IsString,
   MaxLength,
   Min,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
 
 // Bank
@@ -291,7 +294,7 @@ export class RegisterPackageRequest {
   //   minLength: 1,
   //   maxLength: 50,
   // })
-  // departureinfo: string;
+  // departureInfo: string;
 
   @IsNumber()
   @ApiProperty({
@@ -449,6 +452,209 @@ export class RegisterPackageRequest {
     enum: ['0', '1'],
   })
   status: string;
+}
+
+export class HotelDto {
+  @Expose()
+  @IsNumber()
+  @ApiProperty()
+  cityId: number;
+
+  @Expose()
+  @IsString()
+  @ApiProperty()
+  cityName: string;
+
+  @Expose()
+  @IsString()
+  @ApiProperty()
+  hotelId: string;
+
+  @Expose()
+  @IsString()
+  @ApiProperty()
+  hotelName: string;
+}
+
+export class RoomDto {
+  @Expose()
+  @IsNumber()
+  @ApiProperty()
+  roomId: number;
+
+  @Expose()
+  @IsNumber()
+  @ApiProperty()
+  roomPrice: number;
+
+  @Expose()
+  @IsString()
+  @ApiProperty()
+  roomName: string;
+}
+
+export class HotelRoomDto {
+  @Expose()
+  @IsNumber()
+  @ApiProperty()
+  packageTypeId: number;
+
+  @Expose()
+  @IsString()
+  @ApiProperty()
+  packageTypeName: string;
+
+  @Expose()
+  @Transform(({ value }) => {
+    try {
+      if (Array.isArray(value)) return value;
+      return JSON.parse(value);
+    } catch (e) {
+      throw new Error('Invalid hotelRooms format. Must be a JSON array.');
+    }
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => HotelDto)
+  @ApiProperty({ type: [HotelDto] })
+  hotels: HotelDto[];
+
+  @Expose()
+  @Transform(({ value }) => {
+    try {
+      if (Array.isArray(value)) return value;
+      return JSON.parse(value);
+    } catch (e) {
+      throw new Error('Invalid hotelRooms format. Must be a JSON array.');
+    }
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => RoomDto)
+  @ApiProperty({ type: [RoomDto] })
+  rooms: RoomDto[];
+}
+
+export class CreatePackageRequestDto {
+  @IsString()
+  @MinLength(1)
+  @MaxLength(20)
+  @ApiProperty()
+  id: string;
+
+  @IsString()
+  @MinLength(1)
+  @MaxLength(20)
+  @ApiProperty()
+  name: string;
+
+  @Type(() => Number)
+  @IsNumber()
+  @ApiProperty()
+  ticket: number;
+
+  @IsISO8601()
+  @ApiProperty()
+  transactionDate: string;
+
+  @Type(() => Number)
+  @IsNumber()
+  @ApiProperty()
+  seat: number;
+
+  @IsISO8601()
+  @ApiProperty()
+  maturityPassportDelivery: string;
+
+  @IsISO8601()
+  @ApiProperty()
+  maturityRepayment: string;
+
+  @IsString()
+  @ApiProperty()
+  manasikDatetime: string;
+
+  @Type(() => Number)
+  @IsNumber()
+  @ApiProperty()
+  manasikPrice: number;
+
+  @Type(() => Number)
+  @IsNumber()
+  @ApiProperty()
+  adminPrice: number;
+
+  @Type(() => Number)
+  @IsNumber()
+  @ApiProperty()
+  pcrPrice: number;
+
+  @Type(() => Number)
+  @IsNumber()
+  @ApiProperty()
+  equipmentHandlingPrice: number;
+
+  @IsISO8601()
+  @ApiProperty()
+  checkInMadinah: string;
+
+  @IsISO8601()
+  @ApiProperty()
+  checkInMekkah: string;
+
+  @IsISO8601()
+  @ApiProperty()
+  checkOutMadinah: string;
+
+  @IsISO8601()
+  @ApiProperty()
+  checkOutMekkah: string;
+
+  @IsString()
+  @ApiProperty()
+  isPromo: string;
+
+  @IsString()
+  @ApiProperty()
+  waGroup: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional()
+  notes?: string;
+
+  @IsString()
+  @ApiProperty()
+  tourLead: string;
+
+  @IsString()
+  @ApiProperty()
+  gatheringTime: string;
+
+  @IsString()
+  @ApiProperty()
+  airportRallyPoint: string;
+
+  @IsString()
+  @ApiProperty()
+  status: string;
+
+  @Expose()
+  @Transform(({ value }) => {
+    console.log('value ====> ', value);
+    console.log('2.value ====> ', JSON.parse(value));
+    try {
+      if (Array.isArray(value)) return value;
+      return JSON.parse(value);
+    } catch (e) {
+      throw new Error('Invalid hotelRooms format. Must be a JSON array.');
+    }
+  })
+  @IsArray()
+  // @ValidateNested({ each: true })
+  @Type(() => HotelRoomDto)
+  @ApiProperty({ type: [HotelRoomDto] })
+  hotelRooms: HotelRoomDto[];
 }
 export class PackageTypeResponse {
   @ApiProperty({

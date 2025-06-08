@@ -66,27 +66,87 @@ VALUES
   (6, 3, '1', null, null, NOW(), NOW()),
   (6, 4, '1', null, null, NOW(), NOW()),
   (6, 5, '1', null, null, NOW(), NOW()),
-
   (7, 1, '1', null, null, NOW(), NOW()),
   (7, 2, '1', null, null, NOW(), NOW()),
   (7, 3, '1', null, null, NOW(), NOW()),
   (7, 4, '1', null, null, NOW(), NOW()),
   (7, 5, '1', null, null, NOW(), NOW()),
-
   (8, 1, '1', null, null, NOW(), NOW()),
   (8, 2, '1', null, null, NOW(), NOW()),
   (8, 3, '1', null, null, NOW(), NOW()),
   (8, 4, '1', null, null, NOW(), NOW()),
   (8, 5, '1', null, null, NOW(), NOW()),
-
   (9, 1, '1', null, null, NOW(), NOW()),
   (9, 2, '1', null, null, NOW(), NOW()),
   (9, 3, '1', null, null, NOW(), NOW()),
   (9, 4, '1', null, null, NOW(), NOW()),
   (9, 5, '1', null, null, NOW(), NOW()),
-
   (10, 1, '1', null, null, NOW(), NOW()),
   (10, 2, '1', null, null, NOW(), NOW()),
   (10, 3, '1', null, null, NOW(), NOW()),
   (10, 4, '1', null, null, NOW(), NOW()),
   (10, 5, '1', null, null, NOW(), NOW());
+
+INSERT INTO provinces (name, status, created_by, created_at, updated_by, updated_at)
+VALUES
+  ('Aceh', '1', null, NOW(), null, NOW()),
+  ('Sumatera Utara', '1', null, NOW(), null, NOW()),
+  ('Sumatera Selatan', '1', null, NOW(), null, NOW()),
+  ('Sumatera Barat', '1', null, NOW(), null, NOW()),
+  ('Bengkulu', '1', null, NOW(), null, NOW()),
+  ('Riau', '1', null, NOW(), null, NOW()),
+  ('Kepulauan Riau', '1', null, NOW(), null, NOW()),
+  ('Jambi', '1', null, NOW(), null, NOW()),
+  ('Lampung', '1', null, NOW(), null, NOW()),
+  ('Bangka Belitung', '1', null, NOW(), null, NOW()),
+  ('Kalimantan Barat', '1', null, NOW(), null, NOW()),
+  ('Kalimantan Timur', '1', null, NOW(), null, NOW()),
+  ('Kalimantan Selatan', '1', null, NOW(), null, NOW()),
+  ('Kalimantan Tengah', '1', null, NOW(), null, NOW()),
+  ('Kalimantan Utara', '1', null, NOW(), null, NOW()),
+  ('Banten', '1', null, NOW(), null, NOW()),
+  ('DKI Jakarta', '1', null, NOW(), null, NOW()),
+  ('Jawa Barat', '1', null, NOW(), null, NOW()),
+  ('Jawa Tengah', '1', null, NOW(), null, NOW()),
+  ('DI Yogyakarta', '1', null, NOW(), null, NOW()),
+  ('Jawa Timur', '1', null, NOW(), null, NOW()),
+  ('Bali', '1', null, NOW(), null, NOW()),
+  ('Nusa Tenggara Barat', '1', null, NOW(), null, NOW()),
+  ('Nusa Tenggara Timur', '1', null, NOW(), null, NOW()),
+  ('Gorontalo', '1', null, NOW(), null, NOW()),
+  ('Sulawesi Barat', '1', null, NOW(), null, NOW()),
+  ('Sulawesi Tengah', '1', null, NOW(), null, NOW()),
+  ('Sulawesi Utara', '1', null, NOW(), null, NOW()),
+  ('Sulawesi Tenggara', '1', null, NOW(), null, NOW()),
+  ('Sulawesi Selatan', '1', null, NOW(), null, NOW()),
+  ('Maluku Utara', '1', null, NOW(), null, NOW()),
+  ('Maluku', '1', null, NOW(), null, NOW()),
+  ('Papua Barat', '1', null, NOW(), null, NOW()),
+  ('Papua', '1', null, NOW(), null, NOW()),
+  ('Papua Tengah', '1', null, NOW(), null, NOW()),
+  ('Papua Pegunungan', '1', null, NOW(), null, NOW()),
+  ('Papua Selatan', '1', null, NOW(), null, NOW()),
+  ('Papua Barat Daya', '1', null, NOW(), null, NOW());
+
+-- Seed Data Kota di DKI Jakarta, pastikan province_id nya !!
+INSERT INTO districts (province_id, name, status, created_by, created_at, updated_by, updated_at) VALUES
+(17, 'Jakarta Pusat', '1', null, NOW(), null, NOW()),
+(17, 'Jakarta Utara', '1', null, NOW(), null, NOW()),
+(17, 'Jakarta Barat', '1', null, NOW(), null, NOW()),
+(17, 'Jakarta Selatan', '1', null, NOW(), null, NOW()),
+(17, 'Jakarta Timur', '1', null, NOW(), null, NOW()),
+(17, 'Kepulauan Seribu', '1', null, NOW(), null, NOW());
+
+-- Seed Data Kecamatan di Jakarta Selatan, pastikan province_id dan district_id nya !!
+INSERT INTO sub_districts (province_id, district_id, name, status, created_by, created_at, updated_by, updated_at) VALUES
+(17, 4, 'Tebet', '1', null, NOW(), null, NOW()),
+(17, 4, 'Kebayoran Baru', '1', null, NOW(), null, NOW());
+
+-- Seed Data Kelurahan di Jakarta Selatan, pastikan province_id, district_id dan sub_districts nya !!
+INSERT INTO neighborhoods (
+  province_id, district_id, sub_district_id,
+  name, status, created_by, created_at, updated_by, updated_at
+) VALUES
+(17, 4, 2, 'Kebon Baru', '1', null, NOW(), null, NOW()),
+(17, 4, 2, 'Manggarai Selatan', '1', null, NOW(), null, NOW());
+

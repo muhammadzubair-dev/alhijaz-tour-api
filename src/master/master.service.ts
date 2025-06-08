@@ -4,7 +4,7 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from '@nes
 import { users } from '@prisma/client';
 import moment from 'moment';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest } from 'src/common/dto/master.dto';
+import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest, CreatePackageRequestDto } from 'src/common/dto/master.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import { UploadService } from 'src/common/upload.service';
@@ -367,7 +367,7 @@ export class MasterService {
   // Paket
   async registerPackage(
     authUser: users,
-    data: RegisterPackageRequest,
+    data: CreatePackageRequestDto,
     files: {
       itinerary?: Express.Multer.File[];
       manasikInvitation?: Express.Multer.File[];
@@ -375,79 +375,117 @@ export class MasterService {
       departureInfo?: Express.Multer.File[];
     },
   ) {
-    const uploadedFiles = {};
+    const uploadedFiles: Record<string, string> = {};
+    const rollbackFiles: string[] = [];
 
-    // Simpan setiap file jika ada
-    if (files.itinerary?.[0]) {
-      uploadedFiles['itinerary'] = await this.uploadService.saveFile(
-        files.itinerary[0].buffer,
-        files.itinerary[0].originalname,
-      );
+    const saveFile = async (file: Express.Multer.File, type: string) => {
+      const path = await this.uploadService.saveFile(file.buffer, file.originalname);
+      uploadedFiles[type] = path;
+      rollbackFiles.push(path);
+    };
+
+    try {
+      // Upload semua file yang ada
+      if (files.itinerary?.[0]) await saveFile(files.itinerary[0], 'itinerary');
+      if (files.manasikInvitation?.[0]) await saveFile(files.manasikInvitation[0], 'manasikInvitation');
+      if (files.brochure?.[0]) await saveFile(files.brochure[0], 'brochure');
+      if (files.departureInfo?.[0]) await saveFile(files.departureInfo[0], 'departureInfo');
+
+      // Jalankan transaksi Prisma
+      const result = await this.prisma.$transaction(async (tx) => {
+        // Insert ke tabel `packages`
+        const createdPackage = await tx.packages.create({
+          data: {
+            id: data.id,
+            name: data.name,
+            itinerary: uploadedFiles['itinerary'] ?? null,
+            manasik_invitation: uploadedFiles['manasikInvitation'] ?? null,
+            brochure: uploadedFiles['brochure'] ?? null,
+            departure_info: uploadedFiles['departureInfo'] ?? null,
+            ticket: data.ticket,
+            seat: data.seat,
+            maturity_passport_delivery: new Date(data.maturityPassportDelivery),
+            maturity_repayment: new Date(data.maturityRepayment),
+            manasik_date: new Date(data.manasikDatetime),
+            manasik_time: new Date(data.manasikDatetime),
+            manasik_price: data.manasikPrice,
+            admin_price: data.adminPrice,
+            equipment_handling_price: data.equipmentHandlingPrice,
+            pcr_price: data.pcrPrice,
+            airport_rally_point: data.airportRallyPoint,
+            gathering_time: new Date(data.gatheringTime),
+            tour_lead: data.tourLead,
+            checkin_madinah: new Date(data.checkInMadinah),
+            checkout_madinah: new Date(data.checkOutMadinah),
+            checkin_mekkah: new Date(data.checkInMekkah),
+            checkout_mekkah: new Date(data.checkOutMekkah),
+            isPromo: data.isPromo === 'true',
+            wa_group: data.waGroup,
+            notes: data.notes,
+            status: data.status,
+            created_by: authUser.id,
+            updated_by: null,
+            updated_at: null,
+          },
+        });
+
+        // Build data package_room_prices
+        const roomPrices = [];
+        const hotelData = [];
+
+        for (const pkg of data.hotelRooms) {
+          for (const room of pkg.rooms) {
+            roomPrices.push({
+              packages_id: createdPackage.id,
+              package_rooms_id: room.roomId,
+              price: room.roomPrice,
+              created_by: authUser.id,
+              updated_by: authUser.id,
+            });
+          }
+
+          for (const hotel of pkg.hotels) {
+            hotelData.push({
+              package_id: createdPackage.id,
+              package_type_id: pkg.packageTypeId,
+              city_id: hotel.cityId,
+              hotel_id: parseInt(hotel.hotelId),
+              created_by: authUser.id,
+              updated_by: authUser.id,
+            });
+          }
+        }
+
+        if (roomPrices.length > 0) {
+          await tx.package_room_prices.createMany({ data: roomPrices });
+        }
+
+        if (hotelData.length > 0) {
+          await tx.package_hotels.createMany({ data: hotelData });
+        }
+
+        return createdPackage;
+      });
+
+      return { message: `Package registered: ${result.id}` };
+
+    } catch (error) {
+      // Rollback: hapus file yang sudah diupload
+      for (const filePath of rollbackFiles) {
+        try {
+          await this.uploadService.deleteFile(filePath); // asumsi kamu punya method ini
+        } catch (e) {
+          console.warn('Gagal hapus file rollback:', filePath);
+        }
+      }
+
+      throw new Error('Gagal menyimpan paket. Semua perubahan telah di-rollback.');
     }
-
-    if (files.manasikInvitation?.[0]) {
-      uploadedFiles['manasikInvitation'] = await this.uploadService.saveFile(
-        files.manasikInvitation[0].buffer,
-        files.manasikInvitation[0].originalname,
-      );
-    }
-
-    if (files.brochure?.[0]) {
-      uploadedFiles['brochure'] = await this.uploadService.saveFile(
-        files.brochure[0].buffer,
-        files.brochure[0].originalname,
-      );
-    }
-
-    if (files.departureInfo?.[0]) {
-      uploadedFiles['departureInfo'] = await this.uploadService.saveFile(
-        files.departureInfo[0].buffer,
-        files.departureInfo[0].originalname,
-      );
-    }
-
-    const createdPackage = await this.prisma.packages.create({
-      data: {
-        id: data.id,
-        name: data.name,
-        itinerary: uploadedFiles['itinerary'] ?? null,
-        manasik_invitation: uploadedFiles['manasikInvitation'] ?? null,
-        brochure: uploadedFiles['brochure'] ?? null,
-        departure_info: uploadedFiles['departureInfo'] ?? null,
-        ticket: data.ticket,
-        seat: data.seat,
-        maturity_passport_delivery: data.maturityPassportDelivery,
-        maturity_repayment: data.maturityRepayment,
-        manasik_date: data.manasikDateTime,
-        manasik_time: data.manasikDateTime,
-        manasik_price: data.manasikPrice,
-        admin_price: data.adminPrice,
-        equipment_handling_price: data.equipmentHandlingPrice,
-        pcr_price: data.pcrPrice,
-        airport_rally_point: data.airportRallyPoint,
-        gathering_time: data.gatheringTime,
-        tour_lead: data.tourLead,
-        checkin_madinah: data.checkInMadinah,
-        checkout_madinah: data.checkOutMadinah,
-        checkin_mekkah: data.checkInMekkah,
-        checkout_mekkah: data.checkoutMekkah,
-        isPromo: data.isPromo,
-        wa_group: data.waGroup,
-        notes: data.notes,
-        status: data.status,
-        created_by: authUser.id,
-        updated_by: null,
-        updated_at: null
-      },
-    });
-
-    // - Insert ke table packages
-    // - Insert ke table package_room_prices
-    // - Insert ke table package_hotels
-
-    return { message: `Package registered: ${createdPackage.id}` }
   }
 
+
+
+  // Testing Upload
   async uploadAvatar(buffer: Buffer, originalName: string) {
     const uploaded = await this.uploadService.saveFile(buffer, originalName);
     // Contoh: bisa tambahkan logic simpan ke DB juga di sini
