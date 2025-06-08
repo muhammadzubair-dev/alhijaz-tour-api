@@ -2,7 +2,7 @@
 /* eslint-disable prettier/prettier */
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest } from 'src/common/dto/master.dto';
+import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse } from 'src/common/dto/master.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import { camelToSnakeCase } from 'src/common/utils/camelToSnakeCase';

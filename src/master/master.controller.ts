@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from "@nestjs/common";
-import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest } from "src/common/dto/master.dto";
+import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse } from "src/common/dto/master.dto";
 import { WebResponse } from "src/common/dto/web.dto";
 import { MasterService } from "./master.service";
+import { Auth } from "src/common/auth.decorator";
+import { users } from "@prisma/client";
 
 @Controller('/api/master')
 export class MasterController {

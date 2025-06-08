@@ -223,3 +223,70 @@ export class SosmedResponse {
   })
   isActive?: boolean;
 }
+
+// Tipe Paket
+export class PackageTypeResponse {
+  @ApiProperty({
+    example: '21',
+  })
+  id: number;
+
+  @ApiProperty({
+    example: 'Standard',
+  })
+  name: string;
+
+  @ApiProperty({
+    example: 'Paket Standard',
+  })
+  desc?: string;
+}
+
+// Cities
+export class CityResponse {
+  @ApiProperty({
+    example: '21',
+  })
+  id: number;
+
+  @ApiProperty({
+    example: 'Madinah',
+  })
+  name: string;
+
+  @ApiProperty({
+    example: '1',
+  })
+  status?: string;
+}
+
+// Tipe Room
+export class RoomTypeResponse {
+  @ApiProperty({
+    example: '45',
+  })
+  id: number;
+
+  @ApiProperty({
+    example: 'Double',
+  })
+  name: string;
+
+  @ApiProperty({
+    example: 'Room Double',
+  })
+  desc?: string;
+}
+
+// Tipe Room
+export class HotelResponse {
+  @ApiProperty({
+    example: '45',
+  })
+  id: number;
+
+  @ApiProperty({
+    example: 'Hotel Brizz',
+  })
+  name: string;
+}
