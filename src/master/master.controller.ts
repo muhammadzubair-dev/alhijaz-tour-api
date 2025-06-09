@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Query, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
 import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RegisterPackageRequest, CreatePackageRequestDto, ListPackageRequest, PackageResponse } from "src/common/dto/master.dto";
 import { WebResponse } from "src/common/dto/web.dto";
 import { MasterService } from "./master.service";
@@ -113,6 +113,31 @@ export class MasterController {
   ) {
     const result = await this.masterService.registerPackage(user, body, files)
     return result
+  }
+
+  @Put('package/:id')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'itinerary', maxCount: 1 },
+      { name: 'manasikInvitation', maxCount: 1 },
+      { name: 'brochure', maxCount: 1 },
+      { name: 'departureInfo', maxCount: 1 },
+    ]),
+  )
+  async updatePackage(
+    @Auth() user: users,
+    @Param('id') id: string,
+    @UploadedFiles()
+    files: {
+      itinerary?: Express.Multer.File[];
+      manasikInvitation?: Express.Multer.File[];
+      brochure?: Express.Multer.File[];
+      departureInfo?: Express.Multer.File[];
+    },
+    @Body() body: CreatePackageRequestDto, // atau UpdatePackageRequestDto jika ada
+  ) {
+    const result = await this.masterService.updatePackage(id, user, body, files);
+    return result;
   }
 
   @Get('packages')

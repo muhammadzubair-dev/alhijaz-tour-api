@@ -490,6 +490,138 @@ export class MasterService {
     }
   }
 
+  async updatePackage(
+    packageId: string,
+    authUser: users,
+    data: CreatePackageRequestDto,
+    files: {
+      itinerary?: Express.Multer.File[];
+      manasikInvitation?: Express.Multer.File[];
+      brochure?: Express.Multer.File[];
+      departureInfo?: Express.Multer.File[];
+    },
+  ) {
+    const uploadedFiles: Record<string, string> = {};
+    const rollbackFiles: string[] = [];
+
+    const saveFile = async (file: Express.Multer.File, type: string) => {
+      const path = await this.uploadService.saveFile(file.buffer, file.originalname);
+      uploadedFiles[type] = path;
+      rollbackFiles.push(path);
+    };
+
+    try {
+      // Get existing package for rollback and old file paths
+      const existingPackage = await this.prisma.packages.findUnique({
+        where: { id: packageId },
+      });
+
+      // Upload new files
+      if (files.itinerary?.[0]) await saveFile(files.itinerary[0], 'itinerary');
+      if (files.manasikInvitation?.[0]) await saveFile(files.manasikInvitation[0], 'manasikInvitation');
+      if (files.brochure?.[0]) await saveFile(files.brochure[0], 'brochure');
+      if (files.departureInfo?.[0]) await saveFile(files.departureInfo[0], 'departureInfo');
+
+      // Begin transaction
+      await this.prisma.$transaction(async (tx) => {
+        // 1. Update main package
+        await tx.packages.update({
+          where: { id: packageId },
+          data: {
+            name: data.name,
+            itinerary: uploadedFiles['itinerary'] ?? existingPackage.itinerary,
+            manasik_invitation: uploadedFiles['manasikInvitation'] ?? existingPackage.manasik_invitation,
+            brochure: uploadedFiles['brochure'] ?? existingPackage.brochure,
+            departure_info: uploadedFiles['departureInfo'] ?? existingPackage.departure_info,
+            ticket: data.ticket,
+            seat: data.seat,
+            maturity_passport_delivery: new Date(data.maturityPassportDelivery),
+            maturity_repayment: new Date(data.maturityRepayment),
+            manasik_date: new Date(data.manasikDatetime),
+            manasik_time: new Date(data.manasikDatetime),
+            manasik_price: data.manasikPrice,
+            admin_price: data.adminPrice,
+            equipment_handling_price: data.equipmentHandlingPrice,
+            pcr_price: data.pcrPrice,
+            airport_rally_point: data.airportRallyPoint,
+            gathering_time: new Date(data.gatheringTime),
+            tour_lead: data.tourLead,
+            checkin_madinah: new Date(data.checkInMadinah),
+            checkout_madinah: new Date(data.checkOutMadinah),
+            checkin_mekkah: new Date(data.checkInMekkah),
+            checkout_mekkah: new Date(data.checkOutMekkah),
+            isPromo: data.isPromo === 'true',
+            wa_group: data.waGroup,
+            notes: data.notes,
+            status: data.status,
+            updated_by: authUser.id,
+            updated_at: new Date(),
+          },
+        });
+
+        // 2. Delete old relations
+        await tx.package_room_prices.deleteMany({ where: { packages_id: packageId } });
+        await tx.package_hotels.deleteMany({ where: { package_id: packageId } });
+
+        // 3. Insert new relations
+        const roomPrices = [];
+        const hotelData = [];
+
+        for (const pkg of data.hotelRooms) {
+          for (const room of pkg.rooms) {
+            roomPrices.push({
+              packages_id: packageId,
+              package_rooms_id: room.roomId,
+              price: room.roomPrice,
+              created_by: authUser.id,
+              updated_by: authUser.id,
+            });
+          }
+
+          for (const hotel of pkg.hotels) {
+            hotelData.push({
+              package_id: packageId,
+              package_type_id: pkg.packageTypeId,
+              city_id: hotel.cityId,
+              hotel_id: parseInt(hotel.hotelId),
+              created_by: authUser.id,
+              updated_by: authUser.id,
+            });
+          }
+        }
+
+        if (roomPrices.length > 0) {
+          await tx.package_room_prices.createMany({ data: roomPrices });
+        }
+
+        if (hotelData.length > 0) {
+          await tx.package_hotels.createMany({ data: hotelData });
+        }
+      });
+
+      // Delete old files if new ones uploaded
+      for (const [key, newPath] of Object.entries(uploadedFiles)) {
+        const oldPath = existingPackage[key as keyof typeof existingPackage];
+
+        if (typeof oldPath === 'string' && oldPath && oldPath !== newPath) {
+          await this.uploadService.deleteFile(oldPath);
+        }
+      }
+
+      return { message: `Package updated: ${packageId}` };
+    } catch (error) {
+      for (const path of rollbackFiles) {
+        try {
+          await this.uploadService.deleteFile(path);
+        } catch (e) {
+          console.warn('Rollback failed to delete:', path);
+        }
+      }
+
+      throw new Error('Gagal update paket. Semua perubahan telah di-rollback.');
+    }
+  }
+
   async listPackage(
     request: ListPackageRequest,
   ): Promise<WebResponse<PackageResponse[]>> {
