@@ -850,6 +850,61 @@ export class MasterService {
     return { data: response };
   }
 
+  async deletePackage(packageId: string) {
+    try {
+      const existingPackage = await this.prisma.packages.findUnique({
+        where: { id: packageId },
+        include: {
+          package_room_prices: true,
+          package_hotels: true,
+        },
+      });
+
+      if (!existingPackage) {
+        throw new Error(`Paket dengan ID ${packageId} tidak ditemukan.`);
+      }
+
+      // Simpan path file yang akan dihapus (jika ada)
+      const filesToDelete = [
+        existingPackage.itinerary,
+        existingPackage.manasik_invitation,
+        existingPackage.brochure,
+        existingPackage.departure_info,
+      ].filter((f): f is string => typeof f === 'string' && f.length > 0);
+
+      await this.prisma.$transaction(async (tx) => {
+        // Hapus relasi: package_room_prices
+        await tx.package_room_prices.deleteMany({
+          where: { packages_id: packageId },
+        });
+
+        // Hapus relasi: package_hotels
+        await tx.package_hotels.deleteMany({
+          where: { package_id: packageId },
+        });
+
+        // Hapus data utama: packages
+        await tx.packages.delete({
+          where: { id: packageId },
+        });
+      });
+
+      // Hapus file upload dari storage
+      for (const filePath of filesToDelete) {
+        try {
+          await this.uploadService.deleteFile(filePath);
+        } catch (err) {
+          console.warn(`Gagal menghapus file: ${filePath}`);
+        }
+      }
+
+      return { message: `Paket dengan ID ${packageId} berhasil dihapus.` };
+    } catch (error) {
+      throw new Error(`Gagal menghapus paket: ${error.message}`);
+    }
+  }
+
+
   // Testing Upload
   async uploadAvatar(buffer: Buffer, originalName: string) {
     const uploaded = await this.uploadService.saveFile(buffer, originalName);

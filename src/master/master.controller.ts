@@ -158,6 +158,14 @@ export class MasterController {
     return result;
   }
 
+  @Delete('package/:id')
+  async deletePackage(
+    @Param('id') id: string
+  ) {
+    const result = await this.masterService.deletePackage(id);
+    return result;
+  }
+
   // Testing Upload
   @Post('upload-avatar')
   @UseInterceptors(FileInterceptor('file')) // Mengambil file dari form-data
