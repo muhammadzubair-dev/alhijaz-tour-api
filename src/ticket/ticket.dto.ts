@@ -175,10 +175,10 @@ export class TicketResponse {
   })
   bookingCode?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'Joe Dhoe',
   })
-  partnerName: string;
+  partnerName?: string;
 
   @ApiProperty({
     example: '40',
@@ -195,10 +195,10 @@ export class TicketResponse {
   })
   transactionDate: Date;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: '1',
   })
-  status: string;
+  status?: string;
 }
 
 export class CreateTicketDetailDto {

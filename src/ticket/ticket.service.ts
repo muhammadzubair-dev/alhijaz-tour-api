@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
@@ -68,6 +68,56 @@ export class TicketService {
         message: `Ticket registered successfully ${ticket.id}`,
       };
     });
+  }
+
+  async ticketDetail(ticketId: number): Promise<TicketResponse> {
+    const ticket = await this.prisma.tickets.findUnique({
+      where: { id: ticketId },
+      include: {
+        ticket_details: {
+          orderBy: { ticket_date: 'asc' },
+          include: {
+            airline: {
+              select: { name: true },
+            },
+            airport_from: {
+              select: { name: true },
+            },
+            airport_to: {
+              select: { name: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket not found');
+    }
+    const response = {
+      id: ticket.id,
+      transactionDate: ticket.transaction_date,
+      partnerId: ticket.partner_id,
+      bookingCode: ticket.booking_code,
+      dayPack: ticket.day_pack,
+      seatPack: ticket.seat_pack,
+      flight: ticket.ticket_details.map((detail) => ({
+        id: detail.id,
+        type: detail.type,
+        ticketDate: detail.ticket_date,
+        ticketAirline: detail.ticket_airline,
+        flightNo: detail.flight_no,
+        ticketFrom: detail.ticket_from,
+        ticketEtd: detail.ticket_etd,
+        ticketTo: detail.ticket_to,
+        ticketEta: detail.ticket_eta,
+        ticketAirlineName: detail.airline?.name ?? null,
+        ticketFromName: detail.airport_from?.name ?? null,
+        ticketToName: detail.airport_to?.name ?? null,
+      })),
+    };
+
+    return response
   }
 
   async listTicket(

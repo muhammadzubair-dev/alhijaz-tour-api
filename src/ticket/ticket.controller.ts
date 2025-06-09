@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
 import { users } from '@prisma/client';
 import { Auth } from 'src/common/auth.decorator';
 import { WebResponse } from 'src/common/dto/web.dto';
@@ -18,6 +18,16 @@ export class TicketController {
   ): Promise<WebResponse<TicketResponse[]>> {
     const result = await this.ticketService.listTicket(request);
     return result;
+  }
+
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  async ticketDetail(
+    @Auth() _: users,
+    @Param('id') id: number
+  ): Promise<WebResponse<TicketResponse>> {
+    const result = await this.ticketService.ticketDetail(id);
+    return { data: result };
   }
 
   @Post()
