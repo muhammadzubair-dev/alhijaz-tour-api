@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
-import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RegisterPackageRequest, CreatePackageRequestDto } from "src/common/dto/master.dto";
+import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RegisterPackageRequest, CreatePackageRequestDto, ListPackageRequest, PackageResponse } from "src/common/dto/master.dto";
 import { WebResponse } from "src/common/dto/web.dto";
 import { MasterService } from "./master.service";
 import { Auth } from "src/common/auth.decorator";
@@ -113,6 +113,15 @@ export class MasterController {
   ) {
     const result = await this.masterService.registerPackage(user, body, files)
     return result
+  }
+
+  @Get('packages')
+  @HttpCode(HttpStatus.OK)
+  async listPackage(
+    @Query() request: ListPackageRequest,
+  ): Promise<WebResponse<PackageResponse[]>> {
+    const result = await this.masterService.listPackage(request);
+    return result;
   }
 
   // Testing Upload

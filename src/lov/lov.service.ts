@@ -2,7 +2,7 @@
 /* eslint-disable prettier/prettier */
 import { Inject, Injectable } from '@nestjs/common';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { CityResponse, HotelResponse, PackageRoomResponse, PackageTypeResponse, RoomTypeResponse } from 'src/common/dto/master.dto';
+import { CityResponse, HotelResponse, JamaahResponse, PackageRoomResponse, PackageTypeResponse, RoomTypeResponse } from 'src/common/dto/master.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import { Logger } from 'winston';
@@ -89,6 +89,38 @@ export class LovService {
 
     return {
       data: hotels,
+    };
+  }
+
+  async listJamaah(): Promise<WebResponse<JamaahResponse[]>> {
+    const jamaah = await this.prisma.jamaah.findMany({
+      select: {
+        jamaah_code: true,
+        first_name: true,
+        mid_name: true,
+        last_name: true,
+      },
+    });
+    return {
+      data: jamaah.map((item) => ({
+        jamaahCode: item.jamaah_code,
+        jamaahName: `${item.first_name} ${item.mid_name ?? ''} ${item.last_name ?? ''}`.trim(),
+      })),
+    };
+  }
+
+  async listTicket(): Promise<WebResponse<{ bookingCode: string }[]>> {
+    const jamaah = await this.prisma.tickets.findMany({
+      select: {
+        id: true,
+        booking_code: true,
+      },
+    });
+    return {
+      data: jamaah.map((item) => ({
+        id: item.id,
+        bookingCode: item.booking_code,
+      })),
     };
   }
 }

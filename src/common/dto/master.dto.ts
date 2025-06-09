@@ -229,6 +229,72 @@ export class SosmedResponse {
 }
 
 // Tipe Paket
+export class ListPackageRequest {
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'ID Paket (equal)' })
+  id?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'Nama Paket (like)' })
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'status: 1 = aktif, 0 = tidak aktif' })
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'Kode Booking (equal)' })
+  bookingCode?: string;
+
+  @IsOptional()
+  @IsIn([
+    'id',
+    'name',
+    'status',
+    'bookingCode',
+    'createdBy',
+    'createdAt',
+    'updatedBy',
+    'updatedAt',
+  ])
+  @ApiPropertyOptional({
+    description: 'Sort by field',
+    enum: [
+      'id',
+      'name',
+      'status',
+      'bookingCode',
+      'createdBy',
+      'createdAt',
+      'updatedBy',
+      'updatedAt',
+    ],
+  })
+  sortBy?: string;
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  @ApiPropertyOptional({ description: 'Sort direction', enum: ['asc', 'desc'] })
+  sortOrder?: 'asc' | 'desc';
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @ApiPropertyOptional({ default: 1, description: 'Halaman ke-' })
+  page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @ApiPropertyOptional({ default: 10, description: 'Jumlah data per halaman' })
+  limit?: number;
+}
 export class RegisterPackageRequest {
   @IsString()
   @MinLength(1)
@@ -454,7 +520,7 @@ export class RegisterPackageRequest {
   status: string;
 }
 
-export class HotelDto {
+class HotelDto {
   @Expose()
   @IsNumber()
   @ApiProperty()
@@ -476,7 +542,7 @@ export class HotelDto {
   hotelName: string;
 }
 
-export class RoomDto {
+class RoomDto {
   @Expose()
   @IsNumber()
   @ApiProperty()
@@ -493,7 +559,7 @@ export class RoomDto {
   roomName: string;
 }
 
-export class HotelRoomDto {
+class HotelRoomDto {
   @Expose()
   @IsNumber()
   @ApiProperty()
@@ -546,10 +612,6 @@ export class CreatePackageRequestDto {
   @IsNumber()
   @ApiProperty()
   ticket: number;
-
-  @IsISO8601()
-  @ApiProperty()
-  transactionDate: string;
 
   @Type(() => Number)
   @IsNumber()
@@ -665,6 +727,20 @@ export class PackageTypeResponse {
   desc?: string;
 }
 
+export class PackageResponse {
+  @ApiProperty({ example: '21' })
+  id: string;
+
+  @ApiProperty({ example: 'Paket Umroh Berkah' })
+  name: string;
+
+  @ApiProperty({ example: 'UMR12345' })
+  bookingCode: string;
+
+  @ApiProperty({ example: 'A' })
+  status: string;
+}
+
 // Cities
 export class CityResponse {
   @ApiProperty({
@@ -734,4 +810,16 @@ export class PackageRoomResponse {
     example: 'Status Paket',
   })
   status: string;
+}
+
+export class JamaahResponse {
+  @ApiProperty({
+    example: '21',
+  })
+  jamaahCode: string;
+
+  @ApiProperty({
+    example: 'Khalid',
+  })
+  jamaahName: string;
 }

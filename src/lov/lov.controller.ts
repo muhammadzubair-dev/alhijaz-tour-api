@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query } from "@nestjs/common";
-import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RoomTypeResponse, PackageRoomResponse } from "src/common/dto/master.dto";
+import { Controller, Get, HttpCode, HttpStatus, Param } from "@nestjs/common";
+import { users } from "@prisma/client";
+import { Auth } from "src/common/auth.decorator";
+import { JamaahResponse, PackageRoomResponse, PackageTypeResponse, RoomTypeResponse } from "src/common/dto/master.dto";
 import { WebResponse } from "src/common/dto/web.dto";
 import { LovService } from "./lov.service";
-import { Auth } from "src/common/auth.decorator";
-import { users } from "@prisma/client";
 
 @Controller('/api/lov')
 export class LovController {
@@ -55,6 +55,24 @@ export class LovController {
     @Param('cityId') cityId: number,
   ): Promise<WebResponse<RoomTypeResponse[]>> {
     const result = await this.lovService.listHotel(cityId);
+    return result;
+  }
+
+  @Get('jamaah')
+  @HttpCode(HttpStatus.OK)
+  async listJamaah(
+    @Auth() _: users,
+  ): Promise<WebResponse<JamaahResponse[]>> {
+    const result = await this.lovService.listJamaah();
+    return result;
+  }
+
+  @Get('tickets')
+  @HttpCode(HttpStatus.OK)
+  async listTicket(
+    @Auth() _: users,
+  ): Promise<WebResponse<{ bookingCode: string }[]>> {
+    const result = await this.lovService.listTicket();
     return result;
   }
 }

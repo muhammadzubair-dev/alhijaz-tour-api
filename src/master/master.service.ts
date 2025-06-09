@@ -4,7 +4,7 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from '@nes
 import { users } from '@prisma/client';
 import moment from 'moment';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest, CreatePackageRequestDto } from 'src/common/dto/master.dto';
+import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest, CreatePackageRequestDto, PackageResponse, ListPackageRequest } from 'src/common/dto/master.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import { UploadService } from 'src/common/upload.service';
@@ -488,6 +488,129 @@ export class MasterService {
 
       throw new Error('Gagal menyimpan paket. Semua perubahan telah di-rollback.');
     }
+  }
+
+  async listPackage(
+    request: ListPackageRequest,
+  ): Promise<WebResponse<PackageResponse[]>> {
+    const {
+      id,
+      name,
+      status,
+      bookingCode,
+      sortBy,
+      sortOrder,
+      page = 1,
+      limit = 10,
+    } = request;
+
+    const where: any = {
+      ...(id && { id }),
+      ...(name && {
+        name: {
+          contains: name,
+          mode: 'insensitive',
+        },
+      }),
+      ...(status && { status }),
+      ...(bookingCode && {
+        ticket_rel: {
+          is: {
+            booking_code: {
+              equals: bookingCode,
+            },
+          },
+        },
+      }),
+    };
+
+
+    const total = await this.prisma.packages.count({ where });
+    const totalPages = Math.ceil(total / limit);
+
+    let orderBy: any = {
+      created_at: 'desc', // default jika tidak ada sortBy
+    };
+
+    if (sortBy) {
+      if (sortBy === 'bookingCode') {
+        orderBy = {
+          ticket_rel: {
+            booking_code: sortOrder ?? 'asc',
+          },
+        };
+      } else if (sortBy === 'createdBy') {
+        orderBy = {
+          createdByUser: {
+            name: sortOrder ?? 'asc',
+          },
+        };
+      } else if (sortBy === 'updatedBy') {
+        orderBy = {
+          updatedByUser: {
+            name: sortOrder ?? 'asc',
+          },
+        };
+      } else {
+        orderBy = {
+          [camelToSnakeCase(sortBy)]: sortOrder ?? 'asc',
+        };
+      }
+    }
+
+    const packages = await this.prisma.packages.findMany({
+      where,
+      include: {
+        tourLeadUser: {
+          select: {
+            first_name: true,
+            mid_name: true,
+            last_name: true
+          }
+        },
+        ticket_rel: {
+          select: {
+            booking_code: true,
+          },
+        },
+        createdByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy,
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return {
+      data: packages.map((item) => ({
+        id: item.id,
+        name: item.name,
+        bookingCode: item.ticket_rel?.booking_code || null,
+        tourLead: `${item.tourLeadUser.first_name} ${item.tourLeadUser?.mid_name ?? ''} ${item.tourLeadUser?.last_name ?? ''}`.trim(),
+        isPromo: item.isPromo,
+        status: item.status,
+        createdBy: item.createdByUser?.name || null,
+        createdAt: item.created_at,
+        updatedBy: item.updatedByUser?.name || null,
+        updatedAt: item.updated_at,
+      })),
+      paging: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
   }
 
 
