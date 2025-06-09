@@ -34,9 +34,9 @@ export class TicketService {
 
     const where: any = {
       ...(bookingCode && { booking_code: bookingCode }),
-      ...(dayPack !== undefined && { day_pack: dayPack }),
-      ...(seatPack !== undefined && { seat_pack: seatPack }),
-      ...(status !== undefined && { status }),
+      ...(dayPack && { day_pack: dayPack }),
+      ...(seatPack && { seat_pack: seatPack }),
+      ...(status && { status }),
 
       ...(partnerName && {
         partner: {
