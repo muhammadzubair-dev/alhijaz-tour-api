@@ -124,6 +124,15 @@ export class MasterController {
     return result;
   }
 
+  @Get('packages/:packageId')
+  @HttpCode(HttpStatus.OK)
+  async packageDetail(
+    @Param('packageId') packageId: string,
+  ): Promise<WebResponse<PackageResponse>> {
+    const result = await this.masterService.packageDetail(packageId);
+    return result;
+  }
+
   // Testing Upload
   @Post('upload-avatar')
   @UseInterceptors(FileInterceptor('file')) // Mengambil file dari form-data

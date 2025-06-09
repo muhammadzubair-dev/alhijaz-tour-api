@@ -4,7 +4,7 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from '@nes
 import { users } from '@prisma/client';
 import moment from 'moment';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest, CreatePackageRequestDto, PackageResponse, ListPackageRequest } from 'src/common/dto/master.dto';
+import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest, CreatePackageRequestDto, PackageResponse, ListPackageRequest, HotelRoomDto } from 'src/common/dto/master.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import { UploadService } from 'src/common/upload.service';
@@ -610,6 +610,112 @@ export class MasterService {
         totalPages,
       },
     };
+  }
+
+  async packageDetail(packageId: string): Promise<WebResponse<PackageResponse>> {
+    const packageData = await this.prisma.packages.findUnique({
+      where: { id: packageId },
+      include: {
+        ticket_rel: { select: { booking_code: true } },
+        createdByUser: { select: { id: true, name: true } },
+        updatedByUser: { select: { id: true, name: true } },
+        tourLeadUser: {
+          select: {
+            first_name: true,
+            mid_name: true,
+            last_name: true,
+          },
+        },
+        package_room_prices: {
+          include: {
+            package_room: {
+              include: {
+                room_type: true, // <<== Tambahkan ini untuk ambil nama dari relasi
+              },
+            },
+          },
+        },
+        package_hotels: {
+          include: {
+            hotel: {
+              select: { name: true },
+            },
+            city: {
+              select: { name: true },
+            },
+            package_type: {
+              select: { name: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!packageData) throw new NotFoundException(`Package with ID ${packageId} not found`);
+
+    const packageTypes = packageData.package_hotels.map(h => h.package_type_id);
+
+    const hotelRooms = packageTypes.map((packageTypeId) => {
+      const matchingHotels = packageData.package_hotels.filter(h => h.package_type_id === packageTypeId);
+      const matchingRooms = packageData.package_room_prices.filter(
+        r => r.package_room.package_type_id === packageTypeId
+      );
+
+      return {
+        packageTypeId,
+        packageTypeName: matchingHotels[0]?.package_type?.name ?? null,
+        hotels: matchingHotels.map(h => ({
+          cityId: h.city_id,
+          cityName: h.city.name,
+          hotelId: String(h.hotel_id),
+          hotelName: h.hotel.name,
+        })),
+        rooms: matchingRooms.map(r => ({
+          roomId: r.package_rooms_id,
+          roomPrice: r.price,
+          roomName: r.package_room.room_type.name,
+        })),
+      };
+    });
+
+    const baseImage = 'http://localhost:3000/uploads/'
+    const response = {
+      id: packageData.id,
+      name: packageData.name,
+      status: packageData.status,
+      bookingCode: packageData.ticket_rel?.booking_code ?? null,
+      itinerary: baseImage + packageData.itinerary,
+      manasikInvitation: baseImage + packageData.manasik_invitation,
+      brochure: baseImage + packageData.brochure,
+      departureInfo: baseImage + packageData.departure_info,
+      ticket: packageData.ticket,
+      seat: packageData.seat,
+      maturityPassportDelivery: packageData.maturity_passport_delivery,
+      maturityRepayment: packageData.maturity_repayment,
+      manasikDatetime: packageData.manasik_date,
+      manasikPrice: packageData.manasik_price,
+      adminPrice: packageData.admin_price,
+      equipmentHandlingPrice: packageData.equipment_handling_price,
+      pcrPrice: packageData.pcr_price,
+      airportRallyPoint: packageData.airport_rally_point,
+      gatheringTime: packageData.gathering_time,
+      tourLead: packageData.tour_lead,
+      checkInMadinah: packageData.checkin_madinah,
+      checkOutMadinah: packageData.checkout_madinah,
+      checkInMekkah: packageData.checkin_mekkah,
+      checkOutMekkah: packageData.checkout_mekkah,
+      isPromo: packageData.isPromo,
+      waGroup: packageData.wa_group,
+      notes: packageData.notes,
+      hotelRooms
+      // createdBy: packageData.createdByUser?.name ?? null,
+      // createdAt: packageData.created_at,
+      // updatedBy: packageData.updatedByUser?.name ?? null,
+      // updatedAt: packageData.updated_at,
+      // hotelRooms: Array.from(hotelRoomMap.values()),
+    };
+
+    return { data: response };
   }
 
   // Testing Upload

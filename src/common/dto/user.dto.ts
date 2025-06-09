@@ -38,13 +38,13 @@ export class RegisterUserRequest {
   })
   name: string;
 
-  @IsIn(['0', '1'])
-  @ApiProperty({
-    description: 'Tipe pengguna: 0 = staff, 1 = agent',
-    example: 1,
-    enum: ['0', '1'],
-  })
-  type: string;
+  // @IsIn(['0', '1'])
+  // @ApiProperty({
+  //   description: 'Tipe pengguna: 0 = staff, 1 = agent',
+  //   example: 1,
+  //   enum: ['0', '1'],
+  // })
+  // type: string;
 }
 
 export class LoginUserRequest {
@@ -461,6 +461,8 @@ export class ListAgentRequest {
     'name',
     'phone',
     'email',
+    'bankName',
+    'accountNumber',
     'isActive',
     'createdBy',
     'createdAt',
@@ -473,6 +475,8 @@ export class ListAgentRequest {
       'name',
       'phone',
       'email',
+      'bankName',
+      'accountNumber',
       'isActive',
       'createdBy',
       'createdAt',

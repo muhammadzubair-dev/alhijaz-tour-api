@@ -21,7 +21,7 @@ model users {
   banned_until      DateTime?
   isDefaultPassword Boolean   @default(true)
   isActive          Boolean   @default(true)
-  type              String    @default("0") @db.Char(1)
+  type              String?   @db.Char(1) // 0: Staff, 1: Agent
   created_by        String?   @default("system")
   created_at        DateTime? @default(now())
   updated_by        String?   @default("system")

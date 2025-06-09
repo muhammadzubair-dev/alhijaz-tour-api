@@ -102,4 +102,31 @@ export class LovController {
     const result = await this.lovService.listPartner();
     return result;
   }
+
+  @Get('banks')
+  @HttpCode(HttpStatus.OK)
+  async listBank(
+    @Auth() _: users,
+  ): Promise<WebResponse<{ id: number, name: string }[]>> {
+    const result = await this.lovService.listBank();
+    return result;
+  }
+
+  @Get('user-agent')
+  @HttpCode(HttpStatus.OK)
+  async listUserAgent(
+    @Auth() user: users,
+  ): Promise<WebResponse<{ id: string, name: string }[]>> {
+    const result = await this.lovService.listUserAgent(user);
+    return result;
+  }
+
+  @Get('agents')
+  @HttpCode(HttpStatus.OK)
+  async listAgent(
+    @Auth() user: users,
+  ): Promise<WebResponse<{ id: number, name: string }[]>> {
+    const result = await this.lovService.listAgent(user);
+    return result;
+  }
 }

@@ -68,7 +68,6 @@ export class UserService {
       data: {
         username: request.username,
         name: request.name,
-        type: request.type,
         password: hashedPassword,
         created_by: authUser.id,
         updated_by: null,
@@ -215,8 +214,8 @@ export class UserService {
     // Cek apakah payload berbeda dengan data existing
     const isSameData =
       (payload.username ?? existingUser.username) === existingUser.username &&
-      (payload.name ?? existingUser.name) === existingUser.name &&
-      (payload.type ?? existingUser.type) === existingUser.type;
+      (payload.name ?? existingUser.name) === existingUser.name
+    // (payload.type ?? existingUser.type) === existingUser.type;
 
     if (isSameData) {
       throw new BadRequestException(
@@ -229,7 +228,7 @@ export class UserService {
       data: {
         username: payload.username ?? existingUser.username,
         name: payload.name ?? existingUser.name,
-        type: payload.type ?? existingUser.type,
+        // type: payload.type ?? existingUser.type,
         updated_by: authUser.id,
         updated_at: new Date()
       },
@@ -524,21 +523,29 @@ export class UserService {
       limit = 10,
     } = request;
 
-    const where = Object.fromEntries(
-      Object.entries({
-        ...(name && {
-          user: {
-            name: {
-              contains: name,
-              mode: 'insensitive',
-            },
+    const where: any = {
+      ...(name && {
+        user: {
+          name: {
+            contains: name,
+            mode: 'insensitive',
           },
-        }),
-        phone: phone ? { contains: phone, mode: 'insensitive' } : undefined,
-        email: email ? { contains: email, mode: 'insensitive' } : undefined,
-        isActive: isActive !== undefined ? isActive : undefined,
-      }).filter(([_, value]) => value !== undefined),
-    );
+        },
+      }),
+      ...(phone && {
+        phone: {
+          contains: phone,
+          mode: 'insensitive',
+        },
+      }),
+      ...(email && {
+        email: {
+          contains: email,
+          mode: 'insensitive',
+        },
+      }),
+      ...(isActive !== undefined && { isActive }),
+    };
 
     const total = await this.prisma.agents.count({ where });
     const totalPages = Math.ceil(total / limit);
@@ -611,9 +618,9 @@ export class UserService {
         coordinatorId: agent.coordinator_id,
         targetRemaining: agent.target_remaining,
         isActive: agent.isActive,
-        createdBy: agent.created_by,
+        createdBy: agent.createdByUser?.name || null,
         createdAt: agent.created_at,
-        updatedBy: agent.updated_by,
+        updatedBy: agent.updatedByUser?.name || null,
         updatedAt: agent.updated_at,
       })),
       paging: {
@@ -654,6 +661,15 @@ export class UserService {
         created_by: authUser.id,
         updated_by: null,
         updated_at: null
+      },
+    });
+
+    await this.prisma.users.update({
+      where: {
+        id: request.userId,
+      },
+      data: {
+        type: '1',
       },
     });
 

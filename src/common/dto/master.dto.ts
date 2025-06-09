@@ -559,7 +559,7 @@ class RoomDto {
   roomName: string;
 }
 
-class HotelRoomDto {
+export class HotelRoomDto {
   @Expose()
   @IsNumber()
   @ApiProperty()

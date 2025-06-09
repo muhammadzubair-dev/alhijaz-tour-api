@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { Inject, Injectable } from '@nestjs/common';
+import { users } from '@prisma/client';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { CityResponse, HotelResponse, JamaahResponse, PackageRoomResponse, PackageTypeResponse, RoomTypeResponse } from 'src/common/dto/master.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
@@ -22,7 +23,11 @@ export class LovService {
   }
 
   async listCity(): Promise<WebResponse<CityResponse[]>> {
-    const cities = await this.prisma.citys.findMany();
+    const cities = await this.prisma.citys.findMany({
+      where: {
+        status: '1'
+      }
+    });
     return {
       data: cities
     }
@@ -100,6 +105,9 @@ export class LovService {
         mid_name: true,
         last_name: true,
       },
+      where: {
+        status: '1'
+      }
     });
     return {
       data: jamaah.map((item) => ({
@@ -177,6 +185,72 @@ export class LovService {
       data: partners.map((item) => ({
         id: item.id,
         name: item.name,
+      })),
+    };
+  }
+
+  async listBank(): Promise<WebResponse<{ id: number, name: string }[]>> {
+    const banks = await this.prisma.banks.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      where: {
+        isActive: true
+      }
+    });
+    return {
+      data: banks.map((item) => ({
+        id: item.id,
+        name: item.name,
+      })),
+    };
+  }
+
+  async listUserAgent(user: users): Promise<WebResponse<{ id: string, name: string }[]>> {
+    const users = await this.prisma.users.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      where: {
+        isActive: true,
+        type: null,
+        id: {
+          not: user.id
+        }
+      }
+    });
+    return {
+      data: users.map((item) => ({
+        id: item.id,
+        name: item.name,
+      })),
+    };
+  }
+
+  async listAgent(user: users): Promise<WebResponse<{ id: number, name: string }[]>> {
+    const agents = await this.prisma.agents.findMany({
+      where: {
+        isActive: true,
+        user_id: {
+          not: user.id
+        }
+      },
+      select: {
+        id: true,
+        user: {
+          select: {
+            name: true,
+          }
+        }
+      }
+    });
+
+    return {
+      data: agents.map((item) => ({
+        id: item.id,
+        name: item.user.name,
       })),
     };
   }
