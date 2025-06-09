@@ -87,7 +87,10 @@ export class UserController {
   @Patch(':id/deactivate')
   @UserSwaggerDeactivate()
   @HttpCode(HttpStatus.OK)
-  async deactivateUser(@Auth() _: users, @Param('id') id: string) {
+  async deactivateUser(
+    @Auth() _: users,
+    @Param('id') id: string
+  ) {
     return this.userService.deactivateUser(id);
   }
 
@@ -154,7 +157,10 @@ export class UserController {
 
   @Delete('role/:id')
   @HttpCode(HttpStatus.OK)
-  async deleteRole(@Auth() _: users, @Param('id') id: number): Promise<{ message: string }> {
+  async deleteRole(
+    @Auth() _: users,
+    @Param('id') id: number
+  ): Promise<{ message: string }> {
     return this.userService.deleteRole(id);
   }
 

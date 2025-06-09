@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
 import { users } from '@prisma/client';
 import { Auth } from 'src/common/auth.decorator';
 import { WebResponse } from 'src/common/dto/web.dto';
@@ -30,6 +30,16 @@ export class TicketController {
     return { data: result };
   }
 
+  @Put(':id')
+  async updateTicket(
+    @Param('id') id: number,
+    @Auth() user: users,
+    @Body() body: CreateTicketDto,
+  ) {
+    const result = await this.ticketService.updateTicket(id, user, body);
+    return result;
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async registerTicket(
@@ -40,5 +50,15 @@ export class TicketController {
     return {
       data: result,
     };
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async deleteTicket(
+    @Auth() _: users,
+    @Param('id') id: number
+  ) {
+    const result = await this.ticketService.deleteTicket(id);
+    return result;
   }
 }

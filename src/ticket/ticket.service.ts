@@ -70,6 +70,102 @@ export class TicketService {
     });
   }
 
+  async updateTicket(
+    ticketId: number,
+    authUser: users,
+    request: CreateTicketDto
+  ): Promise<{ message: string }> {
+    const {
+      transactionDate,
+      partnerId,
+      bookingCode,
+      dayPack,
+      seatPack,
+      flight,
+    } = request;
+
+    return await this.prisma.$transaction(async (tx) => {
+      // Validasi bahwa ticket ada
+      const existingTicket = await tx.tickets.findUnique({
+        where: { id: ticketId },
+      });
+
+      if (!existingTicket) {
+        throw new NotFoundException(`Ticket with ID ${ticketId} not found`);
+      }
+
+      // Update tabel tickets
+      await tx.tickets.update({
+        where: { id: ticketId },
+        data: {
+          transaction_date: new Date(transactionDate),
+          partner_id: partnerId,
+          booking_code: bookingCode,
+          day_pack: dayPack,
+          seat_pack: seatPack,
+          updated_by: authUser.id,
+          updated_at: new Date(),
+        },
+      });
+
+      // Hapus detail lama
+      await tx.ticket_details.deleteMany({
+        where: { ticket_id: ticketId },
+      });
+
+      // Buat ulang detail baru
+      const newDetails = flight.map((item) => ({
+        ticket_id: ticketId,
+        type: item.type,
+        ticket_date: new Date(item.ticketDate),
+        ticket_airline: item.ticketAirline,
+        flight_no: item.flightNo,
+        ticket_from: item.ticketFrom,
+        ticket_etd: item.ticketEtd,
+        ticket_to: item.ticketTo,
+        ticket_eta: item.ticketEta,
+        created_by: authUser.id,
+        updated_by: null,
+        updated_at: null,
+      }));
+
+      await tx.ticket_details.createMany({
+        data: newDetails,
+      });
+
+      return {
+        message: `Ticket updated successfully (ID: ${ticketId})`,
+      };
+    });
+  }
+
+  async deleteTicket(ticketId: number): Promise<{ message: string }> {
+    const ticket = await this.prisma.tickets.findUnique({
+      where: { id: ticketId },
+      include: { ticket_details: true },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('Ticket tidak ditemukan');
+    }
+
+    return await this.prisma.$transaction(async (tx) => {
+      // Hapus detail penerbangan terlebih dahulu
+      await tx.ticket_details.deleteMany({
+        where: { ticket_id: ticketId },
+      });
+
+      // Hapus tiket utama
+      await tx.tickets.delete({
+        where: { id: ticketId },
+      });
+
+      return {
+        message: `Ticket dengan ID ${ticketId} berhasil dihapus.`,
+      };
+    });
+  }
+
   async ticketDetail(ticketId: number): Promise<TicketResponse> {
     const ticket = await this.prisma.tickets.findUnique({
       where: { id: ticketId },

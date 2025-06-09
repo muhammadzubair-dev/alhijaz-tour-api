@@ -16,6 +16,7 @@ export class MasterController {
   @Post('bank')
   @HttpCode(HttpStatus.CREATED)
   async registerBank(
+    @Auth() _: users,
     @Body() request: RegisterBankRequest,
   ): Promise<WebResponse<BankResponse>> {
     const result = await this.masterService.registerBank(request);
@@ -27,6 +28,7 @@ export class MasterController {
   @Patch('bank/:id')
   @HttpCode(HttpStatus.OK)
   async updateBank(
+    @Auth() _: users,
     @Param('id') id: number,
     @Body() request: Partial<RegisterBankRequest>,
   ): Promise<WebResponse<BankResponse>> {
@@ -39,6 +41,7 @@ export class MasterController {
   @Get('banks')
   @HttpCode(HttpStatus.OK)
   async listBanks(
+    @Auth() _: users,
     @Query() request: ListBankRequest,
   ): Promise<WebResponse<BankResponse[]>> {
     const result = await this.masterService.listBank(request);
@@ -47,7 +50,10 @@ export class MasterController {
 
   @Delete('bank/:id')
   @HttpCode(HttpStatus.OK)
-  async deleteBank(@Param('id') id: number): Promise<{ message: string }> {
+  async deleteBank(
+    @Auth() _: users,
+    @Param('id') id: number
+  ): Promise<{ message: string }> {
     return this.masterService.deleteBank(id);
   }
 
@@ -55,6 +61,7 @@ export class MasterController {
   @Post('sosmed')
   @HttpCode(HttpStatus.CREATED)
   async registerSosmed(
+    @Auth() _: users,
     @Body() request: RegisterSosmedRequest,
   ): Promise<WebResponse<SosmedResponse>> {
     const result = await this.masterService.registerSosmed(request);
@@ -66,6 +73,7 @@ export class MasterController {
   @Patch('sosmed/:id')
   @HttpCode(HttpStatus.OK)
   async updateSosmed(
+    @Auth() _: users,
     @Param('id') id: number,
     @Body() request: Partial<RegisterSosmedRequest>,
   ): Promise<WebResponse<SosmedResponse>> {
@@ -78,6 +86,7 @@ export class MasterController {
   @Get('sosmeds')
   @HttpCode(HttpStatus.OK)
   async listSosmed(
+    @Auth() _: users,
     @Query() request: ListSosmedRequest,
   ): Promise<WebResponse<SosmedResponse[]>> {
     const result = await this.masterService.listSosmed(request);
@@ -86,7 +95,10 @@ export class MasterController {
 
   @Delete('sosmed/:id')
   @HttpCode(HttpStatus.OK)
-  async deleteSosmed(@Param('id') id: number): Promise<{ message: string }> {
+  async deleteSosmed(
+    @Auth() _: users,
+    @Param('id') id: number
+  ): Promise<{ message: string }> {
     return this.masterService.deleteSosmed(id);
   }
 
@@ -143,6 +155,7 @@ export class MasterController {
   @Get('packages')
   @HttpCode(HttpStatus.OK)
   async listPackage(
+    @Auth() _: users,
     @Query() request: ListPackageRequest,
   ): Promise<WebResponse<PackageResponse[]>> {
     const result = await this.masterService.listPackage(request);
@@ -152,6 +165,7 @@ export class MasterController {
   @Get('packages/:packageId')
   @HttpCode(HttpStatus.OK)
   async packageDetail(
+    @Auth() _: users,
     @Param('packageId') packageId: string,
   ): Promise<WebResponse<PackageResponse>> {
     const result = await this.masterService.packageDetail(packageId);
@@ -160,6 +174,7 @@ export class MasterController {
 
   @Delete('package/:id')
   async deletePackage(
+    @Auth() _: users,
     @Param('id') id: string
   ) {
     const result = await this.masterService.deletePackage(id);
