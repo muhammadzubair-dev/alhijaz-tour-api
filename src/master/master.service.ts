@@ -524,7 +524,6 @@ export class MasterService {
       }),
     };
 
-
     const total = await this.prisma.packages.count({ where });
     const totalPages = Math.ceil(total / limit);
 
@@ -612,8 +611,6 @@ export class MasterService {
       },
     };
   }
-
-
 
   // Testing Upload
   async uploadAvatar(buffer: Buffer, originalName: string) {

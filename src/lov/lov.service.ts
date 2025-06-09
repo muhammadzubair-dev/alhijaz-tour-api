@@ -115,11 +115,68 @@ export class LovService {
         id: true,
         booking_code: true,
       },
+      where: {
+        status: '1'
+      }
     });
     return {
       data: jamaah.map((item) => ({
         id: item.id,
         bookingCode: item.booking_code,
+      })),
+    };
+  }
+
+  async listAirport(): Promise<WebResponse<{ code: string, name: string }[]>> {
+    const airports = await this.prisma.airport.findMany({
+      select: {
+        code: true,
+        name: true,
+      },
+      where: {
+        status: '1'
+      }
+    });
+    return {
+      data: airports.map((item) => ({
+        code: item.code,
+        name: item.name,
+      })),
+    };
+  }
+
+  async listAirline(): Promise<WebResponse<{ id: number, name: string }[]>> {
+    const airports = await this.prisma.airlines.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      where: {
+        status: '1'
+      }
+    });
+    return {
+      data: airports.map((item) => ({
+        id: item.id,
+        name: item.name,
+      })),
+    };
+  }
+
+  async listPartner(): Promise<WebResponse<{ id: number, name: string }[]>> {
+    const partners = await this.prisma.partners.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      where: {
+        status: '1'
+      }
+    });
+    return {
+      data: partners.map((item) => ({
+        id: item.id,
+        name: item.name,
       })),
     };
   }

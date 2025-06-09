@@ -75,4 +75,31 @@ export class LovController {
     const result = await this.lovService.listTicket();
     return result;
   }
+
+  @Get('airlines')
+  @HttpCode(HttpStatus.OK)
+  async listAirline(
+    @Auth() _: users,
+  ): Promise<WebResponse<{ id: number, name: string }[]>> {
+    const result = await this.lovService.listAirline();
+    return result;
+  }
+
+  @Get('airports')
+  @HttpCode(HttpStatus.OK)
+  async listAirport(
+    @Auth() _: users,
+  ): Promise<WebResponse<{ code: string, name: string }[]>> {
+    const result = await this.lovService.listAirport();
+    return result;
+  }
+
+  @Get('partners')
+  @HttpCode(HttpStatus.OK)
+  async listPartner(
+    @Auth() _: users,
+  ): Promise<WebResponse<{ id: number, name: string }[]>> {
+    const result = await this.lovService.listPartner();
+    return result;
+  }
 }

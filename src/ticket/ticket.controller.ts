@@ -1,16 +1,15 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, HttpCode, HttpStatus, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
 import { users } from '@prisma/client';
 import { Auth } from 'src/common/auth.decorator';
 import { WebResponse } from 'src/common/dto/web.dto';
-import { ListTicketRequest, TicketResponse } from './ticket.dto';
+import { CreateTicketDto, ListTicketRequest, TicketResponse } from './ticket.dto';
 import { TicketService } from './ticket.service';
 
 @Controller('api/tickets')
 export class TicketController {
   constructor(private ticketService: TicketService) { }
 
-  // Ticket
   @Get()
   @HttpCode(HttpStatus.OK)
   async listUser(
@@ -19,5 +18,17 @@ export class TicketController {
   ): Promise<WebResponse<TicketResponse[]>> {
     const result = await this.ticketService.listTicket(request);
     return result;
+  }
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  async registerTicket(
+    @Auth() user: users,
+    @Body() request: CreateTicketDto,
+  ): Promise<WebResponse<{ message: string }>> {
+    const result = await this.ticketService.registerTicket(user, request);
+    return {
+      data: result,
+    };
   }
 }

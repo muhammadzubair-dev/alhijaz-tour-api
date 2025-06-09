@@ -4,8 +4,9 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import { Logger } from 'winston';
-import { ListTicketRequest, TicketResponse } from './ticket.dto';
+import { CreateTicketDto, ListTicketRequest, TicketResponse } from './ticket.dto';
 import { camelToSnakeCase } from 'src/common/utils/camelToSnakeCase';
+import { users } from '@prisma/client';
 
 @Injectable()
 export class TicketService {
@@ -15,6 +16,60 @@ export class TicketService {
   ) { }
 
   // Ticket
+  async registerTicket(authUser: users, request: CreateTicketDto) {
+    const {
+      transactionDate,
+      partnerId,
+      bookingCode,
+      dayPack,
+      seatPack,
+      flight,
+    } = request;
+
+    return await this.prisma.$transaction(async (tx) => {
+      // Insert tiket utama
+      const ticket = await tx.tickets.create({
+        data: {
+          transaction_date: new Date(transactionDate),
+          partner_id: partnerId,
+          booking_code: bookingCode,
+          day_pack: dayPack,
+          seat_pack: seatPack,
+          materialisasi: 0,
+          cancel: 0,
+          status: '1',
+          created_by: authUser.id,
+          updated_by: null,
+          updated_at: null,
+        },
+      });
+      // Mapping detail penerbangan
+      const detailData = flight.map((item) => ({
+        ticket_id: ticket.id,
+        type: item.type,
+        ticket_date: new Date(item.ticketDate),
+        ticket_airline: item.ticketAirline,
+        flight_no: item.flightNo,
+        ticket_from: item.ticketFrom,
+        ticket_etd: item.ticketEtd,
+        ticket_to: item.ticketTo,
+        ticket_eta: item.ticketEta,
+        created_by: authUser.id,
+        updated_by: null,
+        updated_at: null,
+      }));
+
+      // Insert semua detail
+      await tx.ticket_details.createMany({
+        data: detailData,
+      });
+
+      return {
+        message: `Ticket registered successfully ${ticket.id}`,
+      };
+    });
+  }
+
   async listTicket(
     request: ListTicketRequest,
   ): Promise<WebResponse<TicketResponse[]>> {
@@ -60,7 +115,9 @@ export class TicketService {
     const total = await this.prisma.tickets.count({ where });
     const totalPages = Math.ceil(total / limit);
 
-    let orderBy: any = undefined;
+    let orderBy: any = {
+      created_at: 'desc', // default jika tidak ada sortBy
+    };
 
     if (sortBy) {
       if (sortBy === 'partnerName') {
@@ -126,7 +183,7 @@ export class TicketService {
         status: ticket.status,
         createdBy: ticket.createdByUser.name,
         createdAt: ticket.created_at,
-        updatedBy: ticket.updatedByUser.name,
+        updatedBy: ticket.updatedByUser?.name ?? null,
         updatedAt: ticket.updated_at,
       })),
       paging: {

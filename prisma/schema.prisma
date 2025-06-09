@@ -628,9 +628,9 @@ model ticket_details {
   ticket_airline Int
   flight_no      String? // varchar, bisa nullable jika perlu
   ticket_from    String    @db.VarChar(5)
-  ticket_etd     Int
+  ticket_etd     String    @db.VarChar(5)
   ticket_to      String    @db.VarChar(5)
-  ticket_eta     Int
+  ticket_eta     String    @db.VarChar(5)
   created_by     String?   @default("system")
   created_at     DateTime? @default(now())
   updated_by     String?   @default("system")
@@ -646,7 +646,7 @@ model ticket_details {
 
 model airport {
   code       String    @id @db.VarChar(5)
-  name       String    @db.VarChar(25)
+  name       String    @db.VarChar(100)
   status     String    @db.Char(1)
   created_by String?   @default("system")
   created_at DateTime? @default(now())

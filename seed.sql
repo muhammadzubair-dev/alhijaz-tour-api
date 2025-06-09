@@ -150,3 +150,22 @@ INSERT INTO neighborhoods (
 (17, 4, 2, 'Kebon Baru', '1', null, NOW(), null, NOW()),
 (17, 4, 2, 'Manggarai Selatan', '1', null, NOW(), null, NOW());
 
+INSERT INTO airlines (name, display_name, status, created_by, created_at, updated_by, updated_at) VALUES
+    ('Garuda Indonesia', 'Garuda', '1', null, NOW(), null, NOW()),
+    ('Lion Air', 'Lion', '1', null, NOW(), null, NOW()),
+    ('Citilink', 'Citilink', '1', null, NOW(), null, NOW()),
+    ('Batik Air', 'Batik', '1', null, NOW(), null, NOW());
+
+INSERT INTO airport (code, name, status, created_by, created_at, updated_by, updated_at) VALUES
+    -- 🇮🇩 Indonesia
+    ('CGK', 'Soekarno Hatta', '1', null, NOW(), null, NOW()),
+    ('SUB', 'Juanda', '1', null, NOW(), null, NOW()),
+    -- 🇸🇦 Mekkah (terdekat: Jeddah)
+    ('JED', 'King Abdulaziz', '1', null, NOW(), null, NOW()),
+    ('TIF', 'Taif Regional', '1', null, NOW(), null, NOW()),
+    -- 🇸🇦 Madinah
+    ('MED', 'Prince Mohammad bin Abdulaziz', '1', null, NOW(), null, NOW()),
+    ('YNB', 'Yanbu Airport', '1', null, NOW(), null, NOW()),
+    -- 🇹🇷 Turki
+    ('IST', 'Istanbul Airport', '1', null, NOW(), null, NOW()),
+    ('SAW', 'Sabiha Gokcen', '1', null, NOW(), null, NOW());
