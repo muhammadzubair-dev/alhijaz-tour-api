@@ -6,6 +6,7 @@ import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { CityResponse, HotelResponse, JamaahResponse, PackageRoomResponse, PackageTypeResponse, RoomTypeResponse } from 'src/common/dto/master.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
+import snakeToCamelObject from 'src/common/utils/snakeToCamelObject';
 import { Logger } from 'winston';
 
 @Injectable()
@@ -116,6 +117,20 @@ export class LovService {
       })),
     };
   }
+
+  async getJamaahByIdentityNumber(identityNumber: string): Promise<WebResponse<any | null>> {
+    const jamaah = await this.prisma.jamaah.findFirst({
+      where: {
+        identity_number: identityNumber,
+        status: '1',
+      },
+    });
+
+    return {
+      data: snakeToCamelObject(jamaah),
+    };
+  }
+
 
   async listTicket(): Promise<WebResponse<{ bookingCode: string }[]>> {
     const jamaah = await this.prisma.tickets.findMany({

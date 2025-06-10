@@ -341,7 +341,7 @@ model jamaah {
   first_name        String   @db.VarChar(25)
   mid_name          String?  @db.VarChar(25)
   last_name         String?  @db.VarChar(25)
-  identity_number   String   @db.VarChar(10)
+  identity_number   String   @db.VarChar(16)
   birth_place       String   @db.VarChar(10)
   birth_date        DateTime
   gender            Int // enum: 0: laki-laki, 1: perempuan

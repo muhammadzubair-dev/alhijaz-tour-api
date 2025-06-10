@@ -67,6 +67,16 @@ export class LovController {
     return result;
   }
 
+  @Get('jamaah/:identityNumber')
+  @HttpCode(HttpStatus.OK)
+  async getJamaahByIdentityNumber(
+    @Auth() _: users,
+    @Param('identityNumber') identityNumber: string,
+  ): Promise<WebResponse<any>> {
+    const result = await this.lovService.getJamaahByIdentityNumber(identityNumber);
+    return result;
+  }
+
   @Get('tickets')
   @HttpCode(HttpStatus.OK)
   async listTicket(
