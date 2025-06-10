@@ -937,3 +937,92 @@ export class AirportResponse {
   })
   status: string;
 }
+
+// Airlines
+export class RegisterAirlineRequest {
+  @IsString()
+  @MinLength(3)
+  @MaxLength(50)
+  @ApiProperty({
+    description: 'Nama Pesawat',
+    example: 'BCA',
+    minLength: 3,
+    maxLength: 50,
+  })
+  name: string;
+
+  @IsIn(['0', '1'])
+  @ApiProperty({
+    description: 'Tipe status: 0 = Tidak Aktif, 1 = Aktif',
+    example: 1,
+    enum: ['0', '1'],
+  })
+  status: string;
+}
+
+export class ListAirlineRequest {
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'Filter name (like)' })
+  name?: string;
+
+  @IsOptional()
+  @IsIn(['0', '1'])
+  @ApiPropertyOptional({
+    description: 'Tipe status: 0 = Tidak Aktif, 1 = Aktif',
+    example: 1,
+    enum: ['0', '1'],
+  })
+  status: string;
+
+  @IsOptional()
+  @IsIn(['name', 'status', 'createdBy', 'createdAt', 'updatedBy', 'updatedAt'])
+  @ApiPropertyOptional({
+    description: 'Sort by field',
+    enum: [
+      'name',
+      'status',
+      'createdBy',
+      'createdAt',
+      'updatedBy',
+      'updatedAt',
+    ],
+  })
+  sortBy?: string;
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  @ApiPropertyOptional({ description: 'Sort direction', enum: ['asc', 'desc'] })
+  sortOrder?: 'asc' | 'desc';
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @ApiPropertyOptional({ default: 1, description: 'Halaman ke-' })
+  page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @ApiPropertyOptional({ default: 10, description: 'Jumlah data per halaman' })
+  limit?: number;
+}
+
+export class AirlineResponse {
+  @ApiProperty({
+    example: 22,
+  })
+  id: number;
+
+  @ApiProperty({
+    example: 'Soekarno Hatta',
+  })
+  name: string;
+
+  @ApiProperty({
+    example: '1',
+  })
+  status: string;
+}

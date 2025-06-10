@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Query, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
-import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RegisterPackageRequest, CreatePackageRequestDto, ListPackageRequest, PackageResponse, RegisterAirportRequest, AirportResponse, ListAirportRequest } from "src/common/dto/master.dto";
+import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RegisterPackageRequest, CreatePackageRequestDto, ListPackageRequest, PackageResponse, RegisterAirportRequest, AirportResponse, ListAirportRequest, RegisterAirlineRequest, AirlineResponse, ListAirlineRequest } from "src/common/dto/master.dto";
 import { WebResponse } from "src/common/dto/web.dto";
 import { MasterService } from "./master.service";
 import { Auth } from "src/common/auth.decorator";
@@ -100,6 +100,51 @@ export class MasterController {
     @Param('code') code: string
   ): Promise<{ message: string }> {
     return this.masterService.deleteAirport(code);
+  }
+
+  // Airline
+  @Post('airline')
+  @HttpCode(HttpStatus.CREATED)
+  async registerAirline(
+    @Auth() user: users,
+    @Body() request: RegisterAirlineRequest,
+  ): Promise<WebResponse<AirlineResponse>> {
+    const result = await this.masterService.registerAirline(user, request);
+    return {
+      data: result,
+    };
+  }
+
+  @Patch('airline/:id')
+  @HttpCode(HttpStatus.OK)
+  async updateAirline(
+    @Auth() user: users,
+    @Param('id') id: number,
+    @Body() request: Partial<RegisterAirlineRequest>,
+  ): Promise<WebResponse<AirlineResponse>> {
+    const result = await this.masterService.updateAirline(user, id, request);
+    return {
+      data: result,
+    };
+  }
+
+  @Get('airlines')
+  @HttpCode(HttpStatus.OK)
+  async listAirline(
+    @Auth() _: users,
+    @Query() request: ListAirlineRequest,
+  ): Promise<WebResponse<AirlineResponse[]>> {
+    const result = await this.masterService.listAirline(request);
+    return result;
+  }
+
+  @Delete('airline/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteAirline(
+    @Auth() _: users,
+    @Param('id') id: number
+  ): Promise<{ message: string }> {
+    return this.masterService.deleteAirline(id);
   }
 
   // Sosmed

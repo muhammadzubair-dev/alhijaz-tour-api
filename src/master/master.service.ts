@@ -4,7 +4,7 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from '@nes
 import { users } from '@prisma/client';
 import moment from 'moment';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest, CreatePackageRequestDto, PackageResponse, ListPackageRequest, HotelRoomDto, AirportResponse, ListAirportRequest, RegisterAirportRequest } from 'src/common/dto/master.dto';
+import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest, CreatePackageRequestDto, PackageResponse, ListPackageRequest, HotelRoomDto, AirportResponse, ListAirportRequest, RegisterAirportRequest, ListAirlineRequest, AirlineResponse, RegisterAirlineRequest } from 'src/common/dto/master.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import { UploadService } from 'src/common/upload.service';
@@ -358,7 +358,7 @@ export class MasterService {
         message = 'Kode Airport sudah terdaftar';
       }
 
-      this.logger.warn(`Duplicate bank found: ${message}`);
+      this.logger.warn(`Duplicate airport found: ${message}`);
       throw new BadRequestException(message);
     }
 
@@ -476,6 +476,211 @@ export class MasterService {
     });
 
     return { message: `Airport with code ${code} deleted successfully.`, code };
+  }
+
+  // Airlines
+  async listAirline(
+    request: ListAirlineRequest,
+  ): Promise<WebResponse<AirlineResponse[]>> {
+    const {
+      name,
+      status,
+      sortBy,
+      sortOrder,
+      page = 1,
+      limit = 10,
+    } = request;
+
+    const where: any = {
+      ...(name && { name: { contains: name, mode: 'insensitive' } }),
+      ...(status && { status }),
+    };
+
+    let orderBy: any = {
+      created_at: 'desc', // default jika tidak ada sortBy
+    };
+
+    if (sortBy) {
+      if (sortBy === 'createdBy') {
+        orderBy = {
+          createdByUser: {
+            name: sortOrder ?? 'asc',
+          },
+        };
+      } else if (sortBy === 'updatedBy') {
+        orderBy = {
+          updatedByUser: {
+            name: sortOrder ?? 'asc',
+          },
+        };
+      } else {
+        orderBy = {
+          [camelToSnakeCase(sortBy)]: sortOrder ?? 'asc',
+        };
+      }
+    }
+
+    const total = await this.prisma.airlines.count({ where });
+    const totalPages = Math.ceil(total / limit);
+
+    const airlines = await this.prisma.airlines.findMany({
+      where,
+      orderBy,
+      include: {
+        createdByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return {
+      data: airlines.map((item) => ({
+        id: item.id,
+        name: item.name,
+        status: item.status,
+        createdBy: item.createdByUser?.name || null,
+        createdAt: item.created_at,
+        updatedBy: item.updatedByUser?.name || null,
+        updatedAt: item.updated_at,
+      })),
+      paging: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
+  }
+
+  async registerAirline(
+    user: users,
+    request: RegisterAirlineRequest
+  ): Promise<AirlineResponse> {
+    this.logger.info(`Registering new airlines: ${request.name}`);
+
+    const existingAirline = await this.prisma.airlines.findFirst({
+      where: {
+        name: request.name
+      },
+    });
+
+    if (existingAirline) {
+      let message = 'Airline sudah terdaftar';
+      if (existingAirline.name === request.name) {
+        message = 'Nama Airline sudah terdaftar';
+      }
+
+      this.logger.warn(`Duplicate airline found: ${message}`);
+      throw new BadRequestException(message);
+    }
+
+    const airline = await this.prisma.airlines.create({
+      data: {
+        name: request.name,
+        status: request.status,
+        created_by: user.id,
+        updated_by: null,
+        updated_at: null
+      },
+    });
+
+    this.logger.info(`Airport registered: ${airline.name}`);
+    return {
+      id: airline.id,
+      name: airline.name,
+      status: airline.status,
+    };
+  }
+
+  async updateAirline(
+    user: users,
+    id: number,
+    payload: Partial<RegisterAirlineRequest>,
+  ): Promise<AirlineResponse> {
+    const existingMaster = await this.prisma.airlines.findUnique({
+      where: { id },
+    });
+
+    if (!existingMaster) {
+      throw new NotFoundException(`Airline with id ${id} not found`);
+    }
+
+    // Validasi name atau bankCode yang ingin diubah
+    if (
+      (payload.name && payload.name !== existingMaster.name)
+    ) {
+      const conflictAirline = await this.prisma.airlines.findFirst({
+        where: {
+          name: payload.name,
+          NOT: { id: id }
+        }
+      });
+
+      if (conflictAirline) {
+        const nameConflict = conflictAirline.name === payload.name;
+        let message = 'Airport data already in use by another master.';
+        if (nameConflict) {
+          message = 'Nama Airline sudah dipakai oleh master lain.';
+        }
+        throw new BadRequestException(message);
+      }
+    }
+
+    // Cek apakah payload berbeda dengan data existing
+    const isSameData =
+      (payload.name ?? existingMaster.name) === existingMaster.name &&
+      (payload.status ?? existingMaster.status) === existingMaster.status;
+
+    if (isSameData) {
+      if (isSameData) {
+        throw new BadRequestException(
+          'No changes detected in the update request',
+        );
+      }
+    }
+
+    const updatedAirport = await this.prisma.airlines.update({
+      where: { id },
+      data: {
+        name: payload.name ?? existingMaster.name,
+        status: payload.status ?? existingMaster.status,
+        updated_by: user.id,
+        updated_at: new Date()
+      },
+    });
+
+    return {
+      id: id,
+      name: updatedAirport.name,
+      status: updatedAirport.status,
+    };
+  }
+
+  async deleteAirline(id: number): Promise<{ message: string, id: number }> {
+    const existingAirline = await this.prisma.airlines.findUnique({
+      where: { id },
+    });
+
+    if (!existingAirline) {
+      throw new NotFoundException(`Airline with id ${id} not found`);
+    }
+
+    await this.prisma.airlines.delete({
+      where: { id },
+    });
+
+    return { message: `Airline with id ${id} deleted successfully.`, id };
   }
 
   // Sosmed
