@@ -23,7 +23,7 @@ export class RegisterBankRequest {
   @ApiProperty({
     description: 'Kode Bank',
     example: '014',
-    minLength: 4,
+    minLength: 3,
     maxLength: 10,
   })
   bankCode: string;
@@ -822,4 +822,118 @@ export class JamaahResponse {
     example: 'Khalid',
   })
   jamaahName: string;
+}
+
+// Airport
+export class RegisterAirportRequest {
+  @IsString()
+  @MinLength(3)
+  @MaxLength(5)
+  @ApiProperty({
+    description: 'Kode Bandara',
+    example: 'CGK',
+    minLength: 3,
+    maxLength: 5,
+  })
+  code: string;
+
+  @IsString()
+  @MinLength(3)
+  @MaxLength(100)
+  @ApiProperty({
+    description: 'Nama Bandara',
+    example: 'BCA',
+    minLength: 3,
+    maxLength: 100,
+  })
+  name: string;
+
+  @IsIn(['0', '1'])
+  @ApiProperty({
+    description: 'Tipe status: 0 = Tidak Aktif, 1 = Aktif',
+    example: 1,
+    enum: ['0', '1'],
+  })
+  status: string;
+}
+
+export class ListAirportRequest {
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'Filter code airport (like)' })
+  code?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ description: 'Filter name (like)' })
+  name?: string;
+
+  @IsOptional()
+  @IsIn(['0', '1'])
+  @ApiPropertyOptional({
+    description: 'Tipe status: 0 = Tidak Aktif, 1 = Aktif',
+    example: 1,
+    enum: ['0', '1'],
+  })
+  status: string;
+
+  @IsOptional()
+  @IsIn([
+    'code',
+    'name',
+    'status',
+    'createdBy',
+    'createdAt',
+    'updatedBy',
+    'updatedAt',
+  ])
+  @ApiPropertyOptional({
+    description: 'Sort by field',
+    enum: [
+      'code',
+      'name',
+      'status',
+      'createdBy',
+      'createdAt',
+      'updatedBy',
+      'updatedAt',
+    ],
+  })
+  sortBy?: string;
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  @ApiPropertyOptional({ description: 'Sort direction', enum: ['asc', 'desc'] })
+  sortOrder?: 'asc' | 'desc';
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @ApiPropertyOptional({ default: 1, description: 'Halaman ke-' })
+  page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @ApiPropertyOptional({ default: 10, description: 'Jumlah data per halaman' })
+  limit?: number;
+}
+
+export class AirportResponse {
+  @ApiProperty({
+    example: 'CGK',
+  })
+  code: string;
+
+  @ApiProperty({
+    example: 'Soekarno Hatta',
+  })
+  name: string;
+
+  @ApiProperty({
+    example: '1',
+  })
+  status: string;
 }

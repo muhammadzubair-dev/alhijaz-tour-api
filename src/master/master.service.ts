@@ -4,7 +4,7 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from '@nes
 import { users } from '@prisma/client';
 import moment from 'moment';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest, CreatePackageRequestDto, PackageResponse, ListPackageRequest, HotelRoomDto } from 'src/common/dto/master.dto';
+import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest, CreatePackageRequestDto, PackageResponse, ListPackageRequest, HotelRoomDto, AirportResponse, ListAirportRequest, RegisterAirportRequest } from 'src/common/dto/master.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import { UploadService } from 'src/common/upload.service';
@@ -34,24 +34,56 @@ export class MasterService {
       limit = 10,
     } = request;
 
-    const where = Object.fromEntries(
-      Object.entries({
-        bank_code: bankCode ? { contains: bankCode, mode: 'insensitive' } : undefined,
-        name: name ? { contains: name, mode: 'insensitive' } : undefined,
-        isActive: isActive !== undefined ? isActive : undefined,
-      }).filter(([_, value]) => value !== undefined),
-    );
+    const where: any = {
+      ...(bankCode && { bank_code: { contains: bankCode, mode: 'insensitive' } }),
+      ...(name && { name: { contains: name, mode: 'insensitive' } }),
+      ...(isActive !== undefined && { isActive }),
+    };
+
+    let orderBy: any = {
+      created_at: 'desc', // default jika tidak ada sortBy
+    };
+
+    if (sortBy) {
+      if (sortBy === 'createdBy') {
+        orderBy = {
+          createdByUser: {
+            name: sortOrder ?? 'asc',
+          },
+        };
+      } else if (sortBy === 'updatedBy') {
+        orderBy = {
+          updatedByUser: {
+            name: sortOrder ?? 'asc',
+          },
+        };
+      } else {
+        orderBy = {
+          [camelToSnakeCase(sortBy, ['isActive'])]: sortOrder ?? 'asc',
+        };
+      }
+    }
 
     const total = await this.prisma.banks.count({ where });
     const totalPages = Math.ceil(total / limit);
 
     const banks = await this.prisma.banks.findMany({
       where,
-      orderBy: sortBy
-        ? {
-          [camelToSnakeCase(sortBy, ['isActive'])]: sortOrder ?? 'asc',
-        }
-        : undefined,
+      orderBy,
+      include: {
+        createdByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
       skip: (page - 1) * limit,
       take: limit,
     });
@@ -62,9 +94,9 @@ export class MasterService {
         bankCode: bank.bank_code,
         name: bank.name,
         isActive: bank.isActive,
-        createdBy: bank.created_by,
+        createdBy: bank.createdByUser?.name || null,
         createdAt: bank.created_at,
-        updatedBy: bank.updated_by,
+        updatedBy: bank.updatedByUser?.name || null,
         updatedAt: bank.updated_at,
       })),
       paging: {
@@ -76,7 +108,7 @@ export class MasterService {
     };
   }
 
-  async registerBank(request: RegisterBankRequest): Promise<BankResponse> {
+  async registerBank(user: users, request: RegisterBankRequest): Promise<BankResponse> {
     this.logger.info(`Registering new bank: ${request.name}`);
 
     const existingBank = await this.prisma.banks.findFirst({
@@ -105,6 +137,9 @@ export class MasterService {
         bank_code: request.bankCode,
         name: request.name,
         isActive: request.isActive,
+        created_by: user.id,
+        updated_by: null,
+        updated_at: null
       },
     });
 
@@ -119,6 +154,7 @@ export class MasterService {
   }
 
   async updateBank(
+    user: users,
     bankId: number,
     payload: Partial<RegisterBankRequest>,
   ): Promise<BankResponse> {
@@ -186,6 +222,8 @@ export class MasterService {
         name: payload.name ?? existingMaster.name,
         bank_code: payload.bankCode ?? existingMaster.bank_code,
         isActive: payload.isActive ?? existingMaster.isActive,
+        updated_by: user.id,
+        updated_at: new Date()
       },
     });
 
@@ -211,6 +249,233 @@ export class MasterService {
     });
 
     return { message: `Bank with ID ${id} deleted successfully.` };
+  }
+
+  // Airport
+  async listAirport(
+    request: ListAirportRequest,
+  ): Promise<WebResponse<AirportResponse[]>> {
+    const {
+      code,
+      name,
+      status,
+      sortBy,
+      sortOrder,
+      page = 1,
+      limit = 10,
+    } = request;
+
+    const where: any = {
+      ...(code && { code: { contains: code, mode: 'insensitive' } }),
+      ...(name && { name: { contains: name, mode: 'insensitive' } }),
+      ...(status && { status }),
+    };
+
+    let orderBy: any = {
+      created_at: 'desc', // default jika tidak ada sortBy
+    };
+
+    if (sortBy) {
+      if (sortBy === 'createdBy') {
+        orderBy = {
+          createdByUser: {
+            name: sortOrder ?? 'asc',
+          },
+        };
+      } else if (sortBy === 'updatedBy') {
+        orderBy = {
+          updatedByUser: {
+            name: sortOrder ?? 'asc',
+          },
+        };
+      } else {
+        orderBy = {
+          [camelToSnakeCase(sortBy)]: sortOrder ?? 'asc',
+        };
+      }
+    }
+
+    const total = await this.prisma.airport.count({ where });
+    const totalPages = Math.ceil(total / limit);
+
+    const airports = await this.prisma.airport.findMany({
+      where,
+      orderBy,
+      include: {
+        createdByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return {
+      data: airports.map((item) => ({
+        code: item.code,
+        name: item.name,
+        status: item.status,
+        createdBy: item.createdByUser?.name || null,
+        createdAt: item.created_at,
+        updatedBy: item.updatedByUser?.name || null,
+        updatedAt: item.updated_at,
+      })),
+      paging: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
+  }
+
+  async registerAirport(user: users, request: RegisterAirportRequest): Promise<AirportResponse> {
+    this.logger.info(`Registering new bank: ${request.name}`);
+
+    const existingAirport = await this.prisma.airport.findFirst({
+      where: {
+        OR: [
+          { name: request.name },
+          { code: request.code },
+        ],
+      },
+    });
+
+    if (existingAirport) {
+      let message = 'Airport sudah terdaftar';
+      if (existingAirport.name === request.name) {
+        message = 'Nama Airport sudah terdaftar';
+      } else if (existingAirport.code === request.code) {
+        message = 'Kode Airport sudah terdaftar';
+      }
+
+      this.logger.warn(`Duplicate bank found: ${message}`);
+      throw new BadRequestException(message);
+    }
+
+    const airport = await this.prisma.airport.create({
+      data: {
+        code: request.code,
+        name: request.name,
+        status: request.status,
+        created_by: user.id,
+        updated_by: null,
+        updated_at: null
+      },
+    });
+
+    this.logger.info(`Airport registered: ${airport.name}`);
+    return {
+      code: airport.code,
+      name: airport.name,
+      status: airport.status,
+    };
+  }
+
+  async updateAirport(
+    user: users,
+    code: string,
+    payload: Partial<RegisterAirportRequest>,
+  ): Promise<AirportResponse> {
+    const existingMaster = await this.prisma.airport.findUnique({
+      where: { code },
+    });
+
+    if (!existingMaster) {
+      throw new NotFoundException(`Airport with code ${code} not found`);
+    }
+
+    // Validasi name atau bankCode yang ingin diubah
+    if (
+      (payload.name && payload.name !== existingMaster.name) ||
+      (payload.code && payload.code !== existingMaster.code)
+    ) {
+      const conflictAirport = await this.prisma.airport.findFirst({
+        where: {
+          AND: [
+            {
+              OR: [
+                { name: payload.name },
+                { code: payload.code },
+              ],
+            },
+            {
+              NOT: { code: code }, // pastikan bukan dirinya sendiri
+            },
+          ],
+        },
+      });
+
+      if (conflictAirport) {
+        const nameConflict = conflictAirport.name === payload.name;
+        const codeConflict = conflictAirport.code === payload.code;
+        let message = 'Airport data already in use by another master.';
+        if (nameConflict && codeConflict) {
+          message = 'Nama Airport dan Kode Airport sudah dipakai oleh master lain.';
+        } else if (nameConflict) {
+          message = 'Nama Airport sudah dipakai oleh master lain.';
+        } else if (codeConflict) {
+          message = 'Kode Airport sudah dipakai oleh master lain.';
+        }
+        throw new BadRequestException(message);
+      }
+    }
+
+    // Cek apakah payload berbeda dengan data existing
+    const isSameData =
+      (payload.name ?? existingMaster.name) === existingMaster.name &&
+      (payload.code ?? existingMaster.code) === existingMaster.code &&
+      (payload.status ?? existingMaster.status) === existingMaster.status;
+
+    if (isSameData) {
+      if (isSameData) {
+        throw new BadRequestException(
+          'No changes detected in the update request',
+        );
+      }
+    }
+
+    const updatedAirport = await this.prisma.airport.update({
+      where: { code },
+      data: {
+        name: payload.name ?? existingMaster.name,
+        code: payload.code ?? existingMaster.code,
+        status: payload.status ?? existingMaster.status,
+        updated_by: user.id,
+        updated_at: new Date()
+      },
+    });
+
+    return {
+      code: code,
+      name: updatedAirport.name,
+      status: updatedAirport.status,
+    };
+  }
+
+  async deleteAirport(code: string): Promise<{ message: string, code: string }> {
+    const existingAirport = await this.prisma.airport.findUnique({
+      where: { code },
+    });
+
+    if (!existingAirport) {
+      throw new NotFoundException(`Airport with code ${code} not found`);
+    }
+
+    await this.prisma.airport.delete({
+      where: { code },
+    });
+
+    return { message: `Airport with code ${code} deleted successfully.`, code };
   }
 
   // Sosmed

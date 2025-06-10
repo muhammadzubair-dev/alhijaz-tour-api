@@ -43,6 +43,10 @@ model users {
   agentsCreated agents[] @relation("AgentCreatedBy")
   agentsUpdated agents[] @relation("AgentUpdatedBy")
 
+  // Relations from banks table
+  banksCreated banks[] @relation("BanksCreatedBy")
+  banksUpdated banks[] @relation("BanksUpdatedBy")
+
   agents     agents[]
   user_roles user_roles[]
 
@@ -252,6 +256,10 @@ model banks {
   updated_at DateTime? @default(now())
 
   agents agents[]
+
+  // Relasi ke users
+  createdByUser users? @relation("BanksCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users? @relation("BanksUpdatedBy", fields: [updated_by], references: [id])
 }
 
 model user_roles {

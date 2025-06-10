@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Query, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
-import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RegisterPackageRequest, CreatePackageRequestDto, ListPackageRequest, PackageResponse } from "src/common/dto/master.dto";
+import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RegisterPackageRequest, CreatePackageRequestDto, ListPackageRequest, PackageResponse, RegisterAirportRequest, AirportResponse, ListAirportRequest } from "src/common/dto/master.dto";
 import { WebResponse } from "src/common/dto/web.dto";
 import { MasterService } from "./master.service";
 import { Auth } from "src/common/auth.decorator";
@@ -16,10 +16,10 @@ export class MasterController {
   @Post('bank')
   @HttpCode(HttpStatus.CREATED)
   async registerBank(
-    @Auth() _: users,
+    @Auth() user: users,
     @Body() request: RegisterBankRequest,
   ): Promise<WebResponse<BankResponse>> {
-    const result = await this.masterService.registerBank(request);
+    const result = await this.masterService.registerBank(user, request);
     return {
       data: result,
     };
@@ -28,11 +28,11 @@ export class MasterController {
   @Patch('bank/:id')
   @HttpCode(HttpStatus.OK)
   async updateBank(
-    @Auth() _: users,
+    @Auth() user: users,
     @Param('id') id: number,
     @Body() request: Partial<RegisterBankRequest>,
   ): Promise<WebResponse<BankResponse>> {
-    const result = await this.masterService.updateBank(id, request);
+    const result = await this.masterService.updateBank(user, id, request);
     return {
       data: result,
     };
@@ -55,6 +55,51 @@ export class MasterController {
     @Param('id') id: number
   ): Promise<{ message: string }> {
     return this.masterService.deleteBank(id);
+  }
+
+  // Airport
+  @Post('airport')
+  @HttpCode(HttpStatus.CREATED)
+  async registerAirport(
+    @Auth() user: users,
+    @Body() request: RegisterAirportRequest,
+  ): Promise<WebResponse<AirportResponse>> {
+    const result = await this.masterService.registerAirport(user, request);
+    return {
+      data: result,
+    };
+  }
+
+  @Patch('airport/:code')
+  @HttpCode(HttpStatus.OK)
+  async updateRequest(
+    @Auth() user: users,
+    @Param('code') code: string,
+    @Body() request: Partial<RegisterAirportRequest>,
+  ): Promise<WebResponse<AirportResponse>> {
+    const result = await this.masterService.updateAirport(user, code, request);
+    return {
+      data: result,
+    };
+  }
+
+  @Get('airports')
+  @HttpCode(HttpStatus.OK)
+  async listAirport(
+    @Auth() _: users,
+    @Query() request: ListAirportRequest,
+  ): Promise<WebResponse<AirportResponse[]>> {
+    const result = await this.masterService.listAirport(request);
+    return result;
+  }
+
+  @Delete('airport/:code')
+  @HttpCode(HttpStatus.OK)
+  async deleteAirport(
+    @Auth() _: users,
+    @Param('code') code: string
+  ): Promise<{ message: string }> {
+    return this.masterService.deleteAirport(code);
   }
 
   // Sosmed
