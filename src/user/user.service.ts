@@ -69,6 +69,7 @@ export class UserService {
         username: request.username,
         name: request.name,
         isActive: request.isActive,
+        type: request.type,
         password: hashedPassword,
         created_by: authUser.id,
         updated_by: null,
@@ -217,23 +218,23 @@ export class UserService {
     }
 
     // Cek apakah payload berbeda dengan data existing
-    const isSameData =
-      (payload.username ?? existingUser.username) === existingUser.username &&
-      (payload.name ?? existingUser.name) === existingUser.name
-    // (payload.type ?? existingUser.type) === existingUser.type;
+    // const isSameData =
+    //   (payload.username ?? existingUser.username) === existingUser.username &&
+    //   (payload.name ?? existingUser.name) === existingUser.name
+    // // (payload.type ?? existingUser.type) === existingUser.type;
 
-    if (isSameData) {
-      throw new BadRequestException(
-        'No changes detected in the update request',
-      );
-    }
+    // if (isSameData) {
+    //   throw new BadRequestException(
+    //     'No changes detected in the update request',
+    //   );
+    // }
 
     const updatedUser = await this.prisma.users.update({
       where: { id: userId },
       data: {
         username: payload.username ?? existingUser.username,
         name: payload.name ?? existingUser.name,
-        // type: payload.type ?? existingUser.type,
+        type: payload.type ?? existingUser.type,
         updated_by: authUser.id,
         updated_at: new Date()
       },

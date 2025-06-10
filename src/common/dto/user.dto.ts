@@ -45,13 +45,14 @@ export class RegisterUserRequest {
   })
   isActive: boolean;
 
-  // @IsIn(['0', '1'])
-  // @ApiProperty({
-  //   description: 'Tipe pengguna: 0 = staff, 1 = agent',
-  //   example: 1,
-  //   enum: ['0', '1'],
-  // })
-  // type: string;
+  @IsOptional()
+  @IsIn(['0', '1'])
+  @ApiPropertyOptional({
+    description: 'Tipe pengguna: 0 = staff, 1 = agent',
+    example: 1,
+    enum: ['0', '1'],
+  })
+  type?: string;
 }
 
 export class LoginUserRequest {
