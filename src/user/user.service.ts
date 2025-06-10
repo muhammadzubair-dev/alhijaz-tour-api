@@ -68,6 +68,7 @@ export class UserService {
       data: {
         username: request.username,
         name: request.name,
+        isActive: request.isActive,
         password: hashedPassword,
         created_by: authUser.id,
         updated_by: null,
@@ -98,20 +99,28 @@ export class UserService {
       limit = 10,
     } = request;
 
-    const where = Object.fromEntries(
-      Object.entries({
-        username: username
-          ? { contains: username, mode: 'insensitive' }
-          : undefined,
-        name: name ? { contains: name, mode: 'insensitive' } : undefined,
-        type: type !== undefined ? type : undefined,
-        isActive: isActive !== undefined ? isActive : undefined,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      }).filter(([_, value]) => value !== undefined),
-    );
+    const where: any = {
+      ...(username && {
+        username: { contains: username, mode: 'insensitive' },
+      }),
+      ...(name && {
+        name: { contains: name, mode: 'insensitive' },
+      }),
+      ...(type !== undefined && { type }),
+      ...(isActive !== undefined && { isActive }),
+      isDeleted: false, // hanya ambil data yang belum dihapus
+    };
 
     const total = await this.prisma.users.count({ where });
     const totalPages = Math.ceil(total / limit);
+
+    let orderBy: any = { created_at: 'desc' }; // default sorting
+
+    if (sortBy) {
+      orderBy = {
+        [sortBy]: sortOrder ?? 'asc',
+      };
+    }
 
     const users = await this.prisma.users.findMany({
       include: {
@@ -129,11 +138,7 @@ export class UserService {
         },
       },
       where,
-      orderBy: sortBy
-        ? {
-          [sortBy]: sortOrder ?? 'asc',
-        }
-        : undefined,
+      orderBy,
       skip: (page - 1) * limit,
       take: limit,
     });
@@ -264,6 +269,38 @@ export class UserService {
     await this.redis.set(`auth_token:${user.id}`, token);
 
     return { token }
+  }
+
+  async deleteUser(authUser: users, id: string): Promise<{ message: string; username: string }> {
+    const existingUser = await this.prisma.users.findUnique({
+      where: { id },
+      select: {
+        username: true,
+        isDeleted: true,
+      },
+    });
+
+    if (!existingUser) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    if (existingUser.isDeleted) {
+      throw new BadRequestException(`User with ID ${id} is already deleted`);
+    }
+
+    await this.prisma.users.update({
+      where: { id },
+      data: {
+        isDeleted: true,
+        updated_by: authUser.id,
+        updated_at: new Date(),
+      },
+    });
+
+    return {
+      message: `User with ID ${id} has been successfully soft-deleted.`,
+      username: existingUser.username,
+    };
   }
 
   // Menu
@@ -545,18 +582,19 @@ export class UserService {
         },
       }),
       ...(isActive !== undefined && { isActive }),
+      isDeleted: false,
     };
 
     const total = await this.prisma.agents.count({ where });
     const totalPages = Math.ceil(total / limit);
 
-    let orderBy: any = undefined;
+    let orderBy: any = { created_at: 'desc' };
 
     if (sortBy) {
-      if (sortBy === 'name') {
+      if (['name', 'username'].includes(sortBy)) {
         orderBy = {
           user: {
-            name: sortOrder ?? 'asc',
+            [sortBy]: sortOrder ?? 'asc',
           },
         };
       } else if (sortBy === 'bankName') {
@@ -577,11 +615,14 @@ export class UserService {
       include: {
         user: {
           select: {
+            id: true,
             name: true,
+            username: true
           },
         },
         bank: {
           select: {
+            id: true,
             name: true,
           },
         },
@@ -606,8 +647,11 @@ export class UserService {
     return {
       data: agents.map((agent) => ({
         id: agent.id,
+        userId: agent.user.id,
+        username: agent.user.username,
         name: agent.user.name,
         identityType: agent.identity_type,
+        bankId: agent.bank.id,
         bankName: agent.bank.name,
         accountNumber: agent.account_number,
         phone: agent.phone,
@@ -632,7 +676,7 @@ export class UserService {
     };
   }
 
-  async registerAgent(request: RegisterAgentRequest, authUser: users): Promise<{ message: string }> {
+  async registerAgent(request: RegisterAgentRequest, authUser: users): Promise<{ message: string, username: string }> {
     this.logger.info(`Registering new agent: ${request.userId}`);
 
     const existingAgent = await this.prisma.agents.findFirst({
@@ -644,36 +688,108 @@ export class UserService {
       throw new BadRequestException('Agent already exists');
     }
 
-    const agent = await this.prisma.agents.create({
-      data: {
-        user_id: request.userId,
-        identity_type: request.identityType,
-        bank_id: request.bankId,
-        account_number: request.accountNumber,
-        phone: request.phone,
-        email: request.email,
-        balance: 0,
-        address: request.address,
-        lead_id: request.leadId,
-        coordinator_id: request.coordinatorId,
-        target_remaining: 0,
-        isActive: request.isActive,
-        created_by: authUser.id,
-        updated_by: null,
-        updated_at: null
-      },
+    await this.prisma.$transaction(async (tx) => {
+      // Create agent
+      await tx.agents.create({
+        data: {
+          user_id: request.userId,
+          identity_type: request.identityType,
+          bank_id: request.bankId,
+          account_number: request.accountNumber,
+          phone: request.phone,
+          email: request.email,
+          balance: 0,
+          address: request.address,
+          lead_id: request.leadId,
+          coordinator_id: request.coordinatorId,
+          target_remaining: 0,
+          isActive: request.isActive,
+          created_by: authUser.id,
+          updated_by: null,
+          updated_at: null,
+        },
+      });
+
+      // Update user type
+      await tx.users.update({
+        where: {
+          id: request.userId,
+        },
+        data: {
+          type: '1', // Assuming '1' means agent
+        },
+      });
     });
 
-    await this.prisma.users.update({
-      where: {
-        id: request.userId,
-      },
-      data: {
-        type: '1',
-      },
+    const user = await this.prisma.users.findUnique({
+      where: { id: request.userId },
+      select: { username: true },
     });
 
-    this.logger.info(`Agent registered: ${agent.user_id}`);
-    return { message: `Agent registered: ${agent.user_id}` }
+    this.logger.info(`Agent registered: ${request.userId}`);
+    return { message: `Agent registered: ${request.userId}`, username: user.username };
   }
+
+  async updateAgent(authUser: users, id: number, request: RegisterAgentRequest): Promise<{ message: string }> {
+    const existingAgent = await this.prisma.agents.findUnique({ where: { id } });
+
+    if (!existingAgent) {
+      throw new NotFoundException(`Agent with ID ${id} not found`);
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.agents.update({
+        where: { id },
+        data: {
+          identity_type: request.identityType,
+          bank_id: request.bankId,
+          account_number: request.accountNumber,
+          phone: request.phone,
+          email: request.email,
+          address: request.address,
+          lead_id: request.leadId,
+          coordinator_id: request.coordinatorId,
+          isActive: request.isActive,
+          updated_by: authUser.id,
+          updated_at: new Date(),
+        },
+      });
+    });
+
+    return { message: `Agent updated: ${id}` };
+  }
+
+  async deleteAgent(authUser: users, id: number): Promise<{ message: string; username: string }> {
+    const existingAgent = await this.prisma.agents.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: { username: true },
+        },
+      },
+    });
+
+    if (!existingAgent) {
+      throw new NotFoundException(`Agent with ID ${id} not found`);
+    }
+
+    if ((existingAgent as any).isDeleted) {
+      throw new BadRequestException(`Agent with ID ${id} already deleted`);
+    }
+
+    await this.prisma.agents.update({
+      where: { id },
+      data: {
+        isDeleted: true,
+        updated_by: authUser.id,
+        updated_at: new Date(),
+      },
+    });
+
+    return {
+      message: `Agent with ID ${id} has been successfully soft-deleted`,
+      username: existingAgent.user.username,
+    };
+  }
+
 }

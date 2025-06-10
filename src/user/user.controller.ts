@@ -9,6 +9,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
 } from '@nestjs/common';
 import {
@@ -108,6 +109,18 @@ export class UserController {
     };
   }
 
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async dele(
+    @Auth() user: users,
+    @Param('id') id: string,
+  ): Promise<WebResponse<{ message: string, username: string }>> {
+    const result = await this.userService.deleteUser(user, id);
+    return {
+      data: result,
+    };
+  }
+
   // Menu
   @Get('menus')
   @HttpCode(HttpStatus.OK)
@@ -170,9 +183,36 @@ export class UserController {
   async registerAgent(
     @Auth() user: users,
     @Body() request: RegisterAgentRequest,
-  ): Promise<{ message: string }> {
+  ): Promise<WebResponse<{ message: string }>> {
     const result = await this.userService.registerAgent(request, user);
-    return result
+    return {
+      data: result
+    }
+  }
+
+  @Put('agent/:id')
+  @HttpCode(HttpStatus.OK)
+  async updateAgent(
+    @Auth() user: users,
+    @Param('id') id: number,
+    @Body() request: RegisterAgentRequest,
+  ): Promise<WebResponse<{ message: string }>> {
+    const result = await this.userService.updateAgent(user, id, request);
+    return {
+      data: result,
+    };
+  }
+
+  @Delete('agent/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteAgent(
+    @Auth() user: users,
+    @Param('id') id: number,
+  ): Promise<WebResponse<{ message: string, username: string }>> {
+    const result = await this.userService.deleteAgent(user, id);
+    return {
+      data: result,
+    };
   }
 
   @Get('agents')

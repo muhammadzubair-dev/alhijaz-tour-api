@@ -214,6 +214,7 @@ export class LovService {
         name: true,
       },
       where: {
+        isDeleted: false,
         isActive: true,
         type: null,
         id: {
@@ -232,6 +233,7 @@ export class LovService {
   async listAgent(user: users): Promise<WebResponse<{ id: number, name: string }[]>> {
     const agents = await this.prisma.agents.findMany({
       where: {
+        isDeleted: false,
         isActive: true,
         user_id: {
           not: user.id

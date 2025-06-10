@@ -38,6 +38,13 @@ export class RegisterUserRequest {
   })
   name: string;
 
+  @IsBoolean()
+  @ApiProperty({
+    description: 'isActive: true = active, false = Inactive',
+    example: true,
+  })
+  isActive: boolean;
+
   // @IsIn(['0', '1'])
   // @ApiProperty({
   //   description: 'Tipe pengguna: 0 = staff, 1 = agent',
@@ -459,6 +466,7 @@ export class ListAgentRequest {
   @IsOptional()
   @IsIn([
     'name',
+    'username',
     'phone',
     'email',
     'bankName',
@@ -473,6 +481,7 @@ export class ListAgentRequest {
     description: 'Sort by field',
     enum: [
       'name',
+      'username',
       'phone',
       'email',
       'bankName',

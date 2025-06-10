@@ -21,6 +21,7 @@ model users {
   banned_until      DateTime?
   isDefaultPassword Boolean   @default(true)
   isActive          Boolean   @default(true)
+  isDeleted         Boolean   @default(false)
   type              String?   @db.Char(1) // 0: Staff, 1: Agent
   created_by        String?   @default("system")
   created_at        DateTime? @default(now())
@@ -160,6 +161,7 @@ model agents {
   coordinator_id   Int?
   target_remaining Int       @default(0)
   isActive         Boolean   @default(true)
+  isDeleted        Boolean   @default(false)
   created_by       String?   @default("system")
   created_at       DateTime? @default(now())
   updated_by       String?   @default("system")
