@@ -139,4 +139,54 @@ export class LovController {
     const result = await this.lovService.listAgent(user);
     return result;
   }
+
+  @Get('provinces')
+  @HttpCode(HttpStatus.OK)
+  async listProvince(
+    @Auth() _: users,
+  ): Promise<WebResponse<{ id: number, name: string }[]>> {
+    const result = await this.lovService.listProvince();
+    return result;
+  }
+
+  @Get('provinces/:provinceId/districts')
+  @HttpCode(HttpStatus.OK)
+  async listDistrict(
+    @Auth() _: users,
+    @Param('provinceId') provinceId: string,
+  ): Promise<WebResponse<{ id: number; name: string }[]>> {
+    return await this.lovService.listDistrict(Number(provinceId));
+  }
+
+  @Get('provinces/:provinceId/districts/:districtId/sub-districts')
+  @HttpCode(HttpStatus.OK)
+  async listSubDistrict(
+    @Auth() _: users,
+    @Param('provinceId') provinceId: string,
+    @Param('districtId') districtId: string,
+  ): Promise<WebResponse<{ id: number; name: string }[]>> {
+    return await this.lovService.listSubDistrict(
+      Number(provinceId),
+      Number(districtId),
+    );
+  }
+
+
+  @Get(
+    'provinces/:provinceId/districts/:districtId/sub-districts/:subDistrictId/neighborhoods',
+  )
+  @HttpCode(HttpStatus.OK)
+  async listNeighborhoods(
+    @Auth() _: users,
+    @Param('provinceId') provinceId: string,
+    @Param('districtId') districtId: string,
+    @Param('subDistrictId') subDistrictId: string,
+  ): Promise<WebResponse<{ id: number; name: string }[]>> {
+    return await this.lovService.listNeighborhoods(
+      Number(provinceId),
+      Number(districtId),
+      Number(subDistrictId),
+    );
+  }
+
 }
