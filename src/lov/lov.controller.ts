@@ -189,4 +189,22 @@ export class LovController {
     );
   }
 
+  @Get('umroh-package')
+  @HttpCode(HttpStatus.OK)
+  async listUmrohPackage(
+    @Auth() _: users,
+  ): Promise<WebResponse<{ id: string, name: string }[]>> {
+    const result = await this.lovService.listUmrohPackage();
+    return result;
+  }
+
+  @Get('umroh-package/:packageId/rooms')
+  @HttpCode(HttpStatus.OK)
+  async listUmrohPackageRooms(
+    @Auth() _: users,
+    @Param('packageId') packageId: string,
+  ): Promise<WebResponse<{ id: number, price: number }[]>> {
+    const result = await this.lovService.listUmrohPackageRooms(packageId);
+    return result;
+  }
 }

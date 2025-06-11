@@ -870,6 +870,18 @@ export class MasterService {
           prefix: 'JBU',
           padding: 4,
         });
+
+        // Ambil detail tiket keberangkatan pertama (type = 0)
+        const detailTicket = await tx.ticket_details.findFirst({
+          where: {
+            ticket_id: data.ticket,
+            type: 0, // 0: Departure
+          },
+          orderBy: {
+            ticket_date: 'asc',
+          },
+        });
+
         // Insert ke tabel `packages`
         const createdPackage = await tx.packages.create({
           data: {
@@ -880,6 +892,7 @@ export class MasterService {
             brochure: uploadedFiles['brochure'] ?? null,
             departure_info: uploadedFiles['departureInfo'] ?? null,
             ticket: data.ticket,
+            departure_date: detailTicket?.ticket_date ?? null,
             seat: data.seat,
             maturity_passport_delivery: new Date(data.maturityPassportDelivery),
             maturity_repayment: new Date(data.maturityRepayment),

@@ -693,6 +693,7 @@ model packages {
   manasik_invitation         String?   @db.VarChar(50) // file pdf
   brochure                   String?   @db.VarChar(50) // file pdf
   departure_info             String?   @db.VarChar(50) // file pdf
+  departure_date             DateTime?
   ticket                     Int?
   seat                       Int?
   maturity_passport_delivery DateTime?
@@ -821,8 +822,9 @@ model umrah_registers {
   mahram             String?   @db.VarChar(20)
   package            String
   package_room_price Int
-  office_discount    Int
-  agent_discount     Int
+  other_expenses     Int       @default(0)
+  office_discount    Int       @default(0)
+  agent_discount     Int       @default(0)
   agent_id           Int?
   register_name      String    @db.VarChar(20)
   register_phone     String    @db.VarChar(20)

@@ -8,6 +8,7 @@ import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import snakeToCamelObject from 'src/common/utils/snakeToCamelObject';
 import { Logger } from 'winston';
+import * as moment from 'moment';
 
 @Injectable()
 export class LovService {
@@ -346,6 +347,60 @@ export class LovService {
       data: banks.map((item) => ({
         id: item.id,
         name: item.name,
+      })),
+    };
+  }
+
+  async listUmrohPackage(): Promise<WebResponse<{ id: string, name: string }[]>> {
+    const banks = await this.prisma.packages.findMany({
+      select: {
+        id: true,
+        name: true,
+        departure_date: true
+      },
+      where: {
+        status: '1'
+      }
+    });
+    return {
+      data: banks.map((item) => ({
+        id: item.id,
+        name: `${item.name} / ${moment(item.departure_date).format('YYYY-MM-DD')}`,
+      })),
+    };
+  }
+
+  async listUmrohPackageRooms(packagesId: string): Promise<WebResponse<{ id: number, price: number }[]>> {
+    const result = await this.prisma.package_room_prices.findMany({
+      where: {
+        packages_id: packagesId,
+      },
+      select: {
+        id: true,
+        price: true,
+        package: {
+          select: {
+            equipment_handling_price: true
+          }
+        },
+        package_room: {
+          select: {
+            room_type: {
+              select: { name: true },
+            },
+            package_type: {
+              select: { name: true },
+            },
+          },
+        },
+      },
+    });
+    return {
+      data: result.map((item) => ({
+        id: item.id,
+        name: `${item.package_room.package_type.name}: ${item.package_room.room_type.name}`,
+        price: item.price,
+        equipmentHandlingPrice: item.package.equipment_handling_price
       })),
     };
   }
