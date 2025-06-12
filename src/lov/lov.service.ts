@@ -132,22 +132,38 @@ export class LovService {
     };
   }
 
-
-  async listTicket(): Promise<WebResponse<{ bookingCode: string }[]>> {
-    const jamaah = await this.prisma.tickets.findMany({
-      select: {
-        id: true,
-        booking_code: true,
-      },
-      where: {
-        status: '1'
-      }
+  async listTicket(): Promise<WebResponse<{ bookingCode: string; remainingSeat: number }[]>> {
+    const tickets = await this.prisma.tickets.findMany({
+      where: { status: '1' },
+      select: { id: true, booking_code: true, seat_pack: true, ticket_details: true },
     });
+    const usedSeats = await this.prisma.packages.groupBy({
+      by: ['ticket'],
+      where: {
+        ticket: { in: tickets.map(t => t.id) },
+        seat: { not: null },
+      },
+      _sum: { seat: true },
+    });
+    const seatMap = Object.fromEntries(
+      usedSeats.map(u => [u.ticket, u._sum.seat || 0])
+    );
     return {
-      data: jamaah.map((item) => ({
-        id: item.id,
-        bookingCode: item.booking_code,
-      })),
+      data: tickets.map(t => {
+        const remainingSeat = t.seat_pack - (seatMap[t.id] || 0);
+        const sortedDetails = t.ticket_details.sort((a, b) =>
+          new Date(a.ticket_date).getTime() - new Date(b.ticket_date).getTime()
+        );
+        const departureDate = sortedDetails[0]?.ticket_date ?? null;
+        return {
+          id: t.id,
+          bookingCode: t.booking_code,
+          seatPack: t.seat_pack,
+          remainingSeat,
+          departureDate,
+          ticketDetails: snakeToCamelObject(t.ticket_details),
+        };
+      }),
     };
   }
 
