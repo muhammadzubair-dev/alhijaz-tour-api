@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { users } from '@prisma/client';
+import { umrah_registers, users } from '@prisma/client';
 import moment from 'moment';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest, CreatePackageRequestDto, PackageResponse, ListPackageRequest, HotelRoomDto, AirportResponse, ListAirportRequest, RegisterAirportRequest, ListAirlineRequest, AirlineResponse, RegisterAirlineRequest, CreateUmrohRegisterRequest } from 'src/common/dto/master.dto';
+import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest, CreatePackageRequestDto, PackageResponse, ListPackageRequest, HotelRoomDto, AirportResponse, ListAirportRequest, RegisterAirportRequest, ListAirlineRequest, AirlineResponse, RegisterAirlineRequest, CreateUmrohRegisterRequest, ListUmrohRequest } from 'src/common/dto/master.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import { UploadService } from 'src/common/upload.service';
@@ -1185,6 +1185,7 @@ export class MasterService {
         },
         ticket_rel: {
           select: {
+            id: true,
             booking_code: true,
           },
         },
@@ -1210,6 +1211,7 @@ export class MasterService {
       data: packages.map((item) => ({
         id: item.id,
         name: item.name,
+        bookingCodeId: item.ticket_rel?.id || null,
         bookingCode: item.ticket_rel?.booking_code || null,
         tourLead: `${item.tourLeadUser.first_name} ${item.tourLeadUser?.mid_name ?? ''} ${item.tourLeadUser?.last_name ?? ''}`.trim(),
         isPromo: item.isPromo,
@@ -1490,7 +1492,131 @@ export class MasterService {
     }
   }
 
+  async listUmroh(
+    request: ListUmrohRequest,
+  ): Promise<WebResponse<any[]>> {
+    const {
+      registerName,
+      registerPhone,
+      sortBy,
+      sortOrder,
+      page = 1,
+      limit = 10,
+    } = request;
 
+    const where: any = {
+      ...(registerName && {
+        register_name: {
+          contains: registerName,
+          mode: 'insensitive',
+        },
+      }),
+      ...(registerPhone && {
+        register_phone: {
+          contains: registerPhone,
+          mode: 'insensitive',
+        },
+      }),
+    };
+
+    const total = await this.prisma.umrah_registers.count({ where });
+    const totalPages = Math.ceil(total / limit);
+
+    let orderBy: any = {
+      created_at: 'desc', // default jika tidak ada sortBy
+    };
+
+    if (sortBy) {
+      if (sortBy === 'createdBy') {
+        orderBy = {
+          createdByUser: {
+            name: sortOrder ?? 'asc',
+          },
+        };
+      } else if (sortBy === 'updatedBy') {
+        orderBy = {
+          updatedByUser: {
+            name: sortOrder ?? 'asc',
+          },
+        };
+      } else {
+        orderBy = {
+          [camelToSnakeCase(sortBy)]: sortOrder ?? 'asc',
+        };
+      }
+    }
+
+    const umroh = await this.prisma.umrah_registers.findMany({
+      where,
+      include: {
+        packageRel: {
+          select: {
+            id: true,
+            name: true,
+            departure_date: true,
+          },
+        },
+        packageRoomPrice: {
+          select: {
+            price: true,
+            package_room: {
+              select: {
+                package_type: {
+                  select: {
+                    name: true,
+                  },
+                },
+                room_type: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        createdByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy,
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return {
+      data: umroh.map((item) => ({
+        id: item.id,
+        registerName: item.register_name,
+        registerPhone: item.register_phone,
+        packageId: item.packageRel.id,
+        packageName: item.packageRel.name,
+        packageHotel: item.packageRoomPrice.package_room.package_type.name,
+        packageRoom: item.packageRoomPrice.package_room.room_type.name,
+        price: item.packageRoomPrice.price,
+        departureDate: item.packageRel.departure_date,
+        status: item.status,
+        createdBy: item.createdByUser?.name || null,
+        createdAt: item.created_at,
+        updatedBy: item.updatedByUser?.name || null,
+        updatedAt: item.updated_at,
+      })),
+      paging: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
+  }
 
   // Testing Upload
   async uploadAvatar(buffer: Buffer, originalName: string) {

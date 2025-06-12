@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Query, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
-import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RegisterPackageRequest, CreatePackageRequestDto, ListPackageRequest, PackageResponse, RegisterAirportRequest, AirportResponse, ListAirportRequest, RegisterAirlineRequest, AirlineResponse, ListAirlineRequest, CreateUmrohRegisterRequest } from "src/common/dto/master.dto";
+import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RegisterPackageRequest, CreatePackageRequestDto, ListPackageRequest, PackageResponse, RegisterAirportRequest, AirportResponse, ListAirportRequest, RegisterAirlineRequest, AirlineResponse, ListAirlineRequest, CreateUmrohRegisterRequest, ListUmrohRequest } from "src/common/dto/master.dto";
 import { WebResponse } from "src/common/dto/web.dto";
 import { MasterService } from "./master.service";
 import { Auth } from "src/common/auth.decorator";
@@ -287,6 +287,16 @@ export class MasterController {
     @Body() body: CreateUmrohRegisterRequest,
   ) {
     const result = await this.masterService.createUmroh(user, body, files);
+    return result;
+  }
+
+  @Get('umroh')
+  @HttpCode(HttpStatus.OK)
+  async listUmroh(
+    @Auth() _: users,
+    @Query() request: ListUmrohRequest,
+  ): Promise<WebResponse<any[]>> {
+    const result = await this.masterService.listUmroh(request);
     return result;
   }
 

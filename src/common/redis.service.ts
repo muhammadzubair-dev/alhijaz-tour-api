@@ -19,8 +19,8 @@ export class RedisService extends Redis implements OnModuleInit {
     });
 
     this.defaultExpireSeconds = parseInt(
-      configService.get('REDIS_DEFAULT_EXPIRE') || '3600',
-    ); // default 1 jam
+      configService.get('REDIS_DEFAULT_EXPIRE') || '86400',
+    ); // default 1 hari
   }
 
   onModuleInit() {

@@ -11,8 +11,7 @@ export class JwtService {
   constructor(private readonly configService: ConfigService) {
     this.secret =
       this.configService.get<string>('JWT_SECRET') || 'secret value';
-    this.expiresIn =
-      this.configService.get<string>('JWT_EXPIRES_IN') || '3600s';
+    this.expiresIn = this.configService.get<string>('JWT_EXPIRES_IN') || '1d';
   }
 
   sign(payload: object): string {

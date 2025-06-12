@@ -1218,3 +1218,64 @@ export class CreateUmrohRegisterRequest {
   })
   equipmentHandlingPrice?: number;
 }
+
+export class ListUmrohRequest {
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  @ApiPropertyOptional({ description: 'Nama Pendaftar (like)' })
+  registerName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(16)
+  @ApiPropertyOptional({ description: 'No. Tlp/Hp Pendaftar (like)' })
+  registerPhone?: string;
+
+  // @IsOptional()
+  // @IsString()
+  // @MaxLength(20)
+  // @ApiPropertyOptional({ description: 'Nama Paket Umroh (like)' })
+  // packageName?: string;
+
+  @IsOptional()
+  @IsIn([
+    'registerName',
+    'registerPhone',
+    'createdBy',
+    'createdAt',
+    'updatedBy',
+    'updatedAt',
+  ])
+  @ApiPropertyOptional({
+    description: 'Sort by field',
+    enum: [
+      'registerName',
+      'registerPhone',
+      'createdBy',
+      'createdAt',
+      'updatedBy',
+      'updatedAt',
+    ],
+  })
+  sortBy?: string;
+
+  @IsOptional()
+  @IsIn(['asc', 'desc'])
+  @ApiPropertyOptional({ description: 'Sort direction', enum: ['asc', 'desc'] })
+  sortOrder?: 'asc' | 'desc';
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @ApiPropertyOptional({ default: 1, description: 'Halaman ke-' })
+  page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @ApiPropertyOptional({ default: 10, description: 'Jumlah data per halaman' })
+  limit?: number;
+}
