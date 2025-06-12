@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Query, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
-import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RegisterPackageRequest, CreatePackageRequestDto, ListPackageRequest, PackageResponse, RegisterAirportRequest, AirportResponse, ListAirportRequest, RegisterAirlineRequest, AirlineResponse, ListAirlineRequest } from "src/common/dto/master.dto";
+import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RegisterPackageRequest, CreatePackageRequestDto, ListPackageRequest, PackageResponse, RegisterAirportRequest, AirportResponse, ListAirportRequest, RegisterAirlineRequest, AirlineResponse, ListAirlineRequest, CreateUmrohRegisterRequest } from "src/common/dto/master.dto";
 import { WebResponse } from "src/common/dto/web.dto";
 import { MasterService } from "./master.service";
 import { Auth } from "src/common/auth.decorator";
@@ -268,6 +268,25 @@ export class MasterController {
     @Param('id') id: string
   ) {
     const result = await this.masterService.deletePackage(id);
+    return result;
+  }
+
+  // Umroh
+  @Post('umroh')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'photoIdentity', maxCount: 1 },
+    ]),
+  )
+  async registerUmroh(
+    @Auth() user: users,
+    @UploadedFiles()
+    files: {
+      photoIdentity?: Express.Multer.File[];
+    },
+    @Body() body: CreateUmrohRegisterRequest,
+  ) {
+    const result = await this.masterService.createUmroh(user, body, files);
     return result;
   }
 

@@ -176,6 +176,7 @@ model agents {
   bank             banks                   @relation(fields: [bank_id], references: [id])
   fee_transactions agent_fee_transaction[]
   social_accounts  agent_sosmed[]
+  jamaahList       jamaah[]                @relation("AgentToJamaah")
 
   // Self-relations
   lead                  agents?  @relation("Lead", fields: [lead_id], references: [id])
@@ -360,7 +361,7 @@ model jamaah {
   photo_identity    String?  @db.VarChar(50)
   notes             String?  @db.Text
   status            String   @db.Char(1)
-  agents_id         String?  @db.Uuid
+  agents_id         Int?
   staff_id          String?  @db.Uuid
 
   created_by String?   @default("system")
@@ -369,6 +370,9 @@ model jamaah {
   updated_at DateTime? @default(now())
 
   jamaah_documents jamaah_documents[]
+
+  // Relasi ke agent
+  agent agents? @relation("AgentToJamaah", fields: [agents_id], references: [id])
 
   // Relasi ke users
   createdByUser users? @relation("JamaahCreatedBy", fields: [created_by], references: [id])

@@ -4,12 +4,13 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from '@nes
 import { users } from '@prisma/client';
 import moment from 'moment';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest, CreatePackageRequestDto, PackageResponse, ListPackageRequest, HotelRoomDto, AirportResponse, ListAirportRequest, RegisterAirportRequest, ListAirlineRequest, AirlineResponse, RegisterAirlineRequest } from 'src/common/dto/master.dto';
+import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest, CreatePackageRequestDto, PackageResponse, ListPackageRequest, HotelRoomDto, AirportResponse, ListAirportRequest, RegisterAirportRequest, ListAirlineRequest, AirlineResponse, RegisterAirlineRequest, CreateUmrohRegisterRequest } from 'src/common/dto/master.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import { UploadService } from 'src/common/upload.service';
 import { camelToSnakeCase } from 'src/common/utils/camelToSnakeCase';
 import { generateAutoId } from 'src/common/utils/generateAutoId';
+import snakeToCamelObject from 'src/common/utils/snakeToCamelObject';
 import { Logger } from 'winston';
 
 @Injectable()
@@ -1386,6 +1387,109 @@ export class MasterService {
       throw new Error(`Gagal menghapus paket: ${error.message}`);
     }
   }
+
+  // Umroh
+  async createUmroh(
+    authUser: users,
+    dto: CreateUmrohRegisterRequest,
+    files: { photoIdentity?: Express.Multer.File[] },
+  ) {
+    const uploadedFiles: Record<string, string> = {};
+    const rollbackFiles: string[] = [];
+
+    const saveFile = async (file: Express.Multer.File, key: string) => {
+      const path = await this.uploadService.saveFile(file.buffer, file.originalname);
+      uploadedFiles[key] = path;
+      rollbackFiles.push(path);
+    };
+
+    try {
+      // ✅ Upload file jika ada
+      if (files.photoIdentity?.[0]) {
+        await saveFile(files.photoIdentity[0], 'photoIdentity');
+      }
+
+      // ✅ Jalankan transaksi database
+      return await this.prisma.$transaction(async (tx) => {
+        // Cek jamaah berdasarkan NIK
+        const existingJamaah = await tx.jamaah.findFirst({
+          where: { identity_number: dto.identityNumber },
+        });
+
+        if (!existingJamaah) {
+          throw new NotFoundException('Jamaah dengan NIK tersebut tidak ditemukan');
+        }
+
+        // Update data jamaah
+        await tx.jamaah.update({
+          where: { jamaah_code: existingJamaah.jamaah_code },
+          data: {
+            first_name: dto.firstName,
+            mid_name: dto.middleName,
+            last_name: dto.lastName,
+            birth_place: dto.birthPlace,
+            birth_date: dto.birthDate,
+            gender: Number(dto.gender),
+            married_status: Number(dto.marriedStatus),
+            phone_number: dto.phoneNumber,
+            province: dto.province,
+            district: dto.district,
+            sub_district: dto.subDistrict,
+            neighborhoods: dto.neighborhoods,
+            address: dto.address,
+            agents_id: dto.agentId,
+            staff_id: dto.staffId,
+            photo_identity: uploadedFiles['photoIdentity'] ?? undefined,
+            medical_condition: dto.medicalCondition,
+            notes: dto.notes,
+            updated_by: authUser.id,
+            updated_at: new Date()
+          },
+        });
+
+        // Buat kode umroh unik
+        const umrohCode = await generateAutoId(this.prisma, {
+          model: 'umrah_registers',
+          prefix: 'UMR',
+          padding: 6,
+        });
+
+        // Insert ke umrah_registers
+        const addedUmroh = await tx.umrah_registers.create({
+          data: {
+            umroh_code: umrohCode,
+            jamaah: existingJamaah.jamaah_code,
+            remarks: Number(dto.remarks),
+            mahram: dto.mahram,
+            package: dto.packageId,
+            package_room_price: dto.packageRoomPrice,
+            office_discount: dto.officeDiscount ?? 0,
+            agent_discount: dto.agentDiscount ?? 0,
+            agent_id: dto.agentId,
+            register_name: dto.registerName,
+            register_phone: dto.registerPhone,
+            notes: dto.notes,
+            pin: Number(dto.phoneNumber.slice(-6)),
+            status: '1',
+            created_by: authUser.id,
+            updated_by: null,
+            updated_at: null
+          },
+        });
+
+        return {
+          data: snakeToCamelObject(addedUmroh)
+        }
+      });
+    } catch (error) {
+      // 🧹 Rollback uploaded files if transaction fails
+      for (const filePath of rollbackFiles) {
+        await this.uploadService.deleteFile(filePath);
+      }
+      throw error;
+    }
+  }
+
 
 
   // Testing Upload
