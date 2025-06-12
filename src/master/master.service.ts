@@ -1452,6 +1452,7 @@ export class MasterService {
         // Buat kode umroh unik
         const umrohCode = await generateAutoId(this.prisma, {
           model: 'umrah_registers',
+          field: 'umroh_code',
           prefix: 'UMR',
           padding: 6,
         });
@@ -1467,11 +1468,12 @@ export class MasterService {
             package_room_price: dto.packageRoomPrice,
             office_discount: dto.officeDiscount ?? 0,
             agent_discount: dto.agentDiscount ?? 0,
+            other_expenses: dto.otherExpenses ?? 0,
             agent_id: dto.agentId,
             register_name: dto.registerName,
             register_phone: dto.registerPhone,
             notes: dto.notes,
-            pin: Number(dto.phoneNumber.slice(-6)),
+            pin: Number(dto.phoneNumber.slice(-5)),
             status: '1',
             created_by: authUser.id,
             updated_by: null,

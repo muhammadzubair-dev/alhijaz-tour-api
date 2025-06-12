@@ -1153,6 +1153,16 @@ export class CreateUmrohRegisterRequest {
   @Type(() => Number)
   @IsOptional()
   @IsNumber()
+  @ApiProperty({
+    description: 'Biaya Lainnya (default 0)',
+    example: 50000,
+    required: false,
+  })
+  otherExpenses?: number;
+
+  @Type(() => Number)
+  @IsOptional()
+  @IsNumber()
   @ApiProperty({ description: 'ID Agen', example: 4, required: false })
   agentId?: number;
 

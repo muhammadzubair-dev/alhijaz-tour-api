@@ -357,8 +357,8 @@ model jamaah {
   address           String   @db.VarChar(100)
   home_phone_number String?  @db.VarChar(25)
   medical_condition String?  @db.Text
-  self_photo        String?  @db.VarChar(50)
-  photo_identity    String?  @db.VarChar(50)
+  self_photo        String?  @db.VarChar(200)
+  photo_identity    String?  @db.VarChar(200)
   notes             String?  @db.Text
   status            String   @db.Char(1)
   agents_id         Int?
