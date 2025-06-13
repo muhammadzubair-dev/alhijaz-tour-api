@@ -677,59 +677,72 @@ export class UserService {
     };
   }
 
-  async registerAgent(request: RegisterAgentRequest, authUser: users): Promise<{ message: string, username: string }> {
-    this.logger.info(`Registering new agent: ${request.userId}`);
+  async registerAgent(request: RegisterAgentRequest, authUser: users): Promise<{ message: string; username: string; password: string }> {
+  this.logger.info(`Registering new agent: ${request.username}`);
 
-    const existingAgent = await this.prisma.agents.findFirst({
-      where: { user_id: request.userId },
-    });
+  const existingUser = await this.prisma.users.findFirst({
+    where: { username: request.username },
+  });
 
-    if (existingAgent) {
-      this.logger.warn(`Agent already exists: ${request.userId}`);
-      throw new BadRequestException('Agent already exists');
-    }
-
-    await this.prisma.$transaction(async (tx) => {
-      // Create agent
-      await tx.agents.create({
-        data: {
-          user_id: request.userId,
-          identity_type: request.identityType,
-          bank_id: request.bankId,
-          account_number: request.accountNumber,
-          phone: request.phone,
-          email: request.email,
-          balance: 0,
-          address: request.address,
-          lead_id: request.leadId,
-          coordinator_id: request.coordinatorId,
-          target_remaining: 0,
-          isActive: request.isActive,
-          created_by: authUser.id,
-          updated_by: null,
-          updated_at: null,
-        },
-      });
-
-      // Update user type
-      await tx.users.update({
-        where: {
-          id: request.userId,
-        },
-        data: {
-          type: '1', // Assuming '1' means agent
-        },
-      });
-    });
-
-    const user = await this.prisma.users.findUnique({
-      where: { id: request.userId },
-      select: { username: true },
-    });
-
-    this.logger.info(`Agent registered: ${request.userId}`);
-    return { message: `Agent registered: ${request.userId}`, username: user.username };
+  if (existingUser) {
+    this.logger.warn(`Username already exists: ${request.username}`);
+    throw new BadRequestException('Username already exists');
   }
+
+  const randomPassword = generatePassword.generate({
+    length: 10,
+    numbers: true,
+    symbols: true,
+    uppercase: true,
+    lowercase: true,
+    strict: true,
+  });
+  const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+  await this.prisma.$transaction(async (tx) => {
+    // 1. Create user
+    const user = await tx.users.create({
+      data: {
+        username: request.username,
+        name: request.name,
+        isActive: request.isActive,
+        type: '1', // langsung type 'agent'
+        password: hashedPassword,
+        created_by: authUser.id,
+        updated_by: null,
+        updated_at: null,
+      },
+    });
+
+    // 2. Create agent with the new user ID
+    await tx.agents.create({
+      data: {
+        user_id: user.id,
+        identity_type: request.identityType,
+        bank_id: request.bankId,
+        account_number: request.accountNumber,
+        phone: request.phone,
+        email: request.email,
+        balance: 0,
+        address: request.address,
+        lead_id: request.leadId,
+        coordinator_id: request.coordinatorId,
+        target_remaining: 0,
+        isActive: request.isActive,
+        created_by: authUser.id,
+        updated_by: null,
+        updated_at: null,
+      },
+    });
+  });
+
+  this.logger.info(`Agent registered: ${request.username}`);
+  return {
+    message: `Agent registered: ${request.username}`,
+    username: request.username,
+    password: randomPassword,
+  };
+}
 
   async updateAgent(authUser: users, id: number, request: RegisterAgentRequest): Promise<{ message: string }> {
     const existingAgent = await this.prisma.agents.findUnique({ where: { id } });

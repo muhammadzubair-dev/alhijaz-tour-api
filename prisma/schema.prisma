@@ -142,6 +142,10 @@ model users {
   packageRoomPricesCreated package_room_prices[] @relation("PackageRoomPricesCreatedBy")
   packageRoomPricesUpdated package_room_prices[] @relation("PackageRoomPricesUpdatedBy")
 
+   // Relations from umrah table
+  umrahCreated umrah[] @relation("UmrahCreatedBy")
+  umrahUpdated umrah[] @relation("UmrahUpdatedBy")
+
   // Relations from umrah_registers table
   umrahRegistersCreated umrah_registers[] @relation("UmrahRegistersCreatedBy")
   umrahRegistersUpdated umrah_registers[] @relation("UmrahRegistersUpdatedBy")
@@ -731,7 +735,7 @@ model packages {
 
   package_hotels      package_hotels[]
   package_room_prices package_room_prices[]
-  umrah_registers     umrah_registers[]
+  umrah_rel           umrah[]               @relation("UmrahToPackage")
 }
 
 model package_types {
@@ -818,14 +822,28 @@ model package_room_prices {
   umrah_registers umrah_registers[]
 }
 
+model umrah {
+  umroh_code String    @id @db.VarChar(20)
+  package    String    @db.VarChar(20)
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
+
+  // Relations
+  createdByUser    users?               @relation("UmrahCreatedBy", fields: [created_by], references: [id])
+  updatedByUser    users?               @relation("UmrahUpdatedBy", fields: [updated_by], references: [id])
+  registers  umrah_registers[] @relation("UmrahToRegister")
+  packageRel packages          @relation("UmrahToPackage", fields: [package], references: [id])
+}
+
 model umrah_registers {
   id                 String    @id @default(uuid())
-  umroh_code         String    @unique @db.VarChar(20)
+  umroh_code         String    @db.VarChar(20)
   jamaah             String    @db.VarChar(25)
   remarks            Int
   mahram             String?   @db.VarChar(20)
-  package            String
-  package_room_price Int
+  package_room_price Int? // ← Dibuat optional
   other_expenses     Int       @default(0)
   office_discount    Int       @default(0)
   agent_discount     Int       @default(0)
@@ -840,18 +858,19 @@ model umrah_registers {
   updated_by         String?   @default("system")
   updated_at         DateTime? @default(now())
 
-  jamaahRel        jamaah              @relation(fields: [jamaah], references: [jamaah_code])
-  packageRel       packages            @relation(fields: [package], references: [id])
-  packageRoomPrice package_room_prices @relation(fields: [package_room_price], references: [id])
-  createdByUser    users?              @relation("UmrahRegistersCreatedBy", fields: [created_by], references: [id])
-  updatedByUser    users?              @relation("UmrahRegistersUpdatedBy", fields: [updated_by], references: [id])
+  // Relations
+  jamaahRel        jamaah               @relation(fields: [jamaah], references: [jamaah_code])
+  packageRoomPrice package_room_prices? @relation(fields: [package_room_price], references: [id]) // ← Dibuat optional
+  createdByUser    users?               @relation("UmrahRegistersCreatedBy", fields: [created_by], references: [id])
+  updatedByUser    users?               @relation("UmrahRegistersUpdatedBy", fields: [updated_by], references: [id])
+  umrah            umrah                @relation("UmrahToRegister", fields: [umroh_code], references: [umroh_code])
   umrah_payments   umrah_payments[]
 }
 
 model umrah_payments {
   id                          String    @id @default(uuid())
   jamaah                      String    @db.VarChar(25)
-  umrah_register_code         String    @db.VarChar(20)
+  umrah_register_id           String    @db.VarChar(36) // ← FK ke umrah_registers.id
   remaining_package_payment   Int
   remaining_equipment_payment Int
   remaining_pcr_payment       Int
@@ -863,8 +882,9 @@ model umrah_payments {
   updated_by                  String?   @default("system")
   updated_at                  DateTime? @default(now())
 
-  jamaahRel        jamaah          @relation(fields: [jamaah], references: [jamaah_code])
-  umrahRegisterRel umrah_registers @relation(fields: [umrah_register_code], references: [umroh_code])
-  createdByUser    users?          @relation("UmrahPaymentsCreatedBy", fields: [created_by], references: [id])
-  updatedByUser    users?          @relation("UmrahPaymentsUpdatedBy", fields: [updated_by], references: [id])
+  // Relations
+  jamaahRel     jamaah          @relation(fields: [jamaah], references: [jamaah_code])
+  registerRel   umrah_registers @relation(fields: [umrah_register_id], references: [id])
+  createdByUser users?          @relation("UmrahPaymentsCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users?          @relation("UmrahPaymentsUpdatedBy", fields: [updated_by], references: [id])
 }

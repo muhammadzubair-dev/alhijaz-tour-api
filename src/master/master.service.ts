@@ -1466,7 +1466,7 @@ export class MasterService {
             jamaah: existingJamaah.jamaah_code,
             remarks: Number(dto.remarks),
             mahram: dto.mahram,
-            package: dto.packageId,
+            // package: dto.packageId,
             package_room_price: dto.packageRoomPrice,
             office_discount: dto.officeDiscount ?? 0,
             agent_discount: dto.agentDiscount ?? 0,
@@ -1508,23 +1508,95 @@ export class MasterService {
       limit = 10,
     } = request;
 
-    const where: any = {
-      ...(registerName && {
-        register_name: {
-          contains: registerName,
-          mode: 'insensitive',
-        },
-      }),
-      ...(registerPhone && {
-        register_phone: {
-          contains: registerPhone,
-          mode: 'insensitive',
-        },
-      }),
-    };
+    const whereClauses: string[] = [];
+    const params: any[] = [];
 
-    const total = await this.prisma.umrah_registers.count({ where });
+    // Menambahkan kondisi pencarian berdasarkan nama pendaftar
+    if (registerName) {
+      whereClauses.push(`register_name ILIKE $${params.length + 1}`);
+      params.push(`%${registerName}%`);
+    }
+
+    // Menambahkan kondisi pencarian berdasarkan nomor telepon pendaftar
+    if (registerPhone) {
+      whereClauses.push(`register_phone ILIKE $${params.length + 1}`);
+      params.push(`%${registerPhone}%`);
+    }
+
+    // Membuat bagian WHERE dari query
+    const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+    // Menentukan kolom yang digunakan untuk penyortiran
+    const validSortFields = ['created_at', 'created_by', 'updated_by'];
+    const orderBy = validSortFields.includes(sortBy) ? sortBy : 'created_at';
+
+    // Menentukan arah penyortiran
+    const orderDirection = sortOrder === 'asc' ? 'ASC' : 'DESC';
+
+    // Query untuk menghitung total data
+    const countQuery = `
+    SELECT COUNT(DISTINCT umroh_code)
+    FROM umrah_registers
+    ${whereSql}
+  `;
+    const totalResult = await this.prisma.$queryRawUnsafe<{ count: bigint }[]>(countQuery, ...params);
+    const total = Number(totalResult[0]?.count || 0);
     const totalPages = Math.ceil(total / limit);
+
+    // Query untuk mengambil data umroh
+    const selectQuery = `
+    SELECT DISTINCT ON (umroh_code) *
+    FROM umrah_registers
+    ${whereSql}
+    ORDER BY umroh_code, ${orderBy} ${orderDirection}
+    LIMIT $${params.length + 1}
+    OFFSET $${params.length + 2}
+  `;
+    params.push(limit, (page - 1) * limit);
+
+    const umroh: any = await this.prisma.$queryRawUnsafe(selectQuery, ...params);
+
+    return {
+      data: umroh.map((item) => ({
+        id: item.id,
+        umrohCode: item.umroh_code,
+        registerName: item.register_name,
+        registerPhone: item.register_phone,
+        packageId: item.package,
+        packageName: item.packageRel?.name,
+        packageHotel: item.packageRoomPrice?.package_room?.package_type?.name,
+        packageRoom: item.packageRoomPrice?.package_room?.room_type?.name,
+        price: item.packageRoomPrice?.price,
+        departureDate: item.packageRel?.departure_date,
+        status: item.status,
+        createdBy: item.createdByUser?.name || null,
+        createdAt: item.created_at,
+        updatedBy: item.updatedByUser?.name || null,
+        updatedAt: item.updated_at,
+      })),
+      paging: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
+  }
+
+  async listUmroh2(
+    request: ListUmrohRequest,
+  ): Promise<WebResponse<any[]>> {
+    const {
+      sortBy,
+      sortOrder,
+      page = 1,
+      limit = 10,
+    } = request;
+
+    const where: any = {
+      // ...(name && { name: { contains: name, mode: 'insensitive' } }),
+      // ...(status && { status }),
+    };
 
     let orderBy: any = {
       created_at: 'desc', // default jika tidak ada sortBy
@@ -1550,35 +1622,13 @@ export class MasterService {
       }
     }
 
-    const umroh = await this.prisma.umrah_registers.findMany({
+    const total = await this.prisma.umrah.count({ where });
+    const totalPages = Math.ceil(total / limit);
+
+    const umrah = await this.prisma.umrah.findMany({
       where,
+      orderBy,
       include: {
-        packageRel: {
-          select: {
-            id: true,
-            name: true,
-            departure_date: true,
-          },
-        },
-        packageRoomPrice: {
-          select: {
-            price: true,
-            package_room: {
-              select: {
-                package_type: {
-                  select: {
-                    name: true,
-                  },
-                },
-                room_type: {
-                  select: {
-                    name: true,
-                  },
-                },
-              },
-            },
-          },
-        },
         createdByUser: {
           select: {
             id: true,
@@ -1592,21 +1642,14 @@ export class MasterService {
           },
         },
       },
-      orderBy,
       skip: (page - 1) * limit,
       take: limit,
     });
+
     return {
-      data: umroh.map((item) => ({
+      data: airlines.map((item) => ({
         id: item.id,
-        registerName: item.register_name,
-        registerPhone: item.register_phone,
-        packageId: item.packageRel.id,
-        packageName: item.packageRel.name,
-        packageHotel: item.packageRoomPrice.package_room.package_type.name,
-        packageRoom: item.packageRoomPrice.package_room.room_type.name,
-        price: item.packageRoomPrice.price,
-        departureDate: item.packageRel.departure_date,
+        name: item.name,
         status: item.status,
         createdBy: item.createdByUser?.name || null,
         createdAt: item.created_at,
@@ -1621,6 +1664,8 @@ export class MasterService {
       },
     };
   }
+
+
 
   // Testing Upload
   async uploadAvatar(buffer: Buffer, originalName: string) {

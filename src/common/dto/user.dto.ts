@@ -38,12 +38,13 @@ export class RegisterUserRequest {
   })
   name: string;
 
+  @IsOptional()
   @IsBoolean()
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'isActive: true = active, false = Inactive',
     example: true,
   })
-  isActive: boolean;
+  isActive?: boolean;
 
   @IsOptional()
   @IsIn(['0', '1'])
@@ -354,14 +355,26 @@ export class RoleResponse {
 // Agent
 export class RegisterAgentRequest {
   @IsString()
-  @Length(36, 36) // UUID standard format: 36 chars
+  @MinLength(4)
+  @MaxLength(20)
   @ApiProperty({
-    description: 'ID user (UUID)',
-    example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-    minLength: 3,
+    description: 'Username pengguna',
+    example: 'JaneDoe',
+    minLength: 4,
     maxLength: 20,
   })
-  userId: string;
+  username: string;
+
+  @IsString()
+  @MinLength(4)
+  @MaxLength(50)
+  @ApiProperty({
+    description: 'Nama pengguna',
+    example: 'Jane Doe',
+    minLength: 4,
+    maxLength: 50,
+  })
+  name: string;
 
   @IsString()
   @Length(1, 1)
