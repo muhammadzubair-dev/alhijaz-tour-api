@@ -679,9 +679,10 @@ export class CreatePackageRequestDto {
   @ApiPropertyOptional()
   notes?: string;
 
+  @IsOptional()
   @IsString()
-  @ApiProperty()
-  tourLead: string;
+  @ApiPropertyOptional()
+  tourLead?: string;
 
   @IsString()
   @ApiProperty()

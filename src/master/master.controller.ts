@@ -276,6 +276,7 @@ export class MasterController {
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'photoIdentity', maxCount: 1 },
+      { name: 'selfPhoto', maxCount: 1 },
     ]),
   )
   async registerUmroh(
@@ -283,6 +284,7 @@ export class MasterController {
     @UploadedFiles()
     files: {
       photoIdentity?: Express.Multer.File[];
+      selfPhoto?: Express.Multer.File[];
     },
     @Body() body: CreateUmrohRegisterRequest,
   ) {

@@ -1213,7 +1213,7 @@ export class MasterService {
         name: item.name,
         bookingCodeId: item.ticket_rel?.id || null,
         bookingCode: item.ticket_rel?.booking_code || null,
-        tourLead: `${item.tourLeadUser.first_name} ${item.tourLeadUser?.mid_name ?? ''} ${item.tourLeadUser?.last_name ?? ''}`.trim(),
+        tourLead: item?.tourLeadUser ? `${item.tourLeadUser.first_name} ${item.tourLeadUser?.mid_name ?? ''} ${item.tourLeadUser?.last_name ?? ''}`.trim() : '-',
         isPromo: item.isPromo,
         status: item.status,
         createdBy: item.createdByUser?.name || null,
@@ -1394,7 +1394,10 @@ export class MasterService {
   async createUmroh(
     authUser: users,
     dto: CreateUmrohRegisterRequest,
-    files: { photoIdentity?: Express.Multer.File[] },
+    files: {
+      photoIdentity?: Express.Multer.File[],
+      selfPhoto?: Express.Multer.File[]
+    },
   ) {
     const uploadedFiles: Record<string, string> = {};
     const rollbackFiles: string[] = [];
@@ -1407,9 +1410,8 @@ export class MasterService {
 
     try {
       // ✅ Upload file jika ada
-      if (files.photoIdentity?.[0]) {
-        await saveFile(files.photoIdentity[0], 'photoIdentity');
-      }
+      if (files.photoIdentity?.[0]) await saveFile(files.photoIdentity[0], 'photoIdentity');
+      if (files.selfPhoto?.[0]) await saveFile(files.selfPhoto[0], 'selfPhoto');
 
       // ✅ Jalankan transaksi database
       return await this.prisma.$transaction(async (tx) => {
