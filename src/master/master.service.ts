@@ -1444,6 +1444,7 @@ export class MasterService {
             agents_id: dto.agentId,
             staff_id: dto.staffId,
             photo_identity: uploadedFiles['photoIdentity'] ?? undefined,
+            self_photo: uploadedFiles['selfPhoto'] ?? undefined,
             medical_condition: dto.medicalCondition,
             notes: dto.notes,
             updated_by: authUser.id,
@@ -1451,13 +1452,28 @@ export class MasterService {
           },
         });
 
-        // Buat kode umroh unik
-        const umrohCode = await generateAutoId(this.prisma, {
-          model: 'umrah_registers',
-          field: 'umroh_code',
-          prefix: 'UMR',
-          padding: 6,
-        });
+        let umrohCode = dto.umrohCode;
+
+        if (!umrohCode) {
+          // Buat kode umroh unik
+          umrohCode = await generateAutoId(this.prisma, {
+            model: 'umrah',
+            field: 'umroh_code',
+            prefix: 'UMR',
+            padding: 6,
+          });
+
+          // Insert ke tabel umrah
+          await tx.umrah.create({
+            data: {
+              umroh_code: umrohCode,
+              package: dto.packageId,
+              created_by: authUser.id,
+              updated_by: null,
+              updated_at: null,
+            },
+          });
+        }
 
         // Insert ke umrah_registers
         const addedUmroh = await tx.umrah_registers.create({
@@ -1496,94 +1512,94 @@ export class MasterService {
     }
   }
 
+  // async listUmroh(
+  //   request: ListUmrohRequest,
+  // ): Promise<WebResponse<any[]>> {
+  //   const {
+  //     registerName,
+  //     registerPhone,
+  //     sortBy,
+  //     sortOrder,
+  //     page = 1,
+  //     limit = 10,
+  //   } = request;
+
+  //   const whereClauses: string[] = [];
+  //   const params: any[] = [];
+
+  //   // Menambahkan kondisi pencarian berdasarkan nama pendaftar
+  //   if (registerName) {
+  //     whereClauses.push(`register_name ILIKE $${params.length + 1}`);
+  //     params.push(`%${registerName}%`);
+  //   }
+
+  //   // Menambahkan kondisi pencarian berdasarkan nomor telepon pendaftar
+  //   if (registerPhone) {
+  //     whereClauses.push(`register_phone ILIKE $${params.length + 1}`);
+  //     params.push(`%${registerPhone}%`);
+  //   }
+
+  //   // Membuat bagian WHERE dari query
+  //   const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+  //   // Menentukan kolom yang digunakan untuk penyortiran
+  //   const validSortFields = ['created_at', 'created_by', 'updated_by'];
+  //   const orderBy = validSortFields.includes(sortBy) ? sortBy : 'created_at';
+
+  //   // Menentukan arah penyortiran
+  //   const orderDirection = sortOrder === 'asc' ? 'ASC' : 'DESC';
+
+  //   // Query untuk menghitung total data
+  //   const countQuery = `
+  //   SELECT COUNT(DISTINCT umroh_code)
+  //   FROM umrah_registers
+  //   ${whereSql}
+  // `;
+  //   const totalResult = await this.prisma.$queryRawUnsafe<{ count: bigint }[]>(countQuery, ...params);
+  //   const total = Number(totalResult[0]?.count || 0);
+  //   const totalPages = Math.ceil(total / limit);
+
+  //   // Query untuk mengambil data umroh
+  //   const selectQuery = `
+  //   SELECT DISTINCT ON (umroh_code) *
+  //   FROM umrah_registers
+  //   ${whereSql}
+  //   ORDER BY umroh_code, ${orderBy} ${orderDirection}
+  //   LIMIT $${params.length + 1}
+  //   OFFSET $${params.length + 2}
+  // `;
+  //   params.push(limit, (page - 1) * limit);
+
+  //   const umroh: any = await this.prisma.$queryRawUnsafe(selectQuery, ...params);
+
+  //   return {
+  //     data: umroh.map((item) => ({
+  //       id: item.id,
+  //       umrohCode: item.umroh_code,
+  //       registerName: item.register_name,
+  //       registerPhone: item.register_phone,
+  //       packageId: item.package,
+  //       packageName: item.packageRel?.name,
+  //       packageHotel: item.packageRoomPrice?.package_room?.package_type?.name,
+  //       packageRoom: item.packageRoomPrice?.package_room?.room_type?.name,
+  //       price: item.packageRoomPrice?.price,
+  //       departureDate: item.packageRel?.departure_date,
+  //       status: item.status,
+  //       createdBy: item.createdByUser?.name || null,
+  //       createdAt: item.created_at,
+  //       updatedBy: item.updatedByUser?.name || null,
+  //       updatedAt: item.updated_at,
+  //     })),
+  //     paging: {
+  //       page,
+  //       limit,
+  //       total,
+  //       totalPages,
+  //     },
+  //   };
+  // }
+
   async listUmroh(
-    request: ListUmrohRequest,
-  ): Promise<WebResponse<any[]>> {
-    const {
-      registerName,
-      registerPhone,
-      sortBy,
-      sortOrder,
-      page = 1,
-      limit = 10,
-    } = request;
-
-    const whereClauses: string[] = [];
-    const params: any[] = [];
-
-    // Menambahkan kondisi pencarian berdasarkan nama pendaftar
-    if (registerName) {
-      whereClauses.push(`register_name ILIKE $${params.length + 1}`);
-      params.push(`%${registerName}%`);
-    }
-
-    // Menambahkan kondisi pencarian berdasarkan nomor telepon pendaftar
-    if (registerPhone) {
-      whereClauses.push(`register_phone ILIKE $${params.length + 1}`);
-      params.push(`%${registerPhone}%`);
-    }
-
-    // Membuat bagian WHERE dari query
-    const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
-
-    // Menentukan kolom yang digunakan untuk penyortiran
-    const validSortFields = ['created_at', 'created_by', 'updated_by'];
-    const orderBy = validSortFields.includes(sortBy) ? sortBy : 'created_at';
-
-    // Menentukan arah penyortiran
-    const orderDirection = sortOrder === 'asc' ? 'ASC' : 'DESC';
-
-    // Query untuk menghitung total data
-    const countQuery = `
-    SELECT COUNT(DISTINCT umroh_code)
-    FROM umrah_registers
-    ${whereSql}
-  `;
-    const totalResult = await this.prisma.$queryRawUnsafe<{ count: bigint }[]>(countQuery, ...params);
-    const total = Number(totalResult[0]?.count || 0);
-    const totalPages = Math.ceil(total / limit);
-
-    // Query untuk mengambil data umroh
-    const selectQuery = `
-    SELECT DISTINCT ON (umroh_code) *
-    FROM umrah_registers
-    ${whereSql}
-    ORDER BY umroh_code, ${orderBy} ${orderDirection}
-    LIMIT $${params.length + 1}
-    OFFSET $${params.length + 2}
-  `;
-    params.push(limit, (page - 1) * limit);
-
-    const umroh: any = await this.prisma.$queryRawUnsafe(selectQuery, ...params);
-
-    return {
-      data: umroh.map((item) => ({
-        id: item.id,
-        umrohCode: item.umroh_code,
-        registerName: item.register_name,
-        registerPhone: item.register_phone,
-        packageId: item.package,
-        packageName: item.packageRel?.name,
-        packageHotel: item.packageRoomPrice?.package_room?.package_type?.name,
-        packageRoom: item.packageRoomPrice?.package_room?.room_type?.name,
-        price: item.packageRoomPrice?.price,
-        departureDate: item.packageRel?.departure_date,
-        status: item.status,
-        createdBy: item.createdByUser?.name || null,
-        createdAt: item.created_at,
-        updatedBy: item.updatedByUser?.name || null,
-        updatedAt: item.updated_at,
-      })),
-      paging: {
-        page,
-        limit,
-        total,
-        totalPages,
-      },
-    };
-  }
-
-  async listUmroh2(
     request: ListUmrohRequest,
   ): Promise<WebResponse<any[]>> {
     const {
@@ -1627,8 +1643,20 @@ export class MasterService {
 
     const umrah = await this.prisma.umrah.findMany({
       where,
-      orderBy,
-      include: {
+      select: {
+        umroh_code: true,
+        packageRel: {
+          select: {
+            name: true,
+            tour_lead: true,
+            departure_date: true,
+          }
+        },
+        _count: {
+          select: {
+            registers: true,
+          },
+        },
         createdByUser: {
           select: {
             id: true,
@@ -1641,16 +1669,20 @@ export class MasterService {
             name: true,
           },
         },
+        created_at: true,
+        updated_at: true,
       },
-      skip: (page - 1) * limit,
-      take: limit,
     });
 
     return {
-      data: airlines.map((item) => ({
-        id: item.id,
-        name: item.name,
-        status: item.status,
+      data: umrah.map((item) => ({
+        id: item.umroh_code,
+        countRegister: item._count.registers,
+        packageName: item.packageRel.name,
+        tourLead: item.packageRel.tour_lead,
+        departureDate: item.packageRel.departure_date,
+        // name: item.name,
+        // status: item.status,
         createdBy: item.createdByUser?.name || null,
         createdAt: item.created_at,
         updatedBy: item.updatedByUser?.name || null,

@@ -207,4 +207,14 @@ export class LovController {
     const result = await this.lovService.listUmrohPackageRooms(packageId);
     return result;
   }
+
+  @Get('umroh/:umrohCode')
+  @HttpCode(HttpStatus.OK)
+  async getUmroh(
+    @Auth() _: users,
+    @Param('umrohCode') umrohCode: string,
+  ): Promise<WebResponse<any>> {
+    const result = await this.lovService.getUmroh(umrohCode);
+    return result;
+  }
 }

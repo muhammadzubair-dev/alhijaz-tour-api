@@ -1030,6 +1030,13 @@ export class AirlineResponse {
 
 // Umroh
 export class CreateUmrohRegisterRequest {
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(20)
+  @ApiProperty({ description: 'Kode Umroh', example: 'UMR000001' })
+  umrohCode?: string;
+
   @IsString()
   @MinLength(16)
   @MaxLength(16)

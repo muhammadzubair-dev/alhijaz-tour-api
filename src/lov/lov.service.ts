@@ -420,4 +420,19 @@ export class LovService {
       })),
     };
   }
+
+  async getUmroh(umrohCode): Promise<WebResponse<any>> {
+    const result = await this.prisma.umrah.findFirst({
+      select: {
+        umroh_code: true,
+        package: true,
+      },
+      where: {
+        umroh_code: umrohCode
+      }
+    });
+    return {
+      data: result,
+    };
+  }
 }
