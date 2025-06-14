@@ -1648,9 +1648,17 @@ export class MasterService {
         pin: true,
         packageRel: {
           select: {
+            id: true,
             name: true,
             tour_lead: true,
             departure_date: true,
+            tourLeadUser: {
+              select: {
+                first_name: true,
+                mid_name: true,
+                last_name: true
+              }
+            }
           }
         },
         _count: {
@@ -1680,8 +1688,9 @@ export class MasterService {
       data: umrah.map((item) => ({
         id: item.umroh_code,
         countRegister: item._count.registers,
+        packageId: item.packageRel.id,
         packageName: item.packageRel.name,
-        tourLead: item.packageRel.tour_lead,
+        tourLead: `${item.packageRel.tourLeadUser.first_name} ${item.packageRel.tourLeadUser.mid_name ?? ''} ${item.packageRel.tourLeadUser.last_name}`,
         pin: item.pin,
         departureDate: item.packageRel.departure_date,
         // name: item.name,
@@ -1700,6 +1709,105 @@ export class MasterService {
     };
   }
 
+  async editUmroh(
+    authUser: users,
+    paramUmrohCode: string,
+    body: { packageId: string; tourLead: string }
+  ) {
+    const { packageId, tourLead } = body;
+
+    // Jalankan transaction
+    return await this.prisma.$transaction(async (tx) => {
+      // Cek apakah umrah ada
+      const umrah = await tx.umrah.findUnique({
+        where: { umroh_code: paramUmrohCode },
+      });
+
+      if (!umrah) {
+        throw new NotFoundException(`Umrah with code ${paramUmrohCode} not found`);
+      }
+
+      // Cek apakah package ada
+      const pkg = await tx.packages.findUnique({
+        where: { id: packageId },
+      });
+
+      if (!pkg) {
+        throw new NotFoundException(`Package with id ${packageId} not found`);
+      }
+
+      // Update umrah
+      await tx.umrah.update({
+        where: { umroh_code: paramUmrohCode },
+        data: {
+          package: packageId,
+          updated_by: authUser.id,
+          updated_at: new Date(),
+        },
+      });
+
+      // Update package
+      await tx.packages.update({
+        where: { id: packageId },
+        data: {
+          tour_lead: tourLead,
+          updated_by: authUser.id,
+          updated_at: new Date(),
+        },
+      });
+
+      return {
+        data: {
+          message: 'Umrah and package updated successfully',
+          umrohCode: paramUmrohCode,
+        }
+      };
+    });
+  }
+
+  async deleteUmroh(umrohCode: string) {
+    return await this.prisma.$transaction(async (tx) => {
+      // Pastikan umrah ada
+      const umrah = await tx.umrah.findUnique({
+        where: { umroh_code: umrohCode },
+        include: {
+          registers: true,
+        },
+      });
+
+      if (!umrah) {
+        throw new NotFoundException(`Umrah with code ${umrohCode} not found`);
+      }
+
+      // Hapus semua umrah_payments yang terkait dengan umrah_registers
+      const registerIds = umrah.registers.map((r) => r.id);
+
+      if (registerIds.length > 0) {
+        await tx.umrah_payments.deleteMany({
+          where: {
+            umrah_register_id: { in: registerIds },
+          },
+        });
+
+        // Hapus semua umrah_registers
+        await tx.umrah_registers.deleteMany({
+          where: {
+            id: { in: registerIds },
+          },
+        });
+      }
+
+      // Hapus umrah itu sendiri
+      await tx.umrah.delete({
+        where: { umroh_code: umrohCode },
+      });
+
+      return {
+        message: 'Umrah and its related data successfully deleted',
+        umrohCode
+      };
+    });
+  }
 
 
   // Testing Upload

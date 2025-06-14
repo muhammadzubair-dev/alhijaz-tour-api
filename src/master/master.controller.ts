@@ -302,6 +302,28 @@ export class MasterController {
     return result;
   }
 
+  @Patch('umroh/:umrohCode')
+  @HttpCode(HttpStatus.OK)
+  async editUmroh(
+    @Auth() user: users,
+    @Param('umrohCode') umrohCode: string,
+    @Body() request: { packageId: string; tourLead: string },
+  ): Promise<WebResponse<any>> {
+    const result = await this.masterService.editUmroh(user, umrohCode, request);
+    return result
+  }
+
+  @Delete('umroh/:umrohCode')
+  async deleteUmroh(
+    @Auth() _: users,
+    @Param('umrohCode') umrohCode: string
+  ) {
+    const result = await this.masterService.deleteUmroh(umrohCode);
+    return {
+      data: result
+    };
+  }
+
   // Testing Upload
   @Post('upload-avatar')
   @UseInterceptors(FileInterceptor('file')) // Mengambil file dari form-data

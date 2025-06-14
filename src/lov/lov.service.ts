@@ -119,6 +119,31 @@ export class LovService {
     };
   }
 
+  async listJamaahUmroh(umrohCode: string): Promise<WebResponse<any[]>> {
+    const jamaah = await this.prisma.umrah_registers.findMany({
+      select: {
+        jamaahRel: {
+          select: {
+            jamaah_code: true,
+            first_name: true,
+            mid_name: true,
+            last_name: true
+          }
+        }
+      },
+      where: {
+        umroh_code: umrohCode,
+        status: '1'
+      }
+    });
+    return {
+      data: jamaah.map((item) => ({
+        jamaahCode: item.jamaahRel.jamaah_code,
+        jamaahName: `${item.jamaahRel.first_name} ${item.jamaahRel.mid_name ?? ''} ${item.jamaahRel.last_name ?? ''}`.trim(),
+      })),
+    };
+  }
+
   async getJamaahByIdentityNumber(identityNumber: string): Promise<WebResponse<any | null>> {
     const jamaah = await this.prisma.jamaah.findFirst({
       where: {

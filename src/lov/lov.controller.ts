@@ -77,6 +77,16 @@ export class LovController {
     return result;
   }
 
+  @Get('jamaah/umroh/:umrohCode')
+  @HttpCode(HttpStatus.OK)
+  async listJamaahUmroh(
+    @Auth() _: users,
+    @Param('umrohCode') umrohCode: string,
+  ): Promise<WebResponse<JamaahResponse[]>> {
+    const result = await this.lovService.listJamaahUmroh(umrohCode);
+    return result;
+  }
+
   @Get('tickets')
   @HttpCode(HttpStatus.OK)
   async listTicket(
