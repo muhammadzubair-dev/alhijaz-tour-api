@@ -1,16 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { umrah_registers, users } from '@prisma/client';
-import moment from 'moment';
+import { users } from '@prisma/client';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
-import { ListBankRequest, ListSosmedRequest, BankResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, SosmedResponse, RegisterPackageRequest, CreatePackageRequestDto, PackageResponse, ListPackageRequest, HotelRoomDto, AirportResponse, ListAirportRequest, RegisterAirportRequest, ListAirlineRequest, AirlineResponse, RegisterAirlineRequest, CreateUmrohRegisterRequest, ListUmrohRequest } from 'src/common/dto/master.dto';
+import { AirlineResponse, AirportResponse, BankResponse, CreatePackageRequestDto, ListAirlineRequest, ListAirportRequest, ListBankRequest, ListPackageRequest, ListSosmedRequest, PackageResponse, RegisterAirlineRequest, RegisterAirportRequest, RegisterBankRequest, RegisterSosmedRequest, SosmedResponse } from 'src/common/dto/master.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { PrismaService } from 'src/common/prisma.service';
 import { UploadService } from 'src/common/upload.service';
 import { camelToSnakeCase } from 'src/common/utils/camelToSnakeCase';
 import { generateAutoId } from 'src/common/utils/generateAutoId';
-import snakeToCamelObject from 'src/common/utils/snakeToCamelObject';
 import { Logger } from 'winston';
 
 @Injectable()

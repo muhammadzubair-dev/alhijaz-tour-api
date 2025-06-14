@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Query, UploadedFile, UploadedFiles, UseInterceptors } from "@nestjs/common";
-import { ListBankRequest, ListSosmedRequest, BankResponse, SosmedResponse, RegisterBankRequest, RegisterSosmedRequest, PackageTypeResponse, RegisterPackageRequest, CreatePackageRequestDto, ListPackageRequest, PackageResponse, RegisterAirportRequest, AirportResponse, ListAirportRequest, RegisterAirlineRequest, AirlineResponse, ListAirlineRequest, CreateUmrohRegisterRequest, ListUmrohRequest } from "src/common/dto/master.dto";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Query, UploadedFiles, UseInterceptors } from "@nestjs/common";
+import { FileFieldsInterceptor } from "@nestjs/platform-express";
+import { users } from "@prisma/client";
+import { Auth } from "src/common/auth.decorator";
+import { AirlineResponse, AirportResponse, BankResponse, CreatePackageRequestDto, ListAirlineRequest, ListAirportRequest, ListBankRequest, ListPackageRequest, ListSosmedRequest, PackageResponse, RegisterAirlineRequest, RegisterAirportRequest, RegisterBankRequest, RegisterSosmedRequest, SosmedResponse } from "src/common/dto/master.dto";
 import { WebResponse } from "src/common/dto/web.dto";
 import { MasterService } from "./master.service";
-import { Auth } from "src/common/auth.decorator";
-import { users } from "@prisma/client";
-import { FileFieldsInterceptor, FileInterceptor } from "@nestjs/platform-express";
 
 @Controller('/api/master')
 export class MasterController {
