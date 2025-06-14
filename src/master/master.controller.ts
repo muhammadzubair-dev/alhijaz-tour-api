@@ -324,6 +324,17 @@ export class MasterController {
     };
   }
 
+  @Get('umroh/:umrohCode/jamaah')
+  @HttpCode(HttpStatus.OK)
+  async listJamaahUmroh(
+    @Auth() _: users,
+    @Param('umrohCode') umrohCode: string,
+    @Query() request: ListUmrohRequest,
+  ): Promise<WebResponse<any[]>> {
+    const result = await this.masterService.listJamaahUmroh(umrohCode, request);
+    return result;
+  }
+
   // Testing Upload
   @Post('upload-avatar')
   @UseInterceptors(FileInterceptor('file')) // Mengambil file dari form-data

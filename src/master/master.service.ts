@@ -1690,7 +1690,7 @@ export class MasterService {
         countRegister: item._count.registers,
         packageId: item.packageRel.id,
         packageName: item.packageRel.name,
-        tourLead: `${item.packageRel.tourLeadUser.first_name} ${item.packageRel.tourLeadUser.mid_name ?? ''} ${item.packageRel.tourLeadUser.last_name}`,
+        // tourLead: item.packageRel?.tourLeadUser ? `${item.packageRel?.tourLeadUser?.first_name} ${item.packageRel?.tourLeadUser?.mid_name ?? ''} ${item.packageRel?.tourLeadUser?.last_name}` : '-',
         pin: item.pin,
         departureDate: item.packageRel.departure_date,
         // name: item.name,
@@ -1807,6 +1807,122 @@ export class MasterService {
         umrohCode
       };
     });
+  }
+
+  async listJamaahUmroh(
+    umrohCode: string,
+    request: ListUmrohRequest,
+  ): Promise<WebResponse<any[]>> {
+    const {
+      sortBy,
+      sortOrder,
+      page = 1,
+      limit = 10,
+    } = request;
+
+    const where: any = {
+      umroh_code: umrohCode
+      // ...(name && { name: { contains: name, mode: 'insensitive' } }),
+      // ...(status && { status }),
+    };
+
+    let orderBy: any = {
+      created_at: 'desc', // default jika tidak ada sortBy
+    };
+
+    if (sortBy) {
+      if (sortBy === 'createdBy') {
+        orderBy = {
+          createdByUser: {
+            name: sortOrder ?? 'asc',
+          },
+        };
+      } else if (sortBy === 'updatedBy') {
+        orderBy = {
+          updatedByUser: {
+            name: sortOrder ?? 'asc',
+          },
+        };
+      } else {
+        orderBy = {
+          [camelToSnakeCase(sortBy)]: sortOrder ?? 'asc',
+        };
+      }
+    }
+
+    const total = await this.prisma.umrah_registers.count({ where });
+    const totalPages = Math.ceil(total / limit);
+
+    const umrah = await this.prisma.umrah_registers.findMany({
+      where,
+      select: {
+        register_name: true,
+        register_phone: true,
+        created_at: true,
+        updated_at: true,
+        jamaahRel: {
+          select: {
+            jamaah_code: true,
+            first_name: true,
+            mid_name: true,
+            last_name: true,
+          }
+        },
+        packageRoomPrice: {
+          select: {
+            package_room: {
+              select: {
+                package_type: {
+                  select: {
+                    name: true
+                  }
+                },
+                room_type: {
+                  select: {
+                    name: true
+                  }
+                }
+              }
+            }
+          }
+        },
+        createdByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        updatedByUser: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy
+    });
+
+    console.log(JSON.stringify(umrah, null, 2))
+
+    return {
+      data: umrah.map((item) => ({
+        jamaahName: `${item.jamaahRel.first_name} ${item.jamaahRel.mid_name ?? ''} ${item.jamaahRel.last_name}`,
+        typePackage: item.packageRoomPrice.package_room.package_type.name,
+        roomPackage: item.packageRoomPrice.package_room.room_type.name,
+        registerName: item.register_name,
+        registerPhone: item.register_phone,
+        createdBy: item.createdByUser?.name || null,
+        createdAt: item.created_at,
+        updatedBy: item.updatedByUser?.name || null,
+        updatedAt: item.updated_at,
+      })),
+      paging: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
   }
 
 

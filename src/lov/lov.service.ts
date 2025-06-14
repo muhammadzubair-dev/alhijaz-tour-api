@@ -157,39 +157,88 @@ export class LovService {
     };
   }
 
-  async listTicket(): Promise<WebResponse<{ bookingCode: string; remainingSeat: number }[]>> {
+  async listTicket(): Promise<WebResponse<any[]>> {
     const tickets = await this.prisma.tickets.findMany({
       where: { status: '1' },
-      select: { id: true, booking_code: true, seat_pack: true, ticket_details: true },
+      select: {
+        id: true,
+        booking_code: true,
+        seat_pack: true,
+        ticket_details: {
+          select: {
+            ticket_date: true,
+            flight_no: true,
+            ticket_etd: true,
+            ticket_eta: true,
+            type: true,
+            airline: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            airport_from: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
+            airport_to: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
     });
+
     const usedSeats = await this.prisma.packages.groupBy({
       by: ['ticket'],
       where: {
-        ticket: { in: tickets.map(t => t.id) },
+        ticket: { in: tickets.map((t) => t.id) },
         seat: { not: null },
       },
       _sum: { seat: true },
     });
+
     const seatMap = Object.fromEntries(
-      usedSeats.map(u => [u.ticket, u._sum.seat || 0])
+      usedSeats.map((u) => [u.ticket, u._sum.seat || 0])
     );
-    return {
-      data: tickets.map(t => {
-        const remainingSeat = t.seat_pack - (seatMap[t.id] || 0);
-        const sortedDetails = t.ticket_details.sort((a, b) =>
-          new Date(a.ticket_date).getTime() - new Date(b.ticket_date).getTime()
-        );
-        const departureDate = sortedDetails[0]?.ticket_date ?? null;
-        return {
-          id: t.id,
-          bookingCode: t.booking_code,
-          seatPack: t.seat_pack,
-          remainingSeat,
-          departureDate,
-          ticketDetails: snakeToCamelObject(t.ticket_details),
-        };
-      }),
-    };
+
+    const data = tickets.map((t) => {
+      const remainingSeat = t.seat_pack - (seatMap[t.id] || 0);
+
+      const sortedDetails = t.ticket_details.sort(
+        (a, b) => new Date(a.ticket_date).getTime() - new Date(b.ticket_date).getTime()
+      );
+
+      const departureDetail = sortedDetails.find((d) => d.type === 0); // departure
+      const returnDetail = sortedDetails.find((d) => d.type === 1); // return
+
+      return {
+        id: t.id,
+        bookingCode: t.booking_code,
+        seatPack: t.seat_pack,
+        remainingSeat,
+        departureDate: departureDetail?.ticket_date ?? null,
+        ticketDetails: sortedDetails.map((d) => ({
+          type: d.type === 0 ? 'Departure' : 'Return',
+          flightNo: d.flight_no,
+          ticketDate: d.ticket_date,
+          ticketAirlineName: d.airline?.name,
+          ticketFrom: d.airport_from?.code,
+          ticketFromName: d.airport_from?.name,
+          ticketEtd: d.ticket_etd,
+          ticketTo: d.airport_to?.code,
+          ticketToName: d.airport_to?.name,
+          ticketEta: d.ticket_eta,
+        })),
+      };
+    });
+
+    return { data };
   }
 
   async listAirport(): Promise<WebResponse<{ code: string, name: string }[]>> {
