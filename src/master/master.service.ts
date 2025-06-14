@@ -1467,6 +1467,7 @@ export class MasterService {
           await tx.umrah.create({
             data: {
               umroh_code: umrohCode,
+              pin: Number(dto.phoneNumber.slice(-5)),
               package: dto.packageId,
               created_by: authUser.id,
               updated_by: null,
@@ -1491,7 +1492,6 @@ export class MasterService {
             register_name: dto.registerName,
             register_phone: dto.registerPhone,
             notes: dto.notes,
-            pin: Number(dto.phoneNumber.slice(-5)),
             status: '1',
             created_by: authUser.id,
             updated_by: null,
@@ -1645,6 +1645,7 @@ export class MasterService {
       where,
       select: {
         umroh_code: true,
+        pin: true,
         packageRel: {
           select: {
             name: true,
@@ -1672,6 +1673,7 @@ export class MasterService {
         created_at: true,
         updated_at: true,
       },
+      orderBy
     });
 
     return {
@@ -1680,6 +1682,7 @@ export class MasterService {
         countRegister: item._count.registers,
         packageName: item.packageRel.name,
         tourLead: item.packageRel.tour_lead,
+        pin: item.pin,
         departureDate: item.packageRel.departure_date,
         // name: item.name,
         // status: item.status,

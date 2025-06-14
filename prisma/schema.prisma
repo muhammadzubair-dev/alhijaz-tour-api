@@ -142,7 +142,7 @@ model users {
   packageRoomPricesCreated package_room_prices[] @relation("PackageRoomPricesCreatedBy")
   packageRoomPricesUpdated package_room_prices[] @relation("PackageRoomPricesUpdatedBy")
 
-   // Relations from umrah table
+  // Relations from umrah table
   umrahCreated umrah[] @relation("UmrahCreatedBy")
   umrahUpdated umrah[] @relation("UmrahUpdatedBy")
 
@@ -825,16 +825,17 @@ model package_room_prices {
 model umrah {
   umroh_code String    @id @db.VarChar(20)
   package    String    @db.VarChar(20)
+  pin        Int       @default(12345)
   created_by String?   @default("system")
   created_at DateTime? @default(now())
   updated_by String?   @default("system")
   updated_at DateTime? @default(now())
 
   // Relations
-  createdByUser    users?               @relation("UmrahCreatedBy", fields: [created_by], references: [id])
-  updatedByUser    users?               @relation("UmrahUpdatedBy", fields: [updated_by], references: [id])
-  registers  umrah_registers[] @relation("UmrahToRegister")
-  packageRel packages          @relation("UmrahToPackage", fields: [package], references: [id])
+  createdByUser users?            @relation("UmrahCreatedBy", fields: [created_by], references: [id])
+  updatedByUser users?            @relation("UmrahUpdatedBy", fields: [updated_by], references: [id])
+  registers     umrah_registers[] @relation("UmrahToRegister")
+  packageRel    packages          @relation("UmrahToPackage", fields: [package], references: [id])
 }
 
 model umrah_registers {
@@ -851,7 +852,6 @@ model umrah_registers {
   register_name      String    @db.VarChar(20)
   register_phone     String    @db.VarChar(20)
   notes              String?   @db.VarChar(100)
-  pin                Int
   status             String    @db.Char(1)
   created_by         String?   @default("system")
   created_at         DateTime? @default(now())
