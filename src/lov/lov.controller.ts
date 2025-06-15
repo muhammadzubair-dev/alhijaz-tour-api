@@ -238,4 +238,13 @@ export class LovController {
     const result = await this.lovService.getUmroh(umrohCode);
     return result;
   }
+
+  @Get('menu')
+  @HttpCode(HttpStatus.OK)
+  async listMenu(
+    @Auth() _: users,
+  ): Promise<WebResponse<{ id: string, name: string }[]>> {
+    const result = await this.lovService.listMenu();
+    return result;
+  }
 }

@@ -529,4 +529,19 @@ export class LovService {
       data: result,
     };
   }
+
+  async listMenu(): Promise<WebResponse<{ id: string, name: string }[]>> {
+    const banks = await this.prisma.menus.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+    return {
+      data: banks.map((item) => ({
+        id: item.id,
+        name: item.name,
+      })),
+    };
+  }
 }

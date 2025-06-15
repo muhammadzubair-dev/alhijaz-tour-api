@@ -57,8 +57,10 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   async currentUser(
     @Auth() user: users,
-  ): Promise<WebResponse<UserResponse>> {
-    return { data: user };
+  ): Promise<WebResponse<any>> {
+    const result = await this.userService.loggedInUser(user.id);
+
+    return { data: { ...user, menu: result.menuIds }, };
   }
 
   @Post()
@@ -175,6 +177,19 @@ export class UserController {
     @Param('id') id: number
   ): Promise<{ message: string }> {
     return this.userService.deleteRole(id);
+  }
+
+  @Post('role/:roleId/menu')
+  @HttpCode(HttpStatus.OK)
+  async updateRoleMenu(
+    @Auth() user: users,
+    @Param('roleId') roleId: number,
+    @Body() request: { data: string[] },
+  ): Promise<WebResponse<any>> {
+    const result = await this.userService.updateRoleMenu(roleId, request.data, user);
+    return {
+      data: result,
+    };
   }
 
   // Agent

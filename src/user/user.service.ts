@@ -367,6 +367,30 @@ export class UserService {
     };
   }
 
+  async loggedInUser(userId: string): Promise<{ menuIds: string[] }> {
+    // Step 1: Ambil semua user_roles yang dimiliki user ini
+    const userRoles = await this.prisma.user_roles.findMany({
+      where: { user_id: userId },
+      select: {
+        id: true, // user_role_id
+        role_menus: {
+          select: {
+            menu_id: true,
+          },
+        },
+      },
+    });
+
+    // Step 2: Ambil semua menu_id dari relasi role_menus
+    const menuIds = userRoles
+      .flatMap((role) => role.role_menus.map((rm) => rm.menu_id));
+
+    // Step 3: Kembalikan hasil sebagai array unik (optional, jika perlu filter duplikat)
+    const uniqueMenuIds = [...new Set(menuIds)];
+
+    return { menuIds: uniqueMenuIds };
+  }
+
   // Menu
   async listMenu(
     request: ListMenuRequest,
@@ -440,6 +464,15 @@ export class UserService {
 
     const roles = await this.prisma.roles.findMany({
       include: {
+        user_roles: {
+          select: {
+            role_menus: {
+              select: {
+                menu_id: true
+              }
+            }
+          }
+        },
         createdByUser: {
           select: {
             id: true,
@@ -469,6 +502,7 @@ export class UserService {
         name: role.name,
         description: role.description,
         type: role.type,
+        menu: role.user_roles,
         platform: role.platform,
         isActive: role.isActive,
         createdBy: role.createdByUser?.name || '-',
@@ -588,6 +622,50 @@ export class UserService {
       type: updatedRole.type,
       isActive: updatedRole.isActive,
     };
+  }
+
+  async updateRoleMenu(
+    roleId: number,
+    payload: string[],
+    authUser: users
+  ) {
+    const now = new Date();
+
+    // 1. Get all user_roles by role_id
+    const userRoles = await this.prisma.user_roles.findMany({
+      where: { roles_id: roleId },
+    });
+    if (!userRoles.length) {
+      throw new NotFoundException('No user_roles found for the given role');
+    }
+    const userRoleIds = userRoles.map((ur) => ur.id);
+
+    // 2. Prepare new user_roles_menu entries
+    const newEntries = userRoles.flatMap((userRole) =>
+      payload.map((menuId) => ({
+        user_role_id: userRole.id,
+        menu_id: menuId,
+        created_by: authUser.id,
+        created_at: now,
+        updated_by: authUser.id,
+        updated_at: now,
+      }))
+    );
+
+    // 3. Run inside transaction
+    await this.prisma.$transaction([
+      this.prisma.user_roles_menu.deleteMany({
+        where: {
+          user_role_id: { in: userRoleIds },
+        },
+      }),
+      this.prisma.user_roles_menu.createMany({
+        data: newEntries,
+        skipDuplicates: true,
+      }),
+    ]);
+
+    return { message: 'User role menus updated successfully' };
   }
 
   async deleteRole(id: number): Promise<{ message: string }> {

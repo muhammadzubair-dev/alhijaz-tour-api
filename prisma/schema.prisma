@@ -305,18 +305,18 @@ model roles {
 model user_roles_menu {
   id           Int       @id @default(autoincrement())
   user_role_id String
-  menu_id      Int
+  menu_id      String
   created_by   String?   @default("system")
   created_at   DateTime? @default(now())
   updated_by   String?   @default("system")
   updated_at   DateTime? @default(now())
 
   user_role user_roles @relation(fields: [user_role_id], references: [id])
-  menu      menus      @relation(fields: [menu_id], references: [id])
+  menuRel   menus      @relation(fields: [menu_id], references: [id])
 }
 
 model menus {
-  id         Int       @id @default(autoincrement())
+  id         String    @id @db.VarChar(50)
   name       String    @db.VarChar(50)
   desc       String    @db.VarChar(50)
   created_by String?   @default("system")
@@ -330,7 +330,7 @@ model menus {
 
 model list_api {
   id         Int       @id @default(autoincrement())
-  menu_id    Int
+  menu_id    String
   name       String    @db.VarChar(50)
   url        String    @db.VarChar(50)
   parent_id  Int
@@ -340,7 +340,7 @@ model list_api {
   updated_by String?   @default("system")
   updated_at DateTime? @default(now())
 
-  menu menus @relation(fields: [menu_id], references: [id])
+  menuRel menus @relation(fields: [menu_id], references: [id])
 }
 
 model jamaah {

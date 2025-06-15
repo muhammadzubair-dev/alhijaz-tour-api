@@ -169,3 +169,65 @@ INSERT INTO airport (code, name, status, created_by, created_at, updated_by, upd
     -- 🇹🇷 Turki
     ('IST', 'Istanbul Airport', '1', null, NOW(), null, NOW()),
     ('SAW', 'Sabiha Gokcen', '1', null, NOW(), null, NOW());
+
+INSERT INTO menus (id, name, "desc")
+VALUES
+('DASH', 'Dashboard', 'Dashboard'),
+('RGST', 'Pendaftaran', 'Menu pendaftaran utama'),
+('RGST|UMRH', 'Pendaftaran Umroh', 'Submenu pendaftaran untuk umroh'),
+('RGST|UMRH|LIST', 'List Umroh', 'Melihat daftar pendaftaran umroh'),
+('RGST|UMRH|ADD', 'Tambah Umroh', 'Menambahkan pendaftaran umroh'),
+('RGST|UMRH|EDIT', 'Edit Umroh', 'Mengedit data pendaftaran umroh'),
+('RGST|UMRH|DEL', 'Hapus Umroh', 'Menghapus pendaftaran umroh'),
+('RGST|UMRH|ADDJ', 'Tambah Umroh via Kode', 'Menambahkan umroh berdasarkan kode'),
+
+('USRM', 'User Management', 'Manajemen pengguna'),
+('USRM|STAF', 'Staff', 'Manajemen data staff'),
+('USRM|STAF|LIST', 'List Staff', 'Melihat daftar staff'),
+('USRM|STAF|ADD', 'Tambah Staff', 'Menambahkan staff baru'),
+('USRM|STAF|EDIT', 'Edit Staff', 'Mengedit data staff'),
+('USRM|STAF|DEL', 'Hapus Staff', 'Menghapus data staff'),
+
+('USRM|AGNT', 'Agent', 'Manajemen data agen'),
+('USRM|AGNT|LIST', 'List Agent', 'Melihat daftar agent'),
+('USRM|AGNT|ADD', 'Tambah Agent', 'Menambahkan agent baru'),
+('USRM|AGNT|EDIT', 'Edit Agent', 'Mengedit data agent'),
+('USRM|AGNT|DEL', 'Hapus Agent', 'Menghapus agent'),
+
+('USRM|ROLE', 'Role', 'Manajemen role'),
+('USRM|ROLE|LIST', 'List Role', 'Melihat daftar role'),
+('USRM|ROLE|ADD', 'Tambah Role', 'Menambahkan role baru'),
+('USRM|ROLE|EDIT', 'Edit Role', 'Mengedit role'),
+('USRM|ROLE|DEL', 'Hapus Role', 'Menghapus role'),
+
+('DTMS', 'Data Master', 'Menu data master utama'),
+('DTMS|PCKG', 'Package', 'Data paket'),
+('DTMS|PCKG|LIST', 'List Package', 'Melihat daftar paket'),
+('DTMS|PCKG|ADD', 'Tambah Package', 'Menambahkan paket baru'),
+('DTMS|PCKG|EDIT', 'Edit Package', 'Mengedit paket'),
+('DTMS|PCKG|DEL', 'Hapus Package', 'Menghapus paket'),
+
+('DTMS|TCKT', 'Ticket', 'Data tiket'),
+('DTMS|TCKT|LIST', 'List Ticket', 'Melihat daftar tiket'),
+('DTMS|TCKT|ADD', 'Tambah Ticket', 'Menambahkan tiket baru'),
+('DTMS|TCKT|EDIT', 'Edit Ticket', 'Mengedit tiket'),
+('DTMS|TCKT|DEL', 'Hapus Ticket', 'Menghapus tiket'),
+
+('DTMS|BANK', 'Bank', 'Data bank'),
+('DTMS|BANK|LIST', 'List Bank', 'Melihat daftar bank'),
+('DTMS|BANK|ADD', 'Tambah Bank', 'Menambahkan bank baru'),
+('DTMS|BANK|EDIT', 'Edit Bank', 'Mengedit bank'),
+('DTMS|BANK|DEL', 'Hapus Bank', 'Menghapus bank'),
+
+('DTMS|ARPT', 'Airport', 'Data bandara'),
+('DTMS|ARPT|LIST', 'List Airport', 'Melihat daftar bandara'),
+('DTMS|ARPT|ADD', 'Tambah Airport', 'Menambahkan bandara'),
+('DTMS|ARPT|EDIT', 'Edit Airport', 'Mengedit bandara'),
+('DTMS|ARPT|DEL', 'Hapus Airport', 'Menghapus bandara'),
+
+('DTMS|ARLN', 'Airline', 'Data maskapai'),
+('DTMS|ARLN|LIST', 'List Airline', 'Melihat daftar maskapai'),
+('DTMS|ARLN|ADD', 'Tambah Airline', 'Menambahkan maskapai'),
+('DTMS|ARLN|EDIT', 'Edit Airline', 'Mengedit maskapai'),
+('DTMS|ARLN|DEL', 'Hapus Airline', 'Menghapus maskapai');
+
