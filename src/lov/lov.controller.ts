@@ -38,6 +38,17 @@ export class LovController {
     return result;
   }
 
+  @Get('role/:userType')
+  @HttpCode(HttpStatus.OK)
+  async listRole(
+    @Auth() _: users,
+    @Param('userType') userType: string,
+  ): Promise<WebResponse<any[]>> {
+    const result = await this.lovService.listRole(userType);
+    return result;
+  }
+
+
   @Get('package/:packageId/rooms')
   @HttpCode(HttpStatus.OK)
   async listPackageRoom(

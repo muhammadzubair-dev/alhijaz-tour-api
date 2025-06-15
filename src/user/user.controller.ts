@@ -195,7 +195,7 @@ export class UserController {
   async updateAgent(
     @Auth() user: users,
     @Param('id') id: number,
-    @Body() request: RegisterAgentRequest,
+    @Body() request: Partial<RegisterAgentRequest>,
   ): Promise<WebResponse<{ message: string }>> {
     const result = await this.userService.updateAgent(user, id, request);
     return {

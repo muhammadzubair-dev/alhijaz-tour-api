@@ -31,6 +31,12 @@ export class AuthMiddleware implements NestMiddleware {
 
           if (redisToken === token) {
             const user = await this.prisma.users.findUnique({
+              select: {
+                id: true,
+                username: true,
+                name: true,
+                type: true,
+              },
               where: { id: userId },
             });
 

@@ -54,6 +54,14 @@ export class RegisterUserRequest {
     enum: ['0', '1'],
   })
   type?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @ApiPropertyOptional({
+    description: 'isActive: true = active, false = Inactive',
+    example: 1,
+  })
+  roleId?: number;
 }
 
 export class LoginUserRequest {
@@ -254,6 +262,14 @@ export class RegisterRoleRequest {
     example: true,
   })
   isActive?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @ApiPropertyOptional({
+    description: 'Role Agent',
+    example: 12,
+  })
+  roleId?: number;
 }
 
 export class ListRoleRequest {
@@ -450,6 +466,14 @@ export class RegisterAgentRequest {
     example: true,
   })
   isActive: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @ApiPropertyOptional({
+    description: 'Role Agent',
+    example: 12,
+  })
+  roleId?: number;
 }
 
 export class ListAgentRequest {

@@ -42,7 +42,10 @@ export class UserService {
   ) { }
 
   // User
-  async registerUser(request: RegisterUserRequest, authUser: users): Promise<UserResponse> {
+  async registerUser(
+    request: RegisterUserRequest,
+    authUser: users
+  ): Promise<UserResponse> {
     this.logger.info(`Registering new user: ${request.username}`);
 
     const existingUser = await this.prisma.users.findFirst({
@@ -62,26 +65,52 @@ export class UserService {
       lowercase: true,
       strict: true,
     });
+
     const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-    const user = await this.prisma.users.create({
-      data: {
-        username: request.username,
-        name: request.name,
-        isActive: request.isActive,
-        type: request.type,
-        password: hashedPassword,
-        created_by: authUser.id,
-        updated_by: null,
-        updated_at: null
-      },
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Buat user
+      const user = await tx.users.create({
+        data: {
+          username: request.username.trim(),
+          name: request.name.trim(),
+          isActive: request.isActive ?? true,
+          type: request.type ?? '0',
+          password: hashedPassword,
+          created_by: authUser.id,
+          updated_by: null,
+          updated_at: null
+        },
+      });
+
+      // Jika ada roleId, insert ke user_roles (hindari duplikasi)
+      if (request.roleId) {
+        await tx.user_roles.upsert({
+          where: {
+            user_id_roles_id: {
+              user_id: user.id,
+              roles_id: request.roleId,
+            },
+          },
+          update: {}, // tidak diupdate jika sudah ada
+          create: {
+            user_id: user.id,
+            roles_id: request.roleId,
+            created_by: authUser.id,
+            updated_by: null,
+            updated_at: null
+          },
+        });
+      }
+
+      return user;
     });
 
-    this.logger.info(`User registered: ${user.username}`);
+    this.logger.info(`User registered: ${result.username}`);
 
     return {
-      username: user.username,
-      name: user.name,
+      username: result.username,
+      name: result.name,
       password: randomPassword,
     };
   }
@@ -107,8 +136,8 @@ export class UserService {
       ...(name && {
         name: { contains: name, mode: 'insensitive' },
       }),
-      ...(type !== undefined && { type }),
       ...(isActive !== undefined && { isActive }),
+      type: '0',
       isDeleted: false, // hanya ambil data yang belum dihapus
     };
 
@@ -125,6 +154,18 @@ export class UserService {
 
     const users = await this.prisma.users.findMany({
       include: {
+        user_roles: {
+          select: {
+            id: true,
+            roles_id: true,
+            role: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          },
+        },
         createdByUser: {
           select: {
             id: true,
@@ -147,6 +188,8 @@ export class UserService {
     return {
       data: users.map((user) => ({
         id: user.id,
+        role: user.user_roles[0]?.role.name || null,
+        roleId: user.user_roles[0]?.role.id || null,
         username: user.username,
         name: user.name,
         bannedUntil: user.banned_until,
@@ -211,34 +254,54 @@ export class UserService {
       });
 
       if (usernameTaken) {
-        throw new BadRequestException(
-          'Username already in use by another user',
-        );
+        throw new BadRequestException('Username already in use by another user');
       }
     }
 
-    // Cek apakah payload berbeda dengan data existing
-    // const isSameData =
-    //   (payload.username ?? existingUser.username) === existingUser.username &&
-    //   (payload.name ?? existingUser.name) === existingUser.name
-    // // (payload.type ?? existingUser.type) === existingUser.type;
+    const operations: any[] = [];
 
-    // if (isSameData) {
-    //   throw new BadRequestException(
-    //     'No changes detected in the update request',
-    //   );
-    // }
+    // Update user data
+    operations.push(
+      this.prisma.users.update({
+        where: { id: userId },
+        data: {
+          username: payload.username ?? existingUser.username,
+          name: payload.name ?? existingUser.name,
+          type: payload.type ?? existingUser.type,
+          updated_by: authUser.id,
+          updated_at: new Date(),
+        },
+      })
+    );
 
-    const updatedUser = await this.prisma.users.update({
-      where: { id: userId },
-      data: {
-        username: payload.username ?? existingUser.username,
-        name: payload.name ?? existingUser.name,
-        type: payload.type ?? existingUser.type,
-        updated_by: authUser.id,
-        updated_at: new Date()
-      },
-    });
+    // Hapus semua role user terlebih dahulu
+    operations.push(
+      this.prisma.user_roles.deleteMany({
+        where: { user_id: userId },
+      })
+    );
+
+    // Tambahkan role jika ada dan belum ada di tabel user_roles
+    if (payload.roleId) {
+      operations.push(
+        this.prisma.user_roles.upsert({
+          where: {
+            user_id_roles_id: {
+              user_id: userId,
+              roles_id: payload.roleId,
+            },
+          },
+          update: {}, // tidak perlu update jika sudah ada
+          create: {
+            user_id: userId,
+            roles_id: payload.roleId,
+            created_by: authUser.id,
+          },
+        })
+      );
+    }
+
+    const [updatedUser] = await this.prisma.$transaction(operations);
 
     return {
       username: updatedUser.username,
@@ -365,16 +428,13 @@ export class UserService {
       limit = 10,
     } = request;
 
-    const where = Object.fromEntries(
-      Object.entries({
-        name: name ? { contains: name, mode: 'insensitive' } : undefined,
-        description: description ? { contains: description, mode: 'insensitive' } : undefined,
-        type: type !== undefined ? type : undefined,
-        platform: platform !== undefined ? platform : undefined,
-        isActive: isActive !== undefined ? isActive : undefined,
-      }).filter(([_, value]) => value !== undefined),
-    );
-
+    const where: any = {
+      ...(name && { name: { contains: name, mode: 'insensitive' } }),
+      ...(description && { description: { contains: description, mode: 'insensitive' } }),
+      ...(type !== undefined && { type }),
+      ...(platform !== undefined && { platform }),
+      ...(isActive !== undefined && { isActive }),
+    };
     const total = await this.prisma.roles.count({ where });
     const totalPages = Math.ceil(total / limit);
 
@@ -546,6 +606,27 @@ export class UserService {
     return { message: `Role with ID ${id} deleted successfully.` };
   }
 
+  async bindUserToRole() {
+    // Params
+    // auth.id
+    // body.roleId
+
+    // Logic
+    // 1. Insert ke table user_role
+  }
+
+  async bindUserRoleToMenu() {
+
+    // Logic
+    // 1. Get id's from user_roles by roles_id
+    // 2. Insert menu_id to user_roles_menu each id's user_roles
+  }
+
+  async lovRole() {
+    // Logic
+    // 1. Select Roles 
+  }
+
   // Agent
   async listAgent(
     request: ListAgentRequest,
@@ -618,7 +699,17 @@ export class UserService {
           select: {
             id: true,
             name: true,
-            username: true
+            username: true,
+            user_roles: {
+              select: {
+                role: {
+                  select: {
+                    id: true,
+                    name: true,
+                  }
+                }
+              }
+            }
           },
         },
         bank: {
@@ -651,6 +742,8 @@ export class UserService {
         userId: agent.user.id,
         username: agent.user.username,
         name: agent.user.name,
+        roleId: agent.user.user_roles[0]?.role.id || null,
+        role: agent.user.user_roles[0]?.role.name || null,
         identityType: agent.identity_type,
         bankId: agent.bank.id,
         bankName: agent.bank.name,
@@ -678,73 +771,93 @@ export class UserService {
   }
 
   async registerAgent(request: RegisterAgentRequest, authUser: users): Promise<{ message: string; username: string; password: string }> {
-  this.logger.info(`Registering new agent: ${request.username}`);
+    this.logger.info(`Registering new agent: ${request.username}`);
 
-  const existingUser = await this.prisma.users.findFirst({
-    where: { username: request.username },
-  });
+    const existingUser = await this.prisma.users.findFirst({
+      where: { username: request.username },
+    });
 
-  if (existingUser) {
-    this.logger.warn(`Username already exists: ${request.username}`);
-    throw new BadRequestException('Username already exists');
+    if (existingUser) {
+      this.logger.warn(`Username already exists: ${request.username}`);
+      throw new BadRequestException('Username already exists');
+    }
+
+    const randomPassword = generatePassword.generate({
+      length: 10,
+      numbers: true,
+      symbols: true,
+      uppercase: true,
+      lowercase: true,
+      strict: true,
+    });
+    const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+    await this.prisma.$transaction(async (tx) => {
+      // 1. Create user
+      const user = await tx.users.create({
+        data: {
+          username: request.username,
+          name: request.name,
+          isActive: request.isActive,
+          type: '1', // langsung type 'agent'
+          password: hashedPassword,
+          created_by: authUser.id,
+          updated_by: null,
+          updated_at: null,
+        },
+      });
+
+      // 2. Create agent with the new user ID
+      await tx.agents.create({
+        data: {
+          user_id: user.id,
+          identity_type: request.identityType,
+          bank_id: request.bankId,
+          account_number: request.accountNumber,
+          phone: request.phone,
+          email: request.email,
+          balance: 0,
+          address: request.address,
+          lead_id: request.leadId,
+          coordinator_id: request.coordinatorId,
+          target_remaining: 0,
+          isActive: request.isActive,
+          created_by: authUser.id,
+          updated_by: null,
+          updated_at: null,
+        },
+      });
+
+      // 3. Jika ada roleId, insert ke user_roles (hindari duplikasi)
+      if (request.roleId) {
+        await tx.user_roles.upsert({
+          where: {
+            user_id_roles_id: {
+              user_id: user.id,
+              roles_id: request.roleId,
+            },
+          },
+          update: {}, // tidak diupdate jika sudah ada
+          create: {
+            user_id: user.id,
+            roles_id: request.roleId,
+            created_by: authUser.id,
+            updated_by: null,
+            updated_at: null
+          },
+        });
+      }
+    });
+
+    this.logger.info(`Agent registered: ${request.username}`);
+    return {
+      message: `Agent registered: ${request.username}`,
+      username: request.username,
+      password: randomPassword,
+    };
   }
 
-  const randomPassword = generatePassword.generate({
-    length: 10,
-    numbers: true,
-    symbols: true,
-    uppercase: true,
-    lowercase: true,
-    strict: true,
-  });
-  const hashedPassword = await bcrypt.hash(randomPassword, 10);
-
-  await this.prisma.$transaction(async (tx) => {
-    // 1. Create user
-    const user = await tx.users.create({
-      data: {
-        username: request.username,
-        name: request.name,
-        isActive: request.isActive,
-        type: '1', // langsung type 'agent'
-        password: hashedPassword,
-        created_by: authUser.id,
-        updated_by: null,
-        updated_at: null,
-      },
-    });
-
-    // 2. Create agent with the new user ID
-    await tx.agents.create({
-      data: {
-        user_id: user.id,
-        identity_type: request.identityType,
-        bank_id: request.bankId,
-        account_number: request.accountNumber,
-        phone: request.phone,
-        email: request.email,
-        balance: 0,
-        address: request.address,
-        lead_id: request.leadId,
-        coordinator_id: request.coordinatorId,
-        target_remaining: 0,
-        isActive: request.isActive,
-        created_by: authUser.id,
-        updated_by: null,
-        updated_at: null,
-      },
-    });
-  });
-
-  this.logger.info(`Agent registered: ${request.username}`);
-  return {
-    message: `Agent registered: ${request.username}`,
-    username: request.username,
-    password: randomPassword,
-  };
-}
-
-  async updateAgent(authUser: users, id: number, request: RegisterAgentRequest): Promise<{ message: string }> {
+  async updateAgent(authUser: users, id: number, request: Partial<RegisterAgentRequest>): Promise<{ message: string }> {
     const existingAgent = await this.prisma.agents.findUnique({ where: { id } });
 
     if (!existingAgent) {
@@ -752,7 +865,7 @@ export class UserService {
     }
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.agents.update({
+      const updatedAgent = await tx.agents.update({
         where: { id },
         data: {
           identity_type: request.identityType,
@@ -768,6 +881,32 @@ export class UserService {
           updated_at: new Date(),
         },
       });
+
+      // Hapus semua role user terlebih dahulu
+      await tx.user_roles.deleteMany({
+        where: { user_id: updatedAgent.user_id },
+      })
+
+      // Tambahkan role jika ada dan belum ada di tabel user_roles
+      if (request.roleId) {
+        console.log('===========> ', updatedAgent.user_id)
+        console.log('===========> ', request.roleId)
+        console.log('===========> ', authUser.id)
+        await tx.user_roles.upsert({
+          where: {
+            user_id_roles_id: {
+              user_id: updatedAgent.user_id,
+              roles_id: request.roleId,
+            },
+          },
+          update: {}, // tidak perlu update jika sudah ada
+          create: {
+            user_id: updatedAgent.user_id,
+            roles_id: request.roleId,
+            created_by: authUser.id,
+          },
+        })
+      }
     });
 
     return { message: `Agent updated: ${id}` };

@@ -363,6 +363,26 @@ export class LovService {
     };
   }
 
+  async listRole(userType: string): Promise<WebResponse<{ id: number, name: string }[]>> {
+    const agents = await this.prisma.roles.findMany({
+      where: {
+        isActive: true,
+        type: userType
+      },
+      select: {
+        id: true,
+        name: true
+      }
+    });
+
+    return {
+      data: agents.map((item) => ({
+        id: item.id,
+        name: item.name,
+      })),
+    };
+  }
+
   async listProvince(): Promise<WebResponse<{ id: number, name: string }[]>> {
     const banks = await this.prisma.provinces.findMany({
       select: {

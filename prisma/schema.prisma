@@ -279,6 +279,8 @@ model user_roles {
   user       users             @relation(fields: [user_id], references: [id])
   role       roles             @relation(fields: [roles_id], references: [id])
   role_menus user_roles_menu[]
+
+  @@unique([user_id, roles_id]) // 👈 tambahkan ini
 }
 
 model roles {
