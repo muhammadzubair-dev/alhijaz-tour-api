@@ -278,7 +278,6 @@ model user_roles {
 
   user       users             @relation(fields: [user_id], references: [id])
   role       roles             @relation(fields: [roles_id], references: [id])
-  role_menus user_roles_menu[]
 
   @@unique([user_id, roles_id]) // 👈 tambahkan ini
 }
@@ -300,18 +299,19 @@ model roles {
   updatedByUser users? @relation("RoleUpdatedBy", fields: [updated_by], references: [id])
 
   user_roles user_roles[]
+  role_menus  user_roles_menu[]
 }
 
 model user_roles_menu {
   id           Int       @id @default(autoincrement())
-  user_role_id String
+  role_id      Int
   menu_id      String
   created_by   String?   @default("system")
   created_at   DateTime? @default(now())
   updated_by   String?   @default("system")
   updated_at   DateTime? @default(now())
 
-  user_role user_roles @relation(fields: [user_role_id], references: [id])
+  roleRel      roles      @relation(fields: [role_id], references: [id])
   menuRel   menus      @relation(fields: [menu_id], references: [id])
 }
 

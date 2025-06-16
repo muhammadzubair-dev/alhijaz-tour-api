@@ -230,4 +230,3 @@ VALUES
 ('DTMS|ARLN|ADD', 'Tambah Airline', 'Menambahkan maskapai'),
 ('DTMS|ARLN|EDIT', 'Edit Airline', 'Mengedit maskapai'),
 ('DTMS|ARLN|DEL', 'Hapus Airline', 'Menghapus maskapai');
-

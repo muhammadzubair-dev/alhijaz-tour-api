@@ -1,10 +1,10 @@
 /* eslint-disable prettier/prettier */
 import { Inject, Injectable, NestMiddleware } from '@nestjs/common';
-import { PrismaService } from './prisma.service';
-import { RedisService } from './redis.service';
-import { JwtService } from './jwt.service';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { Logger } from 'winston';
+import { JwtService } from './jwt.service';
+import { PrismaService } from './prisma.service';
+import { RedisService } from './redis.service';
 
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
@@ -41,16 +41,40 @@ export class AuthMiddleware implements NestMiddleware {
             });
 
             if (user) {
-              req.user = user;
+              // 🔍 Ambil semua role_id milik user
+              const userRoles = await this.prisma.user_roles.findMany({
+                where: { user_id: userId },
+                select: {
+                  roles_id: true,
+                  role: {
+                    select: {
+                      role_menus: {
+                        select: { menu_id: true },
+                      },
+                    },
+                  },
+                },
+              });
+
+              // 🔄 Ambil semua menu_id dari role_menus
+              const menuIds = userRoles
+                .flatMap((ur) => ur.role.role_menus.map((rm) => rm.menu_id));
+              const uniqueMenuIds = [...new Set(menuIds)];
+
+              // ✅ Tempel menuIds ke user
+              req.user = {
+                ...user,
+                menuIds: uniqueMenuIds,
+              };
             }
           }
         }
       } catch (error) {
         this.logger.error(`JWT verification failed: ${error.message}`);
-        // optionally: res.status(401).json({ message: 'Invalid token' }); return;
+        // optionally: res.status(401).json({ message: 'Invalid token' });
       }
     }
 
-    next(); // ✅ hanya dipanggil satu kali
+    next(); // ⚠️ pastikan tetap dipanggil
   }
 }

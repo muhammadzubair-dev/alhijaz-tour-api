@@ -5,6 +5,8 @@ import { MasterModule } from './master/master.module';
 import { TicketModule } from './ticket/ticket.module';
 import { UmrohModule } from './umroh/umroh.module';
 import { LovModule } from './lov/lov.module';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './common/roles.guard';
 
 @Module({
   imports: [
@@ -16,7 +18,12 @@ import { LovModule } from './lov/lov.module';
     LovModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 // eslint-disable-next-line prettier/prettier
 export class AppModule { }

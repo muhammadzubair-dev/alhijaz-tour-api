@@ -36,6 +36,7 @@ import {
 } from './user.swagger';
 import { Auth } from 'src/common/auth.decorator';
 import { users } from '@prisma/client';
+import { Roles } from 'src/common/roles.decorator';
 
 @Controller('/api/users')
 export class UserController {
@@ -59,7 +60,6 @@ export class UserController {
     @Auth() user: users,
   ): Promise<WebResponse<any>> {
     const result = await this.userService.loggedInUser(user.id);
-
     return { data: { ...user, menu: result.menuIds }, };
   }
 
@@ -231,6 +231,7 @@ export class UserController {
   }
 
   @Get('agents')
+  @Roles('USRM|AGNT|LIST')
   @HttpCode(HttpStatus.OK)
   async listAgent(
     @Auth() _: users,

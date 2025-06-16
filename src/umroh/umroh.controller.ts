@@ -7,6 +7,7 @@ import { Auth } from "src/common/auth.decorator";
 import { WebResponse } from "src/common/dto/web.dto";
 import { CreateUmrohRegisterRequest, ListUmrohRequest } from "./umroh.dto";
 import { UmrohService } from "./umroh.service";
+import { Roles } from "src/common/roles.decorator";
 
 @Controller('/api/umroh')
 export class UmrohController {
@@ -34,6 +35,7 @@ export class UmrohController {
   }
 
   @Get()
+  @Roles('RGST|UMRH|LIST')
   @HttpCode(HttpStatus.OK)
   async listUmroh(
     @Auth() _: users,
