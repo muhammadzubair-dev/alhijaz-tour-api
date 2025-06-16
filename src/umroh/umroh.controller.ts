@@ -8,13 +8,14 @@ import { WebResponse } from "src/common/dto/web.dto";
 import { CreateUmrohRegisterRequest, ListUmrohRequest } from "./umroh.dto";
 import { UmrohService } from "./umroh.service";
 import { Roles } from "src/common/roles.decorator";
+import { MENU_IDS } from "src/common/constants/menu-ids.constant";
 
 @Controller('/api/umroh')
 export class UmrohController {
   constructor(private umrohService: UmrohService) { }
 
-  // Umroh
   @Post()
+  @Roles(MENU_IDS.RegisterUmrahAdd)
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'photoIdentity', maxCount: 1 },
@@ -35,7 +36,7 @@ export class UmrohController {
   }
 
   @Get()
-  @Roles('RGST|UMRH|LIST')
+  @Roles(MENU_IDS.RegisterUmrahList)
   @HttpCode(HttpStatus.OK)
   async listUmroh(
     @Auth() _: users,
@@ -46,6 +47,7 @@ export class UmrohController {
   }
 
   @Patch(':umrohCode')
+  @Roles(MENU_IDS.RegisterUmrahEdit)
   @HttpCode(HttpStatus.OK)
   async editUmroh(
     @Auth() user: users,
@@ -57,6 +59,7 @@ export class UmrohController {
   }
 
   @Delete(':umrohCode')
+  @Roles(MENU_IDS.RegisterUmrahDelete)
   async deleteUmroh(
     @Auth() _: users,
     @Param('umrohCode') umrohCode: string
@@ -68,6 +71,7 @@ export class UmrohController {
   }
 
   @Get(':umrohCode/jamaah')
+  @Roles(MENU_IDS.RegisterUmrahAddByCode)
   @HttpCode(HttpStatus.OK)
   async listJamaahUmroh(
     @Auth() _: users,

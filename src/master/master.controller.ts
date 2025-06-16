@@ -7,6 +7,8 @@ import { Auth } from "src/common/auth.decorator";
 import { AirlineResponse, AirportResponse, BankResponse, CreatePackageRequestDto, ListAirlineRequest, ListAirportRequest, ListBankRequest, ListPackageRequest, ListSosmedRequest, PackageResponse, RegisterAirlineRequest, RegisterAirportRequest, RegisterBankRequest, RegisterSosmedRequest, SosmedResponse } from "src/common/dto/master.dto";
 import { WebResponse } from "src/common/dto/web.dto";
 import { MasterService } from "./master.service";
+import { Roles } from "src/common/roles.decorator";
+import { MENU_IDS } from "src/common/constants/menu-ids.constant";
 
 @Controller('/api/master')
 export class MasterController {
@@ -14,6 +16,7 @@ export class MasterController {
 
   // bank
   @Post('bank')
+  @Roles(MENU_IDS.BankAdd)
   @HttpCode(HttpStatus.CREATED)
   async registerBank(
     @Auth() user: users,
@@ -26,6 +29,7 @@ export class MasterController {
   }
 
   @Patch('bank/:id')
+  @Roles(MENU_IDS.BankEdit)
   @HttpCode(HttpStatus.OK)
   async updateBank(
     @Auth() user: users,
@@ -39,6 +43,7 @@ export class MasterController {
   }
 
   @Get('banks')
+  @Roles(MENU_IDS.BankList)
   @HttpCode(HttpStatus.OK)
   async listBanks(
     @Auth() _: users,
@@ -49,6 +54,7 @@ export class MasterController {
   }
 
   @Delete('bank/:id')
+  @Roles(MENU_IDS.BankDelete)
   @HttpCode(HttpStatus.OK)
   async deleteBank(
     @Auth() _: users,
@@ -59,6 +65,7 @@ export class MasterController {
 
   // Airport
   @Post('airport')
+  @Roles(MENU_IDS.AirportAdd)
   @HttpCode(HttpStatus.CREATED)
   async registerAirport(
     @Auth() user: users,
@@ -71,6 +78,7 @@ export class MasterController {
   }
 
   @Patch('airport/:code')
+  @Roles(MENU_IDS.AirportEdit)
   @HttpCode(HttpStatus.OK)
   async updateRequest(
     @Auth() user: users,
@@ -84,6 +92,7 @@ export class MasterController {
   }
 
   @Get('airports')
+  @Roles(MENU_IDS.AirportList)
   @HttpCode(HttpStatus.OK)
   async listAirport(
     @Auth() _: users,
@@ -94,6 +103,7 @@ export class MasterController {
   }
 
   @Delete('airport/:code')
+  @Roles(MENU_IDS.AirportDelete)
   @HttpCode(HttpStatus.OK)
   async deleteAirport(
     @Auth() _: users,
@@ -104,6 +114,7 @@ export class MasterController {
 
   // Airline
   @Post('airline')
+  @Roles(MENU_IDS.AirlineAdd)
   @HttpCode(HttpStatus.CREATED)
   async registerAirline(
     @Auth() user: users,
@@ -116,6 +127,7 @@ export class MasterController {
   }
 
   @Patch('airline/:id')
+  @Roles(MENU_IDS.AirlineEdit)
   @HttpCode(HttpStatus.OK)
   async updateAirline(
     @Auth() user: users,
@@ -129,6 +141,7 @@ export class MasterController {
   }
 
   @Get('airlines')
+  @Roles(MENU_IDS.AirlineList)
   @HttpCode(HttpStatus.OK)
   async listAirline(
     @Auth() _: users,
@@ -139,6 +152,7 @@ export class MasterController {
   }
 
   @Delete('airline/:id')
+  @Roles(MENU_IDS.AirlineDelete)
   @HttpCode(HttpStatus.OK)
   async deleteAirline(
     @Auth() _: users,
@@ -194,6 +208,7 @@ export class MasterController {
 
   // Package
   @Post('package')
+  @Roles(MENU_IDS.PackageAdd)
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'itinerary', maxCount: 1 },
@@ -218,6 +233,7 @@ export class MasterController {
   }
 
   @Put('package/:id')
+  @Roles(MENU_IDS.PackageEdit)
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'itinerary', maxCount: 1 },
@@ -243,6 +259,7 @@ export class MasterController {
   }
 
   @Get('packages')
+  @Roles(MENU_IDS.PackageList)
   @HttpCode(HttpStatus.OK)
   async listPackage(
     @Auth() _: users,
@@ -253,6 +270,7 @@ export class MasterController {
   }
 
   @Get('packages/:packageId')
+  @Roles(MENU_IDS.PackageList)
   @HttpCode(HttpStatus.OK)
   async packageDetail(
     @Auth() _: users,
@@ -263,6 +281,7 @@ export class MasterController {
   }
 
   @Delete('package/:id')
+  @Roles(MENU_IDS.PackageDelete)
   async deletePackage(
     @Auth() _: users,
     @Param('id') id: string

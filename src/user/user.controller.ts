@@ -37,12 +37,12 @@ import {
 import { Auth } from 'src/common/auth.decorator';
 import { users } from '@prisma/client';
 import { Roles } from 'src/common/roles.decorator';
+import { MENU_IDS } from 'src/common/constants/menu-ids.constant';
 
 @Controller('/api/users')
 export class UserController {
   constructor(private userService: UserService) { }
 
-  // User
   @Post('login')
   @HttpCode(HttpStatus.CREATED)
   async loginUser(
@@ -59,11 +59,11 @@ export class UserController {
   async currentUser(
     @Auth() user: users,
   ): Promise<WebResponse<any>> {
-    const result = await this.userService.loggedInUser(user.id);
-    return { data: { ...user, menu: result.menuIds }, };
+    return { data: user };
   }
 
   @Post()
+  @Roles(MENU_IDS.StaffAdd)
   @UserSwaggerRegister()
   @HttpCode(HttpStatus.CREATED)
   async registerUser(
@@ -77,6 +77,7 @@ export class UserController {
   }
 
   @Get()
+  @Roles(MENU_IDS.StaffList)
   @UserSwaggerList()
   @HttpCode(HttpStatus.OK)
   async listUser(
@@ -98,6 +99,7 @@ export class UserController {
   }
 
   @Patch(':id')
+  @Roles(MENU_IDS.StaffEdit)
   @UserSwaggerUpdate()
   @HttpCode(HttpStatus.OK)
   async updateUser(
@@ -112,6 +114,7 @@ export class UserController {
   }
 
   @Delete(':id')
+  @Roles(MENU_IDS.StaffDelete)
   @HttpCode(HttpStatus.OK)
   async dele(
     @Auth() user: users,
@@ -136,6 +139,7 @@ export class UserController {
 
   // Role
   @Post('role')
+  @Roles(MENU_IDS.RoleAdd)
   @HttpCode(HttpStatus.CREATED)
   async registerRole(
     @Auth() user: users,
@@ -148,6 +152,7 @@ export class UserController {
   }
 
   @Get('roles')
+  @Roles(MENU_IDS.RoleList)
   @HttpCode(HttpStatus.OK)
   async listRole(
     @Auth() _: users,
@@ -158,6 +163,7 @@ export class UserController {
   }
 
   @Patch('role/:id')
+  @Roles(MENU_IDS.RoleEdit)
   @HttpCode(HttpStatus.OK)
   async updateRole(
     @Auth() user: users,
@@ -171,6 +177,7 @@ export class UserController {
   }
 
   @Delete('role/:id')
+  @Roles(MENU_IDS.RoleDelete)
   @HttpCode(HttpStatus.OK)
   async deleteRole(
     @Auth() _: users,
@@ -180,6 +187,7 @@ export class UserController {
   }
 
   @Post('role/:roleId/menu')
+  @Roles(MENU_IDS.RoleMenu)
   @HttpCode(HttpStatus.OK)
   async updateRoleMenu(
     @Auth() user: users,
@@ -194,6 +202,7 @@ export class UserController {
 
   // Agent
   @Post('agent')
+  @Roles(MENU_IDS.AgentAdd)
   @HttpCode(HttpStatus.CREATED)
   async registerAgent(
     @Auth() user: users,
@@ -206,6 +215,7 @@ export class UserController {
   }
 
   @Put('agent/:id')
+  @Roles(MENU_IDS.AgentEdit)
   @HttpCode(HttpStatus.OK)
   async updateAgent(
     @Auth() user: users,
@@ -219,6 +229,7 @@ export class UserController {
   }
 
   @Delete('agent/:id')
+  @Roles(MENU_IDS.AgentDelete)
   @HttpCode(HttpStatus.OK)
   async deleteAgent(
     @Auth() user: users,
@@ -231,7 +242,7 @@ export class UserController {
   }
 
   @Get('agents')
-  @Roles('USRM|AGNT|LIST')
+  @Roles(MENU_IDS.AgentList)
   @HttpCode(HttpStatus.OK)
   async listAgent(
     @Auth() _: users,

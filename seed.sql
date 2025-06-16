@@ -199,6 +199,7 @@ VALUES
 ('USRM|ROLE|ADD', 'Tambah Role', 'Menambahkan role baru'),
 ('USRM|ROLE|EDIT', 'Edit Role', 'Mengedit role'),
 ('USRM|ROLE|DEL', 'Hapus Role', 'Menghapus role'),
+('USRM|ROLE|MENU', 'Kelola Menu Role', 'Menetapkan atau menghapus akses menu pada role'),
 
 ('DTMS', 'Data Master', 'Menu data master utama'),
 ('DTMS|PCKG', 'Package', 'Data paket'),
