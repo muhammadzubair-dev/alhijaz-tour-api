@@ -46,15 +46,45 @@ export class UmrohController {
     return result;
   }
 
-  @Patch(':umrohCode')
+  @Get(':registerId')
+  @HttpCode(HttpStatus.OK)
+  async detailUmrohRegister(
+    @Auth() _: users,
+    @Param('registerId') registerId: string,
+  ): Promise<WebResponse<any>> {
+    const result = await this.umrohService.detailUmrohRegister(registerId);
+    return { data: result };
+  }
+
+  @Patch()
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'photoIdentity', maxCount: 1 },
+      { name: 'selfPhoto', maxCount: 1 },
+    ]),
+  )
+  async editUmroh(
+    @Auth() user: users,
+    @UploadedFiles()
+    files: {
+      photoIdentity?: Express.Multer.File[];
+      selfPhoto?: Express.Multer.File[];
+    },
+    @Body() body: CreateUmrohRegisterRequest,
+  ) {
+    const result = await this.umrohService.editUmroh(user, body, files);
+    return result;
+  }
+
+  @Patch(':umrohCode/package')
   @Roles(MENU_IDS.RegisterUmrahEdit)
   @HttpCode(HttpStatus.OK)
-  async editUmroh(
+  async editPackageUmroh(
     @Auth() user: users,
     @Param('umrohCode') umrohCode: string,
     @Body() request: { packageId: string; tourLead: string },
   ): Promise<WebResponse<any>> {
-    const result = await this.umrohService.editUmroh(user, umrohCode, request);
+    const result = await this.umrohService.editPackageUmroh(user, umrohCode, request);
     return result
   }
 

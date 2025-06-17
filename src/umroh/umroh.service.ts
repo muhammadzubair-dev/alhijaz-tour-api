@@ -142,6 +142,169 @@ export class UmrohService {
     }
   }
 
+  async editUmroh(
+    authUser: users,
+    dto: CreateUmrohRegisterRequest,
+    files: {
+      photoIdentity?: Express.Multer.File[];
+      selfPhoto?: Express.Multer.File[];
+    },
+  ) {
+    const uploadedFiles: Record<string, string> = {};
+    const rollbackFiles: string[] = [];
+
+    const saveFile = async (file: Express.Multer.File, key: string) => {
+      const path = await this.uploadService.saveFile(file.buffer, file.originalname);
+      uploadedFiles[key] = path;
+      rollbackFiles.push(path);
+    };
+
+    try {
+      // Upload file baru jika ada
+      if (files.photoIdentity?.[0]) await saveFile(files.photoIdentity[0], 'photoIdentity');
+      if (files.selfPhoto?.[0]) await saveFile(files.selfPhoto[0], 'selfPhoto');
+
+      // Proses transaksi
+      return await this.prisma.$transaction(async (tx) => {
+        const jamaah = await tx.jamaah.findFirst({
+          where: { identity_number: dto.identityNumber },
+        });
+
+        if (!jamaah) {
+          throw new NotFoundException('Jamaah dengan NIK tersebut tidak ditemukan');
+        }
+
+        // Simpan path file lama
+        const oldPhotoIdentity = jamaah.photo_identity;
+        const oldSelfPhoto = jamaah.self_photo;
+  
+        // Update data jamaah
+        await tx.jamaah.update({
+          where: { jamaah_code: jamaah.jamaah_code },
+          data: {
+            first_name: dto.firstName,
+            mid_name: dto.middleName,
+            last_name: dto.lastName,
+            birth_place: dto.birthPlace,
+            birth_date: dto.birthDate,
+            gender: Number(dto.gender),
+            married_status: Number(dto.marriedStatus),
+            phone_number: dto.phoneNumber,
+            province: dto.province,
+            district: dto.district,
+            sub_district: dto.subDistrict,
+            neighborhoods: dto.neighborhoods,
+            address: dto.address,
+            agents_id: dto.agentId,
+            staff_id: dto.staffId,
+            photo_identity: uploadedFiles['photoIdentity'] ?? oldPhotoIdentity,
+            self_photo: uploadedFiles['selfPhoto'] ?? oldSelfPhoto,
+            medical_condition: dto.medicalCondition,
+            notes: dto.notes,
+            updated_by: authUser.id,
+            updated_at: new Date(),
+          },
+        });
+
+        // Update umrah_registers
+        const updatedUmroh = await tx.umrah_registers.update({
+          where: { id: dto.id },
+          data: {
+            remarks: Number(dto.remarks),
+            mahram: dto.mahram,
+            package_room_price: dto.packageRoomPrice,
+            office_discount: dto.officeDiscount ?? 0,
+            agent_discount: dto.agentDiscount ?? 0,
+            other_expenses: dto.otherExpenses ?? 0,
+            agent_id: dto.agentId,
+            register_name: dto.registerName,
+            register_phone: dto.registerPhone,
+            notes: dto.notes,
+            updated_by: authUser.id,
+            updated_at: new Date(),
+          },
+        });
+
+        // Hapus file lama jika diganti
+        if (uploadedFiles['photoIdentity'] && oldPhotoIdentity) {
+          await this.uploadService.deleteFile(oldPhotoIdentity);
+        }
+
+        if (uploadedFiles['selfPhoto'] && oldSelfPhoto) {
+          await this.uploadService.deleteFile(oldSelfPhoto);
+        }
+
+        return {
+          data: snakeToCamelObject(updatedUmroh),
+        };
+      });
+    } catch (error) {
+      // Rollback file yang sudah terupload jika transaksi gagal
+      for (const path of rollbackFiles) {
+        await this.uploadService.deleteFile(path);
+      }
+      throw error;
+    }
+  }
+
+  async detailUmrohRegister(registerId: string): Promise<any> {
+    const umrohRegister = await this.prisma.umrah_registers.findUnique({
+      where: { id: registerId },
+      include: {
+        jamaahRel: true,
+        packageRoomPrice: {
+          select: {
+            packages_id: true
+          }
+        },
+      },
+    });
+
+    if (!umrohRegister) {
+      throw new NotFoundException('Data pendaftaran umroh tidak ditemukan');
+    }
+
+    const jamaah = umrohRegister.jamaahRel;
+
+    if (!jamaah) {
+      throw new NotFoundException('Data jamaah tidak ditemukan');
+    }
+    const baseImage = 'http://localhost:3000/uploads/'
+    return {
+      registerId: umrohRegister.id,
+      umrohCode: umrohRegister.umroh_code,
+      remarks: String(umrohRegister.remarks),
+      mahram: umrohRegister.mahram,
+      packageId: umrohRegister.packageRoomPrice.packages_id,
+      packageRoomPrice: umrohRegister.package_room_price,
+      officeDiscount: umrohRegister.office_discount,
+      agentDiscount: umrohRegister.agent_discount,
+      otherExpenses: umrohRegister.other_expenses,
+      agentId: umrohRegister.agent_id,
+      registerName: umrohRegister.register_name,
+      registerPhone: umrohRegister.register_phone,
+      notes: umrohRegister.notes,
+      identityNumber: jamaah.identity_number,
+      firstName: jamaah.first_name,
+      middleName: jamaah.mid_name,
+      lastName: jamaah.last_name,
+      birthPlace: jamaah.birth_place,
+      birthDate: jamaah.birth_date,
+      gender: String(jamaah.gender),
+      marriedStatus: String(jamaah.married_status),
+      phoneNumber: jamaah.phone_number,
+      province: jamaah.province,
+      district: jamaah.district,
+      subDistrict: jamaah.sub_district,
+      neighborhoods: jamaah.neighborhoods,
+      address: jamaah.address,
+      staffId: jamaah.staff_id,
+      medicalCondition: jamaah.medical_condition,
+      photoIdentity: baseImage + jamaah.photo_identity,
+      selfPhoto: baseImage + jamaah.self_photo,
+    };
+  }
+
   async listUmroh(
     request: ListUmrohRequest,
   ): Promise<WebResponse<any[]>> {
@@ -252,7 +415,7 @@ export class UmrohService {
     };
   }
 
-  async editUmroh(
+  async editPackageUmroh(
     authUser: users,
     paramUmrohCode: string,
     body: { packageId: string; tourLead: string }
@@ -399,6 +562,7 @@ export class UmrohService {
     const umrah = await this.prisma.umrah_registers.findMany({
       where,
       select: {
+        id: true,
         register_name: true,
         register_phone: true,
         created_at: true,
@@ -450,6 +614,7 @@ export class UmrohService {
         jamaahName: `${item.jamaahRel.first_name} ${item.jamaahRel.mid_name ?? ''} ${item.jamaahRel.last_name}`,
         typePackage: item.packageRoomPrice.package_room.package_type.name,
         roomPackage: item.packageRoomPrice.package_room.room_type.name,
+        registerId: item.id,
         registerName: item.register_name,
         registerPhone: item.register_phone,
         createdBy: item.createdByUser?.name || null,

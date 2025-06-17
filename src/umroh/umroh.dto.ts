@@ -14,9 +14,14 @@ import {
 export class CreateUmrohRegisterRequest {
   @IsOptional()
   @IsString()
+  @ApiPropertyOptional({ description: 'ID Umroh register' })
+  id?: string;
+
+  @IsOptional()
+  @IsString()
   @MinLength(1)
   @MaxLength(20)
-  @ApiProperty({ description: 'Kode Umroh', example: 'UMR000001' })
+  @ApiPropertyOptional({ description: 'Kode Umroh', example: 'UMR000001' })
   umrohCode?: string;
 
   @IsString()
