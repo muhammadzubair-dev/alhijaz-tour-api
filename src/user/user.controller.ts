@@ -25,6 +25,7 @@ import {
   RoleResponse,
   RegisterAgentRequest,
   LoginUserRequest,
+  ChangePasswordRequest,
 } from 'src/common/dto/user.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { UserService } from './user.service';
@@ -51,6 +52,20 @@ export class UserController {
     const result = await this.userService.loginUser(request);
     return {
       data: result,
+    };
+  }
+
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  async changePassword(
+    @Auth() user: users,
+    @Body() request: ChangePasswordRequest,
+  ): Promise<WebResponse<{ message: string }>> {
+    await this.userService.changePassword(user.id, request);
+    return {
+      data: {
+        message: 'Password berhasil diubah',
+      },
     };
   }
 

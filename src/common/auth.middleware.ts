@@ -36,6 +36,7 @@ export class AuthMiddleware implements NestMiddleware {
                 username: true,
                 name: true,
                 type: true,
+                isDefaultPassword: true,
               },
               where: { id: userId },
             });

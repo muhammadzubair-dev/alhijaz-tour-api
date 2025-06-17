@@ -13,6 +13,7 @@ import * as generatePassword from 'generate-password';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import {
   AgentResponse,
+  ChangePasswordRequest,
   ListAgentRequest,
   ListMenuRequest,
   ListRoleRequest,
@@ -114,6 +115,41 @@ export class UserService {
       password: randomPassword,
     };
   }
+
+  async changePassword(userId: string, request: ChangePasswordRequest): Promise<void> {
+    this.logger.info(`User ${userId} is attempting to change password`);
+
+    const user = await this.prisma.users.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      this.logger.warn(`User not found: ${userId}`);
+      throw new NotFoundException('User tidak ditemukan');
+    }
+
+    const isPasswordMatch = await bcrypt.compare(request.currentPassword, user.password);
+
+    if (!isPasswordMatch) {
+      this.logger.warn(`Password lama tidak cocok untuk user ${user.username}`);
+      throw new BadRequestException('Password lama tidak sesuai');
+    }
+
+    const newHashedPassword = await bcrypt.hash(request.newPassword, 10);
+
+    await this.prisma.users.update({
+      where: { id: userId },
+      data: {
+        password: newHashedPassword,
+        isDefaultPassword: false, // ✅ update flag
+        updated_at: new Date(),
+        updated_by: userId,
+      },
+    });
+
+    this.logger.info(`Password berhasil diubah untuk user ${user.username}`);
+  }
+
 
   async listUser(
     request: ListUserRequest,

@@ -91,6 +91,38 @@ export class LoginUserRequest {
   password: string;
 }
 
+export class ChangePasswordRequest {
+  @IsString()
+  @Length(8, 100)
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/, {
+    message:
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+  })
+  @ApiProperty({
+    description:
+      'Password pengguna dengan huruf besar, kecil, angka, dan simbol',
+    example: 'P@ssw0rd123',
+    minLength: 8,
+    maxLength: 100,
+  })
+  currentPassword: string;
+
+  @IsString()
+  @Length(8, 100)
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/, {
+    message:
+      'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+  })
+  @ApiProperty({
+    description:
+      'Password pengguna dengan huruf besar, kecil, angka, dan simbol',
+    example: 'P@ssw0rd123',
+    minLength: 8,
+    maxLength: 100,
+  })
+  newPassword: string;
+}
+
 export class ListUserRequest {
   @IsOptional()
   @IsString()
