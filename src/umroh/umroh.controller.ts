@@ -14,6 +14,7 @@ import { MENU_IDS } from "src/common/constants/menu-ids.constant";
 export class UmrohController {
   constructor(private umrohService: UmrohService) { }
 
+  // Umroh
   @Post()
   @Roles(MENU_IDS.RegisterUmrahAdd)
   @UseInterceptors(
@@ -46,36 +47,6 @@ export class UmrohController {
     return result;
   }
 
-  @Get(':registerId')
-  @HttpCode(HttpStatus.OK)
-  async detailUmrohRegister(
-    @Auth() _: users,
-    @Param('registerId') registerId: string,
-  ): Promise<WebResponse<any>> {
-    const result = await this.umrohService.detailUmrohRegister(registerId);
-    return { data: result };
-  }
-
-  @Patch()
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'photoIdentity', maxCount: 1 },
-      { name: 'selfPhoto', maxCount: 1 },
-    ]),
-  )
-  async editUmroh(
-    @Auth() user: users,
-    @UploadedFiles()
-    files: {
-      photoIdentity?: Express.Multer.File[];
-      selfPhoto?: Express.Multer.File[];
-    },
-    @Body() body: CreateUmrohRegisterRequest,
-  ) {
-    const result = await this.umrohService.editUmroh(user, body, files);
-    return result;
-  }
-
   @Patch(':umrohCode/package')
   @Roles(MENU_IDS.RegisterUmrahEdit)
   @HttpCode(HttpStatus.OK)
@@ -100,7 +71,8 @@ export class UmrohController {
     };
   }
 
-  @Get(':umrohCode/jamaah')
+  // Jamaah Umroh
+  @Get('/jamaah/:umrohCode')
   @Roles(MENU_IDS.RegisterUmrahAddByCode)
   @HttpCode(HttpStatus.OK)
   async listJamaahUmroh(
@@ -110,5 +82,46 @@ export class UmrohController {
   ): Promise<WebResponse<any[]>> {
     const result = await this.umrohService.listJamaahUmroh(umrohCode, request);
     return result;
+  }
+
+  @Get('/jamaah/detail/:registerId')
+  @HttpCode(HttpStatus.OK)
+  async detailJamaahUmroh(
+    @Auth() _: users,
+    @Param('registerId') registerId: string,
+  ): Promise<WebResponse<any>> {
+    const result = await this.umrohService.detailJamaahUmroh(registerId);
+    return { data: result };
+  }
+
+  @Patch('/jamaah')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'photoIdentity', maxCount: 1 },
+      { name: 'selfPhoto', maxCount: 1 },
+    ]),
+  )
+  async editJamaahUmroh(
+    @Auth() user: users,
+    @UploadedFiles()
+    files: {
+      photoIdentity?: Express.Multer.File[];
+      selfPhoto?: Express.Multer.File[];
+    },
+    @Body() body: CreateUmrohRegisterRequest,
+  ) {
+    const result = await this.umrohService.editJamaahUmroh(user, body, files);
+    return result;
+  }
+
+  @Delete('/jamaah/:registerId')
+  async deleteJamaahUmroh(
+    @Auth() users: users,
+    @Param('registerId') registerId: string
+  ) {
+    const result = await this.umrohService.deleteJamaahUmroh(users, registerId);
+    return {
+      data: result
+    };
   }
 }
