@@ -354,6 +354,12 @@ export class UserService {
     return { token }
   }
 
+  async logoutUser(userId: string) {
+    const redisKey = `auth_token:${userId}`;
+    await this.redis.del(redisKey);
+    return { message: 'Logout berhasil' }
+  }
+
   async deleteUser(authUser: users, id: string): Promise<{ message: string; username: string }> {
     const existingUser = await this.prisma.users.findUnique({
       where: { id },
@@ -520,7 +526,7 @@ export class UserService {
         name: role.name,
         description: role.description,
         type: role.type,
-        menu: role.role_menus.map((rm) => rm.menu_id), // ✅ ambil langsung dari role_menus
+        menu: role.role_menus.map((rm) => rm.menu_id).filter(item => item !== 'RGST'), // ✅ ambil langsung dari role_menus
         platform: role.platform,
         isActive: role.isActive,
         createdBy: role.createdByUser?.name || '-',

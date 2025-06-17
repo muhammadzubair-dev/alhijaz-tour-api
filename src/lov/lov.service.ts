@@ -224,7 +224,7 @@ export class LovService {
         remainingSeat,
         departureDate: departureDetail?.ticket_date ?? null,
         ticketDetails: sortedDetails.map((d) => ({
-          type: d.type === 0 ? 'Departure' : 'Return',
+          type: d.type,
           flightNo: d.flight_no,
           ticketDate: d.ticket_date,
           ticketAirlineName: d.airline?.name,

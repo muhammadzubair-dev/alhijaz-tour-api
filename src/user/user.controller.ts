@@ -54,6 +54,16 @@ export class UserController {
     };
   }
 
+  @Post('logout')
+  async logout(
+    @Auth() user: users,
+  ): Promise<WebResponse<{ message: string }>> {
+    await this.userService.logoutUser(user?.id);
+    return {
+      data: { message: 'Logout berhasil' }
+    };
+  }
+
   @Get('current')
   @HttpCode(HttpStatus.OK)
   async currentUser(
@@ -187,7 +197,7 @@ export class UserController {
   }
 
   @Post('role/:roleId/menu')
-  @Roles(MENU_IDS.RoleMenu)
+  // @Roles(MENU_IDS.RoleMenu)
   @HttpCode(HttpStatus.OK)
   async updateRoleMenu(
     @Auth() user: users,
