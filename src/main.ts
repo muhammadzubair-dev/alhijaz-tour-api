@@ -4,13 +4,19 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import * as cookieParser from 'cookie-parser';
 import { join } from 'path';
 
 async function bootstrap() {
   // Ubah ke NestExpressApplication untuk dukung static assets
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.enableCors();
+  app.use(cookieParser());
+
+  app.enableCors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+  });
 
   // ✅ Serve file statis dari folder uploads
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {

@@ -170,6 +170,15 @@ export class CreateUmrohRegisterRequest {
   })
   staffId?: string;
 
+  @IsOptional()
+  @IsString()
+  @ApiProperty({
+    description: 'ID user',
+    example: '2bf62241-5e45-40d4-b31b-e819ecc5db87',
+    required: false,
+  })
+  toUserId?: string;
+
   @IsString()
   @MaxLength(20)
   @ApiProperty({ description: 'Nama Pendaftar', example: 'Ahmad' })

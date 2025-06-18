@@ -25,8 +25,8 @@ export class UmrohService {
     authUser: users,
     dto: CreateUmrohRegisterRequest,
     files: {
-      photoIdentity?: Express.Multer.File[],
-      selfPhoto?: Express.Multer.File[]
+      photoIdentity?: Express.Multer.File[];
+      selfPhoto?: Express.Multer.File[];
     },
   ) {
     const uploadedFiles: Record<string, string> = {};
@@ -43,18 +43,38 @@ export class UmrohService {
       if (files.photoIdentity?.[0]) await saveFile(files.photoIdentity[0], 'photoIdentity');
       if (files.selfPhoto?.[0]) await saveFile(files.selfPhoto[0], 'selfPhoto');
 
-      // ✅ Jalankan transaksi database
+      // ✅ Jalankan transaksi
       return await this.prisma.$transaction(async (tx) => {
-        // Cek jamaah berdasarkan NIK
         const existingJamaah = await tx.jamaah.findFirst({
           where: { identity_number: dto.identityNumber },
         });
 
+        // 🔀 Jika jamaah TIDAK ditemukan, simpan sebagai TASK
         if (!existingJamaah) {
-          throw new NotFoundException('Jamaah dengan NIK tersebut tidak ditemukan');
+          const task = await tx.tasks.create({
+            data: {
+              task_type_id: 1, // default 1 kalau tidak ada
+              title: 'Pendaftaran Umroh Tanpa Data Jamaah',
+              data: {
+                ...dto,
+                photoIdentity: uploadedFiles['photoIdentity'] ?? null,
+                selfPhoto: uploadedFiles['selfPhoto'] ?? null,
+              },
+              status: '0', // pending
+              from_user_id: authUser.id,
+              to_user_id: dto.toUserId ?? authUser.id, // default ke user sendiri
+              created_at: new Date(),
+              updated_at: new Date(),
+            },
+          });
+
+          return {
+            data: snakeToCamelObject(task),
+            info: 'Data tidak ditemukan, disimpan sebagai task untuk ditindaklanjuti',
+          };
         }
 
-        // Update data jamaah
+        // ✅ Jika jamaah ditemukan, proses seperti biasa
         await tx.jamaah.update({
           where: { jamaah_code: existingJamaah.jamaah_code },
           data: {
@@ -85,7 +105,6 @@ export class UmrohService {
         let umrohCode = dto.umrohCode;
 
         if (!umrohCode) {
-          // Buat kode umroh unik
           umrohCode = await generateAutoId(this.prisma, {
             model: 'umrah',
             field: 'umroh_code',
@@ -93,7 +112,6 @@ export class UmrohService {
             padding: 6,
           });
 
-          // Insert ke tabel umrah
           await tx.umrah.create({
             data: {
               umroh_code: umrohCode,
@@ -106,14 +124,12 @@ export class UmrohService {
           });
         }
 
-        // Insert ke umrah_registers
         const addedUmroh = await tx.umrah_registers.create({
           data: {
             umroh_code: umrohCode,
             jamaah: existingJamaah.jamaah_code,
             remarks: Number(dto.remarks),
             mahram: dto.mahram,
-            // package: dto.packageId,
             package_room_price: dto.packageRoomPrice,
             office_discount: dto.officeDiscount ?? 0,
             agent_discount: dto.agentDiscount ?? 0,
@@ -125,16 +141,16 @@ export class UmrohService {
             status: '1',
             created_by: authUser.id,
             updated_by: null,
-            updated_at: null
+            updated_at: null,
           },
         });
 
         return {
-          data: snakeToCamelObject(addedUmroh)
-        }
+          data: snakeToCamelObject(addedUmroh),
+        };
       });
     } catch (error) {
-      // 🧹 Rollback uploaded files if transaction fails
+      // 🧹 Rollback file jika transaksi gagal
       for (const filePath of rollbackFiles) {
         await this.uploadService.deleteFile(filePath);
       }
@@ -656,5 +672,4 @@ export class UmrohService {
       message: 'Data pendaftaran umroh berhasil dihapus',
     };
   }
-
 }

@@ -3,8 +3,10 @@ import { CommonModule } from './common/common.module';
 import { UserModule } from './user/user.module';
 import { MasterModule } from './master/master.module';
 import { TicketModule } from './ticket/ticket.module';
+import { TaskModule } from './task/task.module';
 import { UmrohModule } from './umroh/umroh.module';
 import { LovModule } from './lov/lov.module';
+import { SseModule } from './sse/sse.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './common/roles.guard';
 
@@ -16,6 +18,8 @@ import { RolesGuard } from './common/roles.guard';
     TicketModule,
     UmrohModule,
     LovModule,
+    TaskModule,
+    SseModule,
   ],
   controllers: [],
   providers: [
