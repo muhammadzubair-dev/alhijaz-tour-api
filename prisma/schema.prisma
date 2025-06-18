@@ -153,6 +153,10 @@ model users {
   // Relations from umrah_payments table
   umrahPaymentsCreated umrah_payments[] @relation("UmrahPaymentsCreatedBy")
   umrahPaymentsUpdated umrah_payments[] @relation("UmrahPaymentsUpdatedBy")
+
+  fromTasks     tasks[]              @relation("TasksFromUser")
+  toTasks       tasks[]              @relation("TasksToUser")
+  notifications task_notifications[]
 }
 
 model agents {
@@ -276,15 +280,15 @@ model user_roles {
   updated_by String?   @default("system")
   updated_at DateTime? @default(now())
 
-  user       users             @relation(fields: [user_id], references: [id])
-  role       roles             @relation(fields: [roles_id], references: [id])
+  user users @relation(fields: [user_id], references: [id])
+  role roles @relation(fields: [roles_id], references: [id])
 
   @@unique([user_id, roles_id]) // 👈 tambahkan ini
 }
 
 model roles {
   id          Int       @id @default(autoincrement())
-  name        String    @db.VarChar(50)
+  name        String    @unique @db.VarChar(50)
   description String    @db.VarChar(100)
   isActive    Boolean   @default(true)
   platform    String    @default("0") @db.VarChar(1)
@@ -298,21 +302,24 @@ model roles {
   createdByUser users? @relation("RoleCreatedBy", fields: [created_by], references: [id])
   updatedByUser users? @relation("RoleUpdatedBy", fields: [updated_by], references: [id])
 
-  user_roles user_roles[]
-  role_menus  user_roles_menu[]
+  user_roles      user_roles[]
+  role_menus      user_roles_menu[]
+  task_type_roles task_type_roles[]
 }
 
 model user_roles_menu {
-  id           Int       @id @default(autoincrement())
-  role_id      Int
-  menu_id      String
-  created_by   String?   @default("system")
-  created_at   DateTime? @default(now())
-  updated_by   String?   @default("system")
-  updated_at   DateTime? @default(now())
+  id         Int       @id @default(autoincrement())
+  role_id    Int
+  menu_id    String
+  created_by String?   @default("system")
+  created_at DateTime? @default(now())
+  updated_by String?   @default("system")
+  updated_at DateTime? @default(now())
 
-  roleRel      roles      @relation(fields: [role_id], references: [id])
-  menuRel   menus      @relation(fields: [menu_id], references: [id])
+  roleRel roles @relation(fields: [role_id], references: [id])
+  menuRel menus @relation(fields: [menu_id], references: [id])
+
+  @@unique([role_id, menu_id])
 }
 
 model menus {
@@ -889,4 +896,60 @@ model umrah_payments {
   registerRel   umrah_registers @relation(fields: [umrah_register_id], references: [id])
   createdByUser users?          @relation("UmrahPaymentsCreatedBy", fields: [created_by], references: [id])
   updatedByUser users?          @relation("UmrahPaymentsUpdatedBy", fields: [updated_by], references: [id])
+}
+
+model task_types {
+  id          Int      @id @default(autoincrement())
+  code        String   @db.VarChar(30) // e.g., VALIDASI_PEMBAYARAN
+  name        String   @db.VarChar(100)
+  description String?
+  isActive    Boolean
+  created_at  DateTime
+  updated_at  DateTime
+
+  tasks           tasks[]
+  task_type_roles task_type_roles[]
+}
+
+model tasks {
+  id           Int       @id @default(autoincrement())
+  task_type_id Int
+  title        String    @db.VarChar
+  data         Json      @db.JsonB
+  notes        String?
+  status       String    @db.Char(1) // 0: Pending, 1: In Progress, 3: Done, 4: Rejected
+  from_user_id String
+  to_user_id   String
+  created_at   DateTime
+  updated_at   DateTime
+  completed_at DateTime?
+
+  task_type     task_types           @relation(fields: [task_type_id], references: [id])
+  from_user     users?               @relation("TasksFromUser", fields: [from_user_id], references: [id])
+  to_user       users?               @relation("TasksToUser", fields: [to_user_id], references: [id])
+  notifications task_notifications[]
+}
+
+model task_type_roles {
+  id           Int      @id @default(autoincrement())
+  task_type_id Int
+  role_id      Int
+  auto_assign  Boolean  @default(true)
+  isActive     Boolean
+  created_at   DateTime
+  updated_at   DateTime
+
+  task_type task_types @relation(fields: [task_type_id], references: [id])
+  role      roles      @relation(fields: [role_id], references: [id])
+}
+
+model task_notifications {
+  id          Int      @id @default(autoincrement())
+  task_id     Int
+  user_id     String
+  is_read     Boolean  @default(false)
+  notified_at DateTime
+
+  task tasks @relation(fields: [task_id], references: [id])
+  user users @relation(fields: [user_id], references: [id])
 }

@@ -1,3 +1,4 @@
+
 INSERT INTO package_types (name, "desc", created_by, updated_by, created_at, updated_at)
 VALUES 
   ('Standard', 'Paket Standard', null, null, NOW(), NOW()),

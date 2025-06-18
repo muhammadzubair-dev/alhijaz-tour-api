@@ -101,6 +101,17 @@ export class UserController {
     };
   }
 
+  @Post('init')
+  @HttpCode(HttpStatus.CREATED)
+  async registerUserNoLogin(
+    @Body() request: RegisterUserRequest,
+  ): Promise<WebResponse<UserResponse>> {
+    const result = await this.userService.initialUserRoleAndMenu(request);
+    return {
+      data: result,
+    };
+  }
+
   @Get()
   @Roles(MENU_IDS.StaffList)
   @UserSwaggerList()

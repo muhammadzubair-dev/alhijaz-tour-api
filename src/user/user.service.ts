@@ -116,6 +116,134 @@ export class UserService {
     };
   }
 
+  async initialUserRoleAndMenu(
+    request: RegisterUserRequest,
+  ): Promise<UserResponse> {
+    this.logger.info(`Registering new user: ${request.username}`);
+
+    const existingUser = await this.prisma.users.findFirst({
+      where: { username: request.username },
+    });
+
+    if (existingUser) {
+      this.logger.warn(`Username already exists: ${request.username}`);
+      throw new BadRequestException('Username already exists');
+    }
+
+    const randomPassword = generatePassword.generate({
+      length: 10,
+      numbers: true,
+      symbols: true,
+      uppercase: true,
+      lowercase: true,
+      strict: true,
+    });
+
+    const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      // 1. Create user
+      const user = await tx.users.create({
+        data: {
+          username: request.username.trim(),
+          name: request.name.trim(),
+          isActive: request.isActive ?? true,
+          type: request.type ?? '0',
+          password: hashedPassword,
+          created_by: null,
+          updated_by: null,
+          updated_at: null,
+        },
+      });
+
+      // 2. Ensure Super Administrator role exists
+      const superAdminRole = await tx.roles.upsert({
+        where: { name: 'Super Administrator' },
+        update: {},
+        create: {
+          name: 'Super Administrator',
+          description: 'Role dengan akses penuh sistem',
+          isActive: true,
+          platform: '0',
+          type: '0',
+          created_by: user.id,
+          updated_by: null,
+        },
+      });
+
+      // 3. Assign user to Super Administrator role
+      await tx.user_roles.upsert({
+        where: {
+          user_id_roles_id: {
+            user_id: user.id,
+            roles_id: superAdminRole.id,
+          },
+        },
+        update: {},
+        create: {
+          user_id: user.id,
+          roles_id: superAdminRole.id,
+          created_by: user.id,
+          updated_by: null,
+          updated_at: null,
+        },
+      });
+
+      // 4. Insert menu access for Super Administrator role
+      const menuIds = [
+        'DASH',
+        'RGST', 'RGST|UMRH', 'RGST|UMRH|LIST', 'RGST|UMRH|ADD',
+        'RGST|UMRH|EDIT', 'RGST|UMRH|DEL', 'RGST|UMRH|ADDJ',
+        'USRM', 'USRM|STAF', 'USRM|STAF|LIST', 'USRM|STAF|ADD',
+        'USRM|STAF|EDIT', 'USRM|STAF|DEL',
+        'USRM|AGNT', 'USRM|AGNT|LIST', 'USRM|AGNT|ADD',
+        'USRM|AGNT|EDIT', 'USRM|AGNT|DEL',
+        'USRM|ROLE', 'USRM|ROLE|LIST', 'USRM|ROLE|ADD',
+        'USRM|ROLE|EDIT', 'USRM|ROLE|DEL', 'USRM|ROLE|MENU',
+        'DTMS', 'DTMS|PCKG', 'DTMS|PCKG|LIST', 'DTMS|PCKG|ADD',
+        'DTMS|PCKG|EDIT', 'DTMS|PCKG|DEL',
+        'DTMS|TCKT', 'DTMS|TCKT|LIST', 'DTMS|TCKT|ADD',
+        'DTMS|TCKT|EDIT', 'DTMS|TCKT|DEL',
+        'DTMS|BANK', 'DTMS|BANK|LIST', 'DTMS|BANK|ADD',
+        'DTMS|BANK|EDIT', 'DTMS|BANK|DEL',
+        'DTMS|ARPT', 'DTMS|ARPT|LIST', 'DTMS|ARPT|ADD',
+        'DTMS|ARPT|EDIT', 'DTMS|ARPT|DEL',
+        'DTMS|ARLN', 'DTMS|ARLN|LIST', 'DTMS|ARLN|ADD',
+        'DTMS|ARLN|EDIT', 'DTMS|ARLN|DEL',
+      ];
+
+      for (const menuId of menuIds) {
+        await tx.user_roles_menu.upsert({
+          where: {
+            role_id_menu_id: {
+              role_id: superAdminRole.id,
+              menu_id: menuId,
+            },
+          },
+          update: {},
+          create: {
+            role_id: superAdminRole.id,
+            menu_id: menuId,
+            created_by: user.id,
+            updated_by: null,
+            updated_at: null,
+          },
+        });
+      }
+
+      return user;
+    });
+
+    this.logger.info(`User registered: ${result.username}`);
+
+    return {
+      username: result.username,
+      name: result.name,
+      password: randomPassword,
+    };
+  }
+
+
   async changePassword(userId: string, request: ChangePasswordRequest): Promise<void> {
     this.logger.info(`User ${userId} is attempting to change password`);
 
@@ -149,7 +277,6 @@ export class UserService {
 
     this.logger.info(`Password berhasil diubah untuk user ${user.username}`);
   }
-
 
   async listUser(
     request: ListUserRequest,
