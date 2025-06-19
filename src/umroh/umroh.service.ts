@@ -128,7 +128,7 @@ export class UmrohService {
           });
 
           // 🔁 Kirim notif ke user via SSE
-          await this.sseService.sendToUser(toUserId, { notes })
+          await this.sseService.sendToUser(toUserId, { ...snakeToCamelObject(task), type: taskType.name })
 
           return {
             data: snakeToCamelObject(task),

@@ -3,6 +3,8 @@ import { Controller, Get, HttpCode, HttpStatus, Query } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { ListTaskRequest, TaskResponse } from './task.dto';
+import { Auth } from 'src/common/auth.decorator';
+import { users } from '@prisma/client';
 
 @Controller('api/tasks')
 export class TaskController {
@@ -11,9 +13,10 @@ export class TaskController {
   @Get()
   @HttpCode(HttpStatus.OK)
   async listTask(
+    @Auth() authUser: users,
     @Query() request: ListTaskRequest,
   ): Promise<WebResponse<TaskResponse[]>> {
-    const result = await this.taskService.listTask(request);
+    const result = await this.taskService.listTask(authUser, request);
     return result;
   }
 
