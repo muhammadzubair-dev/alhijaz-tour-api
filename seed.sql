@@ -1,3 +1,4 @@
+-- Active: 1748361358184@@127.0.0.1@5432@db_tour@public
 
 INSERT INTO package_types (name, "desc", created_by, updated_by, created_at, updated_at)
 VALUES 
@@ -237,4 +238,6 @@ INSERT INTO product_types (name, description, status, created_by, created_at, up
 
 INSERT INTO partners (name, ppiu_number, phone_pic, phone_presdir, phone_office, pic_name, email, address, product_type, categories, status, created_by, created_at, updated_by, updated_at) VALUES ('PT. Barokah Jaya', 'PP123456789', '081234567890', '081298765432', '0211234567', 'Ahmad Zaki', 'barokah@travel.co.id', 'Jl. Haji Mulyadi No. 10, Jakarta Selatan', 1, '0', '1', NULL, NOW(), NULL, NOW());
 
-INSERT INTO task_types (code, name, description, "isActive", created_at, updated_at) VALUES ('VALIDASI_DATA_JAMAAH', 'Validasi Data Jamaah', 'Validasi data jamaah oleh staff', true, NOW(), NOW());
+INSERT INTO "roles" ("name", "description", "isActive", "platform", "type", "created_by", "created_at", "updated_by", "updated_at") VALUES ('Super Administrator', 'Role dengan akses penuh ke seluruh sistem', true, '0', '0', NULL, NOW(), NULL, NOW());
+
+INSERT INTO task_types (code, name, description, "isActive", role_id, created_at, updated_at) VALUES ('VALIDASI_DATA_JAMAAH', 'Validasi Data Jamaah', 'Validasi data jamaah oleh staff', true,1, NOW(), NOW());

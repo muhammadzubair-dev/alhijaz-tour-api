@@ -9,6 +9,7 @@ import { CreateUmrohRegisterRequest, ListUmrohRequest } from "./umroh.dto";
 import { UmrohService } from "./umroh.service";
 import { Roles } from "src/common/roles.decorator";
 import { MENU_IDS } from "src/common/constants/menu-ids.constant";
+import { AuthUser } from "src/common/auth.middleware";
 
 @Controller('/api/umroh')
 export class UmrohController {
@@ -24,7 +25,7 @@ export class UmrohController {
     ]),
   )
   async registerUmroh(
-    @Auth() user: users,
+    @Auth() user: AuthUser,
     @UploadedFiles()
     files: {
       photoIdentity?: Express.Multer.File[];

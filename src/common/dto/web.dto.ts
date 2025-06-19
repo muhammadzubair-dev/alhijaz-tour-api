@@ -11,6 +11,7 @@ export class WebResponse<T> {
   data?: T;
   errors?: string;
   paging?: Paging;
+  summary?: any;
 }
 
 export class Paging {

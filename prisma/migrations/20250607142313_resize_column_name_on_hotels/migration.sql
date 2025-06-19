@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE "hotels" ALTER COLUMN "name" SET DATA TYPE VARCHAR(100);

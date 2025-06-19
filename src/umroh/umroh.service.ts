@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { users } from '@prisma/client';
+import { Prisma, users } from '@prisma/client';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { CreateUmrohRegisterRequest, ListUmrohRequest } from './umroh.dto';
 import { WebResponse } from 'src/common/dto/web.dto';
@@ -11,18 +11,20 @@ import { camelToSnakeCase } from 'src/common/utils/camelToSnakeCase';
 import { generateAutoId } from 'src/common/utils/generateAutoId';
 import snakeToCamelObject from 'src/common/utils/snakeToCamelObject';
 import { Logger } from 'winston';
+import { SseService } from 'src/sse/sse.service';
+import { AuthUser } from 'src/common/auth.middleware';
 
 @Injectable()
 export class UmrohService {
   constructor(
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
     private readonly prisma: PrismaService,
-    private readonly uploadService: UploadService
+    private readonly uploadService: UploadService,
+    private readonly sseService: SseService
   ) { }
 
-  // Umroh
   async createUmroh(
-    authUser: users,
+    authUser: AuthUser,
     dto: CreateUmrohRegisterRequest,
     files: {
       photoIdentity?: Express.Multer.File[];
@@ -39,34 +41,94 @@ export class UmrohService {
     };
 
     try {
-      // ✅ Upload file jika ada
       if (files.photoIdentity?.[0]) await saveFile(files.photoIdentity[0], 'photoIdentity');
       if (files.selfPhoto?.[0]) await saveFile(files.selfPhoto[0], 'selfPhoto');
 
-      // ✅ Jalankan transaksi
       return await this.prisma.$transaction(async (tx) => {
         const existingJamaah = await tx.jamaah.findFirst({
           where: { identity_number: dto.identityNumber },
         });
 
-        // 🔀 Jika jamaah TIDAK ditemukan, simpan sebagai TASK
         if (!existingJamaah) {
+          // 🔁 Ambil task_type berdasarkan code
+          const taskType = await tx.task_types.findFirst({
+            where: {
+              code: 'VALIDASI_JAMAAH',
+            },
+          });
+
+          if (!taskType) throw new Error(`Task type 'VALIDASI_JAMAAH' not found`);
+
+          const roleId = taskType.role_id;
+
+          // 🔁 Ambil user_id yang punya role ini
+          const userRoles = await tx.user_roles.findMany({
+            where: {
+              roles_id: roleId,
+              user: {
+                isActive: true,
+                isDeleted: false,
+              },
+            },
+            select: {
+              user_id: true,
+            },
+          });
+
+          const userIds = userRoles.map((ur) => ur.user_id);
+          if (userIds.length === 0) throw new Error(`No users with role_id = ${roleId}`);
+
+          // 🔁 Hitung jumlah task status '0' / '1'
+          const tasksPerUser = await tx.tasks.groupBy({
+            by: ['to_user_id'],
+            where: {
+              to_user_id: { in: userIds },
+              status: { in: ['0', '1'] },
+            },
+            _count: { _all: true },
+          });
+
+          // Inisialisasi map untuk menyimpan jumlah task per user
+          const taskCountMap = new Map<string, number>();
+
+          // Isi awal map dengan 0 untuk setiap user_id
+          userIds.forEach((id) => taskCountMap.set(id, 0));
+
+          // Update map dengan jumlah task yang sudah dihitung dari groupBy
+          tasksPerUser.forEach(({ to_user_id, _count }) =>
+            taskCountMap.set(to_user_id, _count._all)
+          );
+
+          // Cari user_id dengan jumlah task paling sedikit
+          // reduce akan membandingkan jumlah task antar user dan memilih yang paling sedikit
+          const toUserId = [...taskCountMap.entries()].reduce((min, curr) =>
+            curr[1] < min[1] ? curr : min
+          )[0];
+
+          const notes = `Anda telah menerima tugas dari ${authUser.username} [${authUser.roleNames[0]}] untuk melakukan validasi data jamaah atas nama "${dto.firstName} ${dto.lastName}". Harap segera diproses.`;
+
+          // 🔁 Simpan task
           const task = await tx.tasks.create({
             data: {
-              task_type_id: 1, // default 1 kalau tidak ada
+              task_type_id: taskType.id,
               title: 'Pendaftaran Umroh Tanpa Data Jamaah',
               data: {
                 ...dto,
                 photoIdentity: uploadedFiles['photoIdentity'] ?? null,
                 selfPhoto: uploadedFiles['selfPhoto'] ?? null,
               },
-              status: '0', // pending
+              notes,
+              status: '0',
               from_user_id: authUser.id,
-              to_user_id: dto.toUserId ?? authUser.id, // default ke user sendiri
+              to_user_id: toUserId,
+              is_read: false,
               created_at: new Date(),
               updated_at: new Date(),
             },
           });
+
+          // 🔁 Kirim notif ke user via SSE
+          await this.sseService.sendToUser(toUserId, { notes })
 
           return {
             data: snakeToCamelObject(task),
@@ -74,7 +136,7 @@ export class UmrohService {
           };
         }
 
-        // ✅ Jika jamaah ditemukan, proses seperti biasa
+        // ✅ Proses normal jika jamaah ditemukan
         await tx.jamaah.update({
           where: { jamaah_code: existingJamaah.jamaah_code },
           data: {
@@ -150,13 +212,13 @@ export class UmrohService {
         };
       });
     } catch (error) {
-      // 🧹 Rollback file jika transaksi gagal
       for (const filePath of rollbackFiles) {
         await this.uploadService.deleteFile(filePath);
       }
       throw error;
     }
   }
+
 
   async listUmroh(
     request: ListUmrohRequest,

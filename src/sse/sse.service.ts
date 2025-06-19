@@ -25,6 +25,7 @@ export class SseService implements OnModuleInit {
     console.log(
       `🔌 User SSE connected: ${userId}. Total: ${this.clients.size}`,
     );
+    console.log('Connected users:', Array.from(this.clients.keys()));
   }
 
   removeClient(userId: string) {

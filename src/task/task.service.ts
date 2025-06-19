@@ -16,98 +16,110 @@ export class TaskService {
     private readonly sse: SseService,
   ) { }
 
-  async listTask(
-    request: ListTaskRequest,
-  ): Promise<WebResponse<TaskResponse[]>> {
-    const {
-      id,
-      title,
-      status,
-      sortBy,
-      sortOrder,
-      page = 1,
-      limit = 10,
-    } = request;
+async listTask(
+  request: ListTaskRequest,
+): Promise<WebResponse<TaskResponse[]>> {
+  const {
+    id,
+    title,
+    status,
+    sortBy,
+    sortOrder,
+    page = 1,
+    limit = 10,
+  } = request;
 
-    const where: any = {
-      ...(id && { id: Number(id) }), // exact match
-      ...(title && { title: { contains: title, mode: 'insensitive' } }),
-      ...(status && { status }),
-    };
+  const where: any = {
+    ...(id && { id: Number(id) }), // exact match
+    ...(title && { title: { contains: title, mode: 'insensitive' } }),
+    ...(status && { status }),
+  };
 
-    let orderBy: any = {
-      created_at: 'desc',
-    };
+  let orderBy: any = {
+    created_at: 'desc',
+  };
 
-    if (sortBy) {
-      if (sortBy === 'createdBy') {
-        orderBy = {
-          createdByUser: {
-            name: sortOrder ?? 'asc',
-          },
-        };
-      } else if (sortBy === 'updatedBy') {
-        orderBy = {
-          updatedByUser: {
-            name: sortOrder ?? 'asc',
-          },
-        };
-      } else {
-        orderBy = {
-          [camelToSnakeCase(sortBy)]: sortOrder ?? 'asc',
-        };
-      }
+  if (sortBy) {
+    if (sortBy === 'createdBy') {
+      orderBy = {
+        createdByUser: {
+          name: sortOrder ?? 'asc',
+        },
+      };
+    } else if (sortBy === 'updatedBy') {
+      orderBy = {
+        updatedByUser: {
+          name: sortOrder ?? 'asc',
+        },
+      };
+    } else {
+      orderBy = {
+        [camelToSnakeCase(sortBy)]: sortOrder ?? 'asc',
+      };
     }
-
-    const total = await this.prisma.tasks.count({ where });
-    const totalPages = Math.ceil(total / limit);
-
-    const tasks = await this.prisma.tasks.findMany({
-      where,
-      orderBy,
-      include: {
-        task_type: {
-          select: {
-            name: true
-          }
-        },
-        from_user: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-          },
-        },
-        to_user: {
-          select: {
-            id: true,
-            name: true,
-            username: true,
-          },
-        },
-      },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
-
-    return {
-      data: tasks.map((item) => ({
-        id: item.id,
-        title: item.title,
-        type: item.task_type.name,
-        notes: item.notes,
-        status: item.status,
-        createdBy: item.from_user.username,
-        createdAt: item.created_at,
-      })),
-      paging: {
-        page,
-        limit,
-        total,
-        totalPages,
-      },
-    };
   }
+
+  const total = await this.prisma.tasks.count({ where });
+  const totalPages = Math.ceil(total / limit);
+
+  const tasks = await this.prisma.tasks.findMany({
+    where,
+    orderBy,
+    include: {
+      task_type: {
+        select: {
+          name: true
+        }
+      },
+      from_user: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+        },
+      },
+      to_user: {
+        select: {
+          id: true,
+          name: true,
+          username: true,
+        },
+      },
+    },
+    skip: (page - 1) * limit,
+    take: limit,
+  });
+
+  // Tambahan: hitung total task yang belum dibaca
+  const unreadCount = await this.prisma.tasks.count({
+    where: {
+      ...where,
+      is_read: false,
+    },
+  });
+
+  return {
+    data: tasks.map((item) => ({
+      id: item.id,
+      title: item.title,
+      type: item.task_type.name,
+      notes: item.notes,
+      status: item.status,
+      isRead: item.is_read,
+      createdBy: item.from_user.username,
+      createdAt: item.created_at,
+    })),
+    paging: {
+      page,
+      limit,
+      total,
+      totalPages,
+    },
+    summary: {
+      unreadCount,
+    },
+  };
+}
 
   sendTestNotification(userId: string, payload: any) {
     this.sse.sendToUser(userId, payload);

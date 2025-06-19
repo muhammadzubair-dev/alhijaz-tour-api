@@ -44,6 +44,7 @@ export class AuthMiddleware implements NestMiddleware {
                   roles_id: true,
                   role: {
                     select: {
+                      name: true,
                       role_menus: {
                         select: { menu_id: true },
                       },
@@ -52,8 +53,14 @@ export class AuthMiddleware implements NestMiddleware {
                 },
               });
 
+              // Ambil semua menu_id dari seluruh role
               const menuIds = userRoles.flatMap((ur) => ur.role.role_menus.map((rm) => rm.menu_id));
-              req.user = { ...user, menuIds: [...new Set(menuIds)] };
+
+              // Ambil nama role-nya
+              const roleNames = userRoles.map((ur) => ur.role.name);
+
+              // Simpan ke req.user
+              req.user = { ...user, roleNames, menuIds: [...new Set(menuIds)] };
             }
           }
         }
@@ -65,3 +72,14 @@ export class AuthMiddleware implements NestMiddleware {
     next();
   }
 }
+
+export interface AuthUser {
+  id: string;
+  username: string;
+  name: string;
+  type: string;
+  isDefaultPassword: boolean;
+  menuIds: number[];
+  roleNames: string[];
+}
+

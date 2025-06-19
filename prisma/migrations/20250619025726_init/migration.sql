@@ -1,10 +1,200 @@
 -- CreateTable
+CREATE TABLE "users" (
+    "id" TEXT NOT NULL,
+    "name" VARCHAR(50) NOT NULL,
+    "username" VARCHAR(20) NOT NULL,
+    "password" VARCHAR(100) NOT NULL,
+    "banned_until" TIMESTAMP(3),
+    "isDefaultPassword" BOOLEAN NOT NULL DEFAULT true,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "type" CHAR(1),
+    "created_by" TEXT,
+    "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_by" TEXT,
+    "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "agents" (
+    "id" SERIAL NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "identity_type" CHAR(1) NOT NULL DEFAULT '0',
+    "bank_id" INTEGER NOT NULL,
+    "account_number" VARCHAR(20) NOT NULL,
+    "phone" VARCHAR(20) NOT NULL,
+    "email" VARCHAR(100) NOT NULL,
+    "balance" INTEGER NOT NULL DEFAULT 0,
+    "address" VARCHAR(200) NOT NULL,
+    "lead_id" INTEGER,
+    "coordinator_id" INTEGER,
+    "target_remaining" INTEGER NOT NULL DEFAULT 0,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "isDeleted" BOOLEAN NOT NULL DEFAULT false,
+    "created_by" TEXT,
+    "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_by" TEXT,
+    "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "agents_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "fees" (
+    "id" SERIAL NOT NULL,
+    "name" VARCHAR(20) NOT NULL,
+    "amount" INTEGER NOT NULL,
+    "desc" VARCHAR(100) NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "created_by" TEXT,
+    "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_by" TEXT,
+    "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "fees_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "agent_fee_transaction" (
+    "id" SERIAL NOT NULL,
+    "agent_id" INTEGER NOT NULL,
+    "amount" INTEGER NOT NULL,
+    "type" CHAR(1) NOT NULL,
+    "description" TEXT NOT NULL,
+    "trx_date" TIMESTAMP(3) NOT NULL,
+    "refrence_id" INTEGER NOT NULL,
+    "category" CHAR(1) NOT NULL,
+    "last_balance" INTEGER NOT NULL DEFAULT 0,
+    "created_by" TEXT,
+    "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_by" TEXT,
+    "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "agent_fee_transaction_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "agent_sosmed" (
+    "id" SERIAL NOT NULL,
+    "agent_id" INTEGER NOT NULL,
+    "social_id" INTEGER NOT NULL,
+    "url" VARCHAR(50) NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "created_by" TEXT,
+    "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_by" TEXT,
+    "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "agent_sosmed_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "social_media" (
+    "id" SERIAL NOT NULL,
+    "name" VARCHAR(20) NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "created_by" TEXT,
+    "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_by" TEXT,
+    "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "social_media_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "banks" (
+    "id" SERIAL NOT NULL,
+    "bank_code" TEXT NOT NULL,
+    "name" VARCHAR(20) NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "created_by" TEXT,
+    "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_by" TEXT,
+    "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "banks_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "user_roles" (
+    "id" TEXT NOT NULL,
+    "user_id" TEXT NOT NULL,
+    "roles_id" INTEGER NOT NULL,
+    "created_by" TEXT,
+    "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_by" TEXT,
+    "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "user_roles_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "roles" (
+    "id" SERIAL NOT NULL,
+    "name" VARCHAR(50) NOT NULL,
+    "description" VARCHAR(100) NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "platform" VARCHAR(1) NOT NULL DEFAULT '0',
+    "type" CHAR(1) NOT NULL DEFAULT '0',
+    "created_by" TEXT,
+    "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_by" TEXT,
+    "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "roles_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "user_roles_menu" (
+    "id" SERIAL NOT NULL,
+    "role_id" INTEGER NOT NULL,
+    "menu_id" TEXT NOT NULL,
+    "created_by" TEXT,
+    "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_by" TEXT,
+    "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "user_roles_menu_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "menus" (
+    "id" VARCHAR(50) NOT NULL,
+    "name" VARCHAR(50) NOT NULL,
+    "desc" VARCHAR(50) NOT NULL,
+    "created_by" TEXT,
+    "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_by" TEXT,
+    "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "menus_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "list_api" (
+    "id" SERIAL NOT NULL,
+    "menu_id" TEXT NOT NULL,
+    "name" VARCHAR(50) NOT NULL,
+    "url" VARCHAR(50) NOT NULL,
+    "parent_id" INTEGER NOT NULL,
+    "order" INTEGER NOT NULL,
+    "created_by" TEXT,
+    "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_by" TEXT,
+    "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "list_api_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "jamaah" (
     "jamaah_code" VARCHAR(25) NOT NULL,
     "first_name" VARCHAR(25) NOT NULL,
     "mid_name" VARCHAR(25),
     "last_name" VARCHAR(25),
-    "identity_number" VARCHAR(10) NOT NULL,
+    "identity_number" VARCHAR(16) NOT NULL,
     "birth_place" VARCHAR(10) NOT NULL,
     "birth_date" TIMESTAMP(3) NOT NULL,
     "gender" INTEGER NOT NULL,
@@ -19,15 +209,15 @@ CREATE TABLE "jamaah" (
     "address" VARCHAR(100) NOT NULL,
     "home_phone_number" VARCHAR(25),
     "medical_condition" TEXT,
-    "self_photo" VARCHAR(50),
-    "photo_identity" VARCHAR(50),
+    "self_photo" VARCHAR(200),
+    "photo_identity" VARCHAR(200),
     "notes" TEXT,
     "status" CHAR(1) NOT NULL,
-    "agents_id" UUID,
+    "agents_id" INTEGER,
     "staff_id" UUID,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "jamaah_pkey" PRIMARY KEY ("jamaah_code")
@@ -38,9 +228,9 @@ CREATE TABLE "documents" (
     "id" SERIAL NOT NULL,
     "name" VARCHAR(15) NOT NULL,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "documents_pkey" PRIMARY KEY ("id")
@@ -52,9 +242,9 @@ CREATE TABLE "jamaah_documents" (
     "jamaah_id" VARCHAR(25) NOT NULL,
     "document_id" INTEGER NOT NULL,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "jamaah_documents_pkey" PRIMARY KEY ("id")
@@ -65,9 +255,9 @@ CREATE TABLE "citys" (
     "id" SERIAL NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "citys_pkey" PRIMARY KEY ("id")
@@ -76,14 +266,14 @@ CREATE TABLE "citys" (
 -- CreateTable
 CREATE TABLE "hotels" (
     "id" SERIAL NOT NULL,
-    "name" VARCHAR(25) NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
     "stars" VARCHAR(5),
     "photo" VARCHAR(100),
     "city_id" INTEGER NOT NULL,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "hotels_pkey" PRIMARY KEY ("id")
@@ -93,11 +283,11 @@ CREATE TABLE "hotels" (
 CREATE TABLE "airlines" (
     "id" SERIAL NOT NULL,
     "name" VARCHAR(50) NOT NULL,
-    "display_name" VARCHAR(40) NOT NULL,
+    "display_name" VARCHAR(40),
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "airlines_pkey" PRIMARY KEY ("id")
@@ -109,9 +299,9 @@ CREATE TABLE "transportations" (
     "company_name" VARCHAR(50) NOT NULL,
     "type" CHAR(1) NOT NULL,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "transportations_pkey" PRIMARY KEY ("id")
@@ -131,9 +321,9 @@ CREATE TABLE "partners" (
     "product_type" INTEGER NOT NULL,
     "categories" CHAR(1) NOT NULL,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "partners_pkey" PRIMARY KEY ("id")
@@ -145,9 +335,9 @@ CREATE TABLE "product_types" (
     "name" VARCHAR(20) NOT NULL,
     "description" VARCHAR(20) NOT NULL,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "product_types_pkey" PRIMARY KEY ("id")
@@ -158,9 +348,9 @@ CREATE TABLE "provinces" (
     "id" SERIAL NOT NULL,
     "name" VARCHAR(20) NOT NULL,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "provinces_pkey" PRIMARY KEY ("id")
@@ -172,9 +362,9 @@ CREATE TABLE "districts" (
     "province_id" INTEGER NOT NULL,
     "name" VARCHAR(20) NOT NULL,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "districts_pkey" PRIMARY KEY ("id")
@@ -187,9 +377,9 @@ CREATE TABLE "sub_districts" (
     "district_id" INTEGER NOT NULL,
     "name" VARCHAR(20) NOT NULL,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "sub_districts_pkey" PRIMARY KEY ("id")
@@ -203,9 +393,9 @@ CREATE TABLE "neighborhoods" (
     "sub_district_id" INTEGER NOT NULL,
     "name" VARCHAR(20) NOT NULL,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "neighborhoods_pkey" PRIMARY KEY ("id")
@@ -222,9 +412,9 @@ CREATE TABLE "tickets" (
     "cancel" INTEGER NOT NULL,
     "transaction_date" TIMESTAMP(3) NOT NULL,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "tickets_pkey" PRIMARY KEY ("id")
@@ -239,12 +429,12 @@ CREATE TABLE "ticket_details" (
     "ticket_airline" INTEGER NOT NULL,
     "flight_no" TEXT,
     "ticket_from" VARCHAR(5) NOT NULL,
-    "ticket_etd" INTEGER NOT NULL,
+    "ticket_etd" VARCHAR(5) NOT NULL,
     "ticket_to" VARCHAR(5) NOT NULL,
-    "ticket_eta" INTEGER NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "ticket_eta" VARCHAR(5) NOT NULL,
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "ticket_details_pkey" PRIMARY KEY ("id")
@@ -253,11 +443,11 @@ CREATE TABLE "ticket_details" (
 -- CreateTable
 CREATE TABLE "airport" (
     "code" VARCHAR(5) NOT NULL,
-    "name" VARCHAR(25) NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "airport_pkey" PRIMARY KEY ("code")
@@ -269,9 +459,9 @@ CREATE TABLE "ticket_transaction" (
     "booking_code" VARCHAR(10) NOT NULL,
     "partner_id" INTEGER NOT NULL,
     "trx_number" TEXT NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "ticket_transaction_pkey" PRIMARY KEY ("id")
@@ -285,7 +475,9 @@ CREATE TABLE "packages" (
     "manasik_invitation" VARCHAR(50),
     "brochure" VARCHAR(50),
     "departure_info" VARCHAR(50),
+    "departure_date" TIMESTAMP(3),
     "ticket" INTEGER,
+    "seat" INTEGER,
     "maturity_passport_delivery" TIMESTAMP(3),
     "maturity_repayment" TIMESTAMP(3),
     "manasik_date" TIMESTAMP(3),
@@ -305,9 +497,9 @@ CREATE TABLE "packages" (
     "wa_group" VARCHAR(10),
     "notes" TEXT,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "packages_pkey" PRIMARY KEY ("id")
@@ -318,9 +510,9 @@ CREATE TABLE "package_types" (
     "id" SERIAL NOT NULL,
     "name" VARCHAR(20) NOT NULL,
     "desc" VARCHAR(20) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "package_types_pkey" PRIMARY KEY ("id")
@@ -331,9 +523,9 @@ CREATE TABLE "room_types" (
     "id" SERIAL NOT NULL,
     "name" VARCHAR(20) NOT NULL,
     "desc" VARCHAR(20) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "room_types_pkey" PRIMARY KEY ("id")
@@ -346,9 +538,9 @@ CREATE TABLE "package_hotels" (
     "package_type_id" INTEGER NOT NULL,
     "city_id" INTEGER NOT NULL,
     "hotel_id" INTEGER NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "package_hotels_pkey" PRIMARY KEY ("id")
@@ -360,9 +552,9 @@ CREATE TABLE "package_rooms" (
     "package_type_id" INTEGER NOT NULL,
     "room_type_id" INTEGER NOT NULL,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "package_rooms_pkey" PRIMARY KEY ("id")
@@ -374,12 +566,25 @@ CREATE TABLE "package_room_prices" (
     "packages_id" TEXT NOT NULL,
     "package_rooms_id" INTEGER NOT NULL,
     "price" INTEGER NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "package_room_prices_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "umrah" (
+    "umroh_code" VARCHAR(20) NOT NULL,
+    "package" VARCHAR(20) NOT NULL,
+    "pin" INTEGER NOT NULL DEFAULT 12345,
+    "created_by" TEXT,
+    "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+    "updated_by" TEXT,
+    "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "umrah_pkey" PRIMARY KEY ("umroh_code")
 );
 
 -- CreateTable
@@ -389,19 +594,18 @@ CREATE TABLE "umrah_registers" (
     "jamaah" VARCHAR(25) NOT NULL,
     "remarks" INTEGER NOT NULL,
     "mahram" VARCHAR(20),
-    "package" TEXT NOT NULL,
-    "package_room_price" INTEGER NOT NULL,
-    "office_discount" INTEGER NOT NULL,
-    "agent_discount" INTEGER NOT NULL,
+    "package_room_price" INTEGER,
+    "other_expenses" INTEGER NOT NULL DEFAULT 0,
+    "office_discount" INTEGER NOT NULL DEFAULT 0,
+    "agent_discount" INTEGER NOT NULL DEFAULT 0,
     "agent_id" INTEGER,
     "register_name" VARCHAR(20) NOT NULL,
     "register_phone" VARCHAR(20) NOT NULL,
     "notes" VARCHAR(100),
-    "pin" INTEGER NOT NULL,
     "status" CHAR(1) NOT NULL,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "umrah_registers_pkey" PRIMARY KEY ("id")
@@ -411,26 +615,128 @@ CREATE TABLE "umrah_registers" (
 CREATE TABLE "umrah_payments" (
     "id" TEXT NOT NULL,
     "jamaah" VARCHAR(25) NOT NULL,
-    "umrah_register_code" VARCHAR(20) NOT NULL,
+    "umrah_register_id" VARCHAR(36) NOT NULL,
     "remaining_package_payment" INTEGER NOT NULL,
     "remaining_equipment_payment" INTEGER NOT NULL,
     "remaining_pcr_payment" INTEGER NOT NULL,
     "remaining_other_payment" INTEGER NOT NULL,
     "status" CHAR(1) NOT NULL,
     "trx_number" TEXT,
-    "created_by" TEXT DEFAULT 'system',
+    "created_by" TEXT,
     "created_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
-    "updated_by" TEXT DEFAULT 'system',
+    "updated_by" TEXT,
     "updated_at" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "umrah_payments_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "task_types" (
+    "id" SERIAL NOT NULL,
+    "code" VARCHAR(30) NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
+    "description" TEXT,
+    "role_id" INTEGER NOT NULL,
+    "isActive" BOOLEAN NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "task_types_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "tasks" (
+    "id" SERIAL NOT NULL,
+    "task_type_id" INTEGER NOT NULL,
+    "title" TEXT NOT NULL,
+    "data" JSONB NOT NULL,
+    "notes" TEXT,
+    "status" CHAR(1) NOT NULL,
+    "from_user_id" TEXT NOT NULL,
+    "to_user_id" TEXT NOT NULL,
+    "is_read" BOOLEAN NOT NULL DEFAULT false,
+    "notified_at" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "completed_at" TIMESTAMP(3),
+
+    CONSTRAINT "tasks_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "user_roles_user_id_roles_id_key" ON "user_roles"("user_id", "roles_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "roles_name_key" ON "roles"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "user_roles_menu_role_id_menu_id_key" ON "user_roles_menu"("role_id", "menu_id");
+
 -- CreateIndex
 CREATE UNIQUE INDEX "tickets_booking_code_key" ON "tickets"("booking_code");
 
--- CreateIndex
-CREATE UNIQUE INDEX "umrah_registers_umroh_code_key" ON "umrah_registers"("umroh_code");
+-- AddForeignKey
+ALTER TABLE "users" ADD CONSTRAINT "users_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "users" ADD CONSTRAINT "users_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "agents" ADD CONSTRAINT "agents_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "agents" ADD CONSTRAINT "agents_bank_id_fkey" FOREIGN KEY ("bank_id") REFERENCES "banks"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "agents" ADD CONSTRAINT "agents_lead_id_fkey" FOREIGN KEY ("lead_id") REFERENCES "agents"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "agents" ADD CONSTRAINT "agents_coordinator_id_fkey" FOREIGN KEY ("coordinator_id") REFERENCES "agents"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "agents" ADD CONSTRAINT "agents_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "agents" ADD CONSTRAINT "agents_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "agent_fee_transaction" ADD CONSTRAINT "agent_fee_transaction_agent_id_fkey" FOREIGN KEY ("agent_id") REFERENCES "agents"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "agent_sosmed" ADD CONSTRAINT "agent_sosmed_agent_id_fkey" FOREIGN KEY ("agent_id") REFERENCES "agents"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "agent_sosmed" ADD CONSTRAINT "agent_sosmed_social_id_fkey" FOREIGN KEY ("social_id") REFERENCES "social_media"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "banks" ADD CONSTRAINT "banks_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "banks" ADD CONSTRAINT "banks_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_roles_id_fkey" FOREIGN KEY ("roles_id") REFERENCES "roles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "roles" ADD CONSTRAINT "roles_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "roles" ADD CONSTRAINT "roles_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_roles_menu" ADD CONSTRAINT "user_roles_menu_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_roles_menu" ADD CONSTRAINT "user_roles_menu_menu_id_fkey" FOREIGN KEY ("menu_id") REFERENCES "menus"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "list_api" ADD CONSTRAINT "list_api_menu_id_fkey" FOREIGN KEY ("menu_id") REFERENCES "menus"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "jamaah" ADD CONSTRAINT "jamaah_agents_id_fkey" FOREIGN KEY ("agents_id") REFERENCES "agents"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "jamaah" ADD CONSTRAINT "jamaah_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -652,13 +958,19 @@ ALTER TABLE "package_room_prices" ADD CONSTRAINT "package_room_prices_created_by
 ALTER TABLE "package_room_prices" ADD CONSTRAINT "package_room_prices_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "umrah" ADD CONSTRAINT "umrah_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "umrah" ADD CONSTRAINT "umrah_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "umrah" ADD CONSTRAINT "umrah_package_fkey" FOREIGN KEY ("package") REFERENCES "packages"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "umrah_registers" ADD CONSTRAINT "umrah_registers_jamaah_fkey" FOREIGN KEY ("jamaah") REFERENCES "jamaah"("jamaah_code") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "umrah_registers" ADD CONSTRAINT "umrah_registers_package_fkey" FOREIGN KEY ("package") REFERENCES "packages"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "umrah_registers" ADD CONSTRAINT "umrah_registers_package_room_price_fkey" FOREIGN KEY ("package_room_price") REFERENCES "package_room_prices"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "umrah_registers" ADD CONSTRAINT "umrah_registers_package_room_price_fkey" FOREIGN KEY ("package_room_price") REFERENCES "package_room_prices"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "umrah_registers" ADD CONSTRAINT "umrah_registers_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -667,13 +979,28 @@ ALTER TABLE "umrah_registers" ADD CONSTRAINT "umrah_registers_created_by_fkey" F
 ALTER TABLE "umrah_registers" ADD CONSTRAINT "umrah_registers_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "umrah_registers" ADD CONSTRAINT "umrah_registers_umroh_code_fkey" FOREIGN KEY ("umroh_code") REFERENCES "umrah"("umroh_code") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "umrah_payments" ADD CONSTRAINT "umrah_payments_jamaah_fkey" FOREIGN KEY ("jamaah") REFERENCES "jamaah"("jamaah_code") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "umrah_payments" ADD CONSTRAINT "umrah_payments_umrah_register_code_fkey" FOREIGN KEY ("umrah_register_code") REFERENCES "umrah_registers"("umroh_code") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "umrah_payments" ADD CONSTRAINT "umrah_payments_umrah_register_id_fkey" FOREIGN KEY ("umrah_register_id") REFERENCES "umrah_registers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "umrah_payments" ADD CONSTRAINT "umrah_payments_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "umrah_payments" ADD CONSTRAINT "umrah_payments_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "task_types" ADD CONSTRAINT "task_types_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tasks" ADD CONSTRAINT "tasks_task_type_id_fkey" FOREIGN KEY ("task_type_id") REFERENCES "task_types"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tasks" ADD CONSTRAINT "tasks_from_user_id_fkey" FOREIGN KEY ("from_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "tasks" ADD CONSTRAINT "tasks_to_user_id_fkey" FOREIGN KEY ("to_user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

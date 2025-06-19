@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE "jamaah" ALTER COLUMN "self_photo" SET DATA TYPE VARCHAR(200),
-ALTER COLUMN "photo_identity" SET DATA TYPE VARCHAR(200);
