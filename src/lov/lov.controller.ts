@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable prettier/prettier */
-import { Controller, Get, HttpCode, HttpStatus, Param } from "@nestjs/common";
+import { Controller, Get, HttpCode, HttpStatus, Param, Query } from "@nestjs/common";
 import { users } from "@prisma/client";
 import { Auth } from "src/common/auth.decorator";
 import { JamaahResponse, PackageRoomResponse, PackageTypeResponse, RoomTypeResponse } from "src/common/dto/master.dto";
@@ -143,12 +143,13 @@ export class LovController {
     return result;
   }
 
-  @Get('user-agent')
+  @Get('staff')
   @HttpCode(HttpStatus.OK)
-  async listUserAgent(
+  async listStaff(
     @Auth() user: users,
+    @Query('staffId') staffId: string
   ): Promise<WebResponse<{ id: string, name: string }[]>> {
-    const result = await this.lovService.listUserAgent(user);
+    const result = await this.lovService.listStaff(user, staffId);
     return result;
   }
 
@@ -156,8 +157,9 @@ export class LovController {
   @HttpCode(HttpStatus.OK)
   async listAgent(
     @Auth() user: users,
+    @Query('agentId') agentId: number
   ): Promise<WebResponse<{ id: number, name: string }[]>> {
-    const result = await this.lovService.listAgent(user);
+    const result = await this.lovService.listAgent(user, agentId);
     return result;
   }
 
@@ -165,8 +167,9 @@ export class LovController {
   @HttpCode(HttpStatus.OK)
   async listProvince(
     @Auth() _: users,
+    @Query('provinceId') provinceId: number
   ): Promise<WebResponse<{ id: number, name: string }[]>> {
-    const result = await this.lovService.listProvince();
+    const result = await this.lovService.listProvince(provinceId);
     return result;
   }
 
@@ -175,8 +178,9 @@ export class LovController {
   async listDistrict(
     @Auth() _: users,
     @Param('provinceId') provinceId: string,
+    @Query('districtId') districtId: number
   ): Promise<WebResponse<{ id: number; name: string }[]>> {
-    return await this.lovService.listDistrict(Number(provinceId));
+    return await this.lovService.listDistrict(Number(provinceId), districtId);
   }
 
   @Get('provinces/:provinceId/districts/:districtId/sub-districts')
@@ -185,10 +189,12 @@ export class LovController {
     @Auth() _: users,
     @Param('provinceId') provinceId: string,
     @Param('districtId') districtId: string,
+    @Query('subDistrictId') subDistrictId: number
   ): Promise<WebResponse<{ id: number; name: string }[]>> {
     return await this.lovService.listSubDistrict(
       Number(provinceId),
       Number(districtId),
+      subDistrictId
     );
   }
 
@@ -202,11 +208,13 @@ export class LovController {
     @Param('provinceId') provinceId: string,
     @Param('districtId') districtId: string,
     @Param('subDistrictId') subDistrictId: string,
+    @Query('neighborhoodId') neighborhoodId: number
   ): Promise<WebResponse<{ id: number; name: string }[]>> {
     return await this.lovService.listNeighborhoods(
       Number(provinceId),
       Number(districtId),
       Number(subDistrictId),
+      neighborhoodId
     );
   }
 
@@ -214,8 +222,9 @@ export class LovController {
   @HttpCode(HttpStatus.OK)
   async listUmrohPackage(
     @Auth() _: users,
+    @Query('packageId') packageId: string
   ): Promise<WebResponse<{ id: string, name: string }[]>> {
-    const result = await this.lovService.listUmrohPackage();
+    const result = await this.lovService.listUmrohPackage(packageId);
     return result;
   }
 
@@ -224,8 +233,9 @@ export class LovController {
   async listUmrohPackageRooms(
     @Auth() _: users,
     @Param('packageId') packageId: string,
+    @Query('packageRoomId') packageRoomId: number,
   ): Promise<WebResponse<{ id: number, price: number }[]>> {
-    const result = await this.lovService.listUmrohPackageRooms(packageId);
+    const result = await this.lovService.listUmrohPackageRooms(packageId, packageRoomId);
     return result;
   }
 

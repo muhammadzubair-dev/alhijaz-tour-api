@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "jamaah" ALTER COLUMN "father_name" DROP NOT NULL,
+ALTER COLUMN "father_name" SET DATA TYPE VARCHAR(50),
+ALTER COLUMN "mother_name" DROP NOT NULL,
+ALTER COLUMN "mother_name" SET DATA TYPE VARCHAR(59);

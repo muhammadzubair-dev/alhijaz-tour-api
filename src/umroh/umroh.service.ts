@@ -111,7 +111,7 @@ export class UmrohService {
           const task = await tx.tasks.create({
             data: {
               task_type_id: taskType.id,
-              title: 'Pendaftaran Umroh Tanpa Data Jamaah',
+              title: `Pendaftaran Jamaah Umroh "${dto.firstName} ${dto.lastName}"`,
               data: {
                 ...dto,
                 photoIdentity: uploadedFiles['photoIdentity'] ?? null,
@@ -218,8 +218,7 @@ export class UmrohService {
       throw error;
     }
   }
-
-
+  
   async listUmroh(
     request: ListUmrohRequest,
   ): Promise<WebResponse<any[]>> {

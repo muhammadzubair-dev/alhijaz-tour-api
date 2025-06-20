@@ -1152,9 +1152,6 @@ export class UserService {
 
       // Tambahkan role jika ada dan belum ada di tabel user_roles
       if (request.roleId) {
-        console.log('===========> ', updatedAgent.user_id)
-        console.log('===========> ', request.roleId)
-        console.log('===========> ', authUser.id)
         await tx.user_roles.upsert({
           where: {
             user_id_roles_id: {

@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, HttpCode, HttpStatus, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Query } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { WebResponse } from 'src/common/dto/web.dto';
 import { ListTaskRequest, TaskResponse } from './task.dto';
@@ -17,6 +17,27 @@ export class TaskController {
     @Query() request: ListTaskRequest,
   ): Promise<WebResponse<TaskResponse[]>> {
     const result = await this.taskService.listTask(authUser, request);
+    return result;
+  }
+
+  @Get(':taskId')
+  @HttpCode(HttpStatus.OK)
+  async getTaskDetail(
+    @Auth() authUser: users,
+    @Param('taskId') taskId: number,
+  ): Promise<WebResponse<TaskResponse[]>> {
+    const result = await this.taskService.getTaskDetail(authUser, taskId);
+    return result;
+  }
+
+  @Patch(':taskId')
+  @HttpCode(HttpStatus.OK)
+  async updateTaskStatus(
+    @Auth() authUser: users,
+    @Param('taskId') taskId: number,
+    @Body('newStatus') newStatus: string,
+  ): Promise<WebResponse<TaskResponse[]>> {
+    const result = await this.taskService.updateTaskStatus(authUser, taskId, newStatus);
     return result;
   }
 

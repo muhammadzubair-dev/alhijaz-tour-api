@@ -313,7 +313,7 @@ export class LovService {
     };
   }
 
-  async listUserAgent(user: users): Promise<WebResponse<{ id: string, name: string }[]>> {
+  async listStaff(user: users, staffId: string): Promise<WebResponse<{ id: string, name: string }[]>> {
     const users = await this.prisma.users.findMany({
       select: {
         id: true,
@@ -322,10 +322,9 @@ export class LovService {
       where: {
         isDeleted: false,
         isActive: true,
-        type: null,
-        id: {
-          not: user.id
-        }
+        ...(staffId && {
+          id: staffId
+        })
       }
     });
     return {
@@ -336,9 +335,10 @@ export class LovService {
     };
   }
 
-  async listAgent(user: users): Promise<WebResponse<{ id: number, name: string }[]>> {
+  async listAgent(user: users, agentId: number): Promise<WebResponse<{ id: number, name: string }[]>> {
     const agents = await this.prisma.agents.findMany({
       where: {
+        ...(agentId !== undefined && { id: agentId }),
         isDeleted: false,
         isActive: true,
         user_id: {
@@ -383,45 +383,29 @@ export class LovService {
     };
   }
 
-  async listProvince(): Promise<WebResponse<{ id: number, name: string }[]>> {
-    const banks = await this.prisma.provinces.findMany({
-      select: {
-        id: true,
-        name: true,
-      },
-      where: {
-        status: '1'
-      }
-    });
-    return {
-      data: banks.map((item) => ({
-        id: item.id,
-        name: item.name,
-      })),
-    };
-  }
-
-  async listDistrict(provinceId: number): Promise<WebResponse<{ id: number, name: string }[]>> {
-    const banks = await this.prisma.districts.findMany({
+  async listProvince(provinceId: number): Promise<WebResponse<{ id: number, name: string }[]>> {
+    const province = await this.prisma.provinces.findMany({
       select: {
         id: true,
         name: true,
       },
       where: {
         status: '1',
-        province_id: provinceId
+        ...(provinceId && {
+          id: provinceId
+        })
       }
     });
     return {
-      data: banks.map((item) => ({
+      data: province.map((item) => ({
         id: item.id,
         name: item.name,
       })),
     };
   }
 
-  async listSubDistrict(provinceId: number, districtId: number): Promise<WebResponse<{ id: number, name: string }[]>> {
-    const banks = await this.prisma.sub_districts.findMany({
+  async listDistrict(provinceId: number, districtId: number): Promise<WebResponse<{ id: number, name: string }[]>> {
+    const district = await this.prisma.districts.findMany({
       select: {
         id: true,
         name: true,
@@ -429,19 +413,21 @@ export class LovService {
       where: {
         status: '1',
         province_id: provinceId,
-        district_id: districtId
+        ...(districtId && {
+          id: districtId
+        })
       }
     });
     return {
-      data: banks.map((item) => ({
+      data: district.map((item) => ({
         id: item.id,
         name: item.name,
       })),
     };
   }
 
-  async listNeighborhoods(provinceId: number, districtId: number, subDistrictId: number): Promise<WebResponse<{ id: number, name: string }[]>> {
-    const banks = await this.prisma.neighborhoods.findMany({
+  async listSubDistrict(provinceId: number, districtId: number, subDistrictId: number): Promise<WebResponse<{ id: number, name: string }[]>> {
+    const subDistrict = await this.prisma.sub_districts.findMany({
       select: {
         id: true,
         name: true,
@@ -450,18 +436,44 @@ export class LovService {
         status: '1',
         province_id: provinceId,
         district_id: districtId,
-        sub_district_id: subDistrictId
+        ...(subDistrictId && {
+          id: subDistrictId
+        })
       }
     });
     return {
-      data: banks.map((item) => ({
+      data: subDistrict.map((item) => ({
         id: item.id,
         name: item.name,
       })),
     };
   }
 
-  async listUmrohPackage(): Promise<WebResponse<{ id: string, name: string }[]>> {
+  async listNeighborhoods(provinceId: number, districtId: number, subDistrictId: number, neighborhoodId: number): Promise<WebResponse<{ id: number, name: string }[]>> {
+    const neighborhood = await this.prisma.neighborhoods.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      where: {
+        status: '1',
+        province_id: provinceId,
+        district_id: districtId,
+        sub_district_id: subDistrictId,
+        ...(neighborhoodId && {
+          id: neighborhoodId
+        })
+      }
+    });
+    return {
+      data: neighborhood.map((item) => ({
+        id: item.id,
+        name: item.name,
+      })),
+    };
+  }
+
+  async listUmrohPackage(packageId: string): Promise<WebResponse<{ id: string, name: string }[]>> {
     const banks = await this.prisma.packages.findMany({
       select: {
         id: true,
@@ -469,7 +481,10 @@ export class LovService {
         departure_date: true
       },
       where: {
-        status: '1'
+        status: '1',
+        ...(packageId && {
+          id: packageId
+        })
       }
     });
     return {
@@ -480,10 +495,13 @@ export class LovService {
     };
   }
 
-  async listUmrohPackageRooms(packagesId: string): Promise<WebResponse<{ id: number, price: number }[]>> {
+  async listUmrohPackageRooms(packagesId: string, packageRoomId: number): Promise<WebResponse<{ id: number, price: number }[]>> {
     const result = await this.prisma.package_room_prices.findMany({
       where: {
         packages_id: packagesId,
+        ...(packageRoomId && {
+          id: packageRoomId
+        })
       },
       select: {
         id: true,
