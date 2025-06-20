@@ -553,12 +553,14 @@ export class LovService {
       select: {
         id: true,
         name: true,
+        desc: true
       },
     });
     return {
       data: banks.map((item) => ({
         id: item.id,
         name: item.name,
+        desc: item.desc
       })),
     };
   }

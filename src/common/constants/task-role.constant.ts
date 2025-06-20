@@ -1,0 +1,3 @@
+export const TASK_ROLE = {
+  VALIDATE_NEW_JAMAAH: 'VALIDATE_NEW_JAMAAH',
+};

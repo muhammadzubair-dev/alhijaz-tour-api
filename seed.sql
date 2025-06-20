@@ -186,9 +186,9 @@ VALUES
 ('TASK|ALL|LIST', 'List Semua Task', 'Menampilkan seluruh tugas tanpa membatasi pengguna tertentu'),
 ('TASK|ALL|STTS', 'Update Status Task', 'Mengelola status tugas dari seluruh pengguna sesuai kebutuhan'),
 
-('TASK|ASRL', 'Role Assignment', 'Mengatur mekanisme dan aturan penugasan tugas'),
-('TASK|ASRL|LIST', 'Daftar Konfigurasi Penugasan', 'Menampilkan daftar tugas dan role yang diassign'),
-('TASK|ASRL|EDIT', 'Ubah Aturan Penugasan', 'Menentukan kepada role mana tugas akan ditugaskan secara otomatis'),
+('TASK|ASRL', 'Role Assignment', 'Pengaturan logika dan peran yang ditugaskan secara otomatis untuk setiap tipe task'),
+('TASK|ASRL|LIST', 'List Penugasan Task per Role', 'Menampilkan daftar tipe tugas beserta role yang menerima penugasan'),
+('TASK|ASRL|EDIT', 'Ubah Role untuk Penugasan Task', 'Menentukan role mana yang akan menerima penugasan otomatis untuk tipe tugas tertentu'),
 
 ('RGST', 'Pendaftaran', 'Menu pendaftaran utama'),
 ('RGST|UMRH', 'Pendaftaran Umroh', 'Submenu pendaftaran untuk umroh'),

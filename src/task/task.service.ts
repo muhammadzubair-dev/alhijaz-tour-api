@@ -9,6 +9,9 @@ import { SseService } from 'src/sse/sse.service';
 import { Logger } from 'winston';
 import { ListTaskRequest, TaskResponse } from './task.dto';
 import { generateAutoId } from 'src/common/utils/generateAutoId';
+import hasMenuAccess from 'src/common/utils/hasMenuAccess';
+import { MENU_IDS } from 'src/common/constants/menu-ids.constant';
+import { AuthUser } from 'src/common/auth.middleware';
 
 @Injectable()
 export class TaskService {
@@ -128,13 +131,16 @@ export class TaskService {
   }
 
   async getTaskDetail(
-    authUser: users,
+    authUser: AuthUser,
     taskId: number,
   ): Promise<WebResponse<any>> {
+    const canAccessAll = hasMenuAccess(authUser, MENU_IDS.TaskAllList);
+    const canAccessOwn = hasMenuAccess(authUser, MENU_IDS.TaskMeList);
+
     const task = await this.prisma.tasks.findFirst({
       where: {
         id: taskId,
-        to_user_id: authUser.id, // keamanan: hanya boleh lihat task miliknya
+        ...(canAccessOwn && !canAccessAll ? { to_user_id: authUser.id } : {}),
       },
       include: {
         task_type: {
@@ -194,11 +200,12 @@ export class TaskService {
     authUser: users,
     taskId: number,
     newStatus: string,
+    onlyOwn: boolean = true,
   ): Promise<WebResponse<any>> {
     const task = await this.prisma.tasks.findFirst({
       where: {
         id: taskId,
-        to_user_id: authUser.id,
+        ...(onlyOwn && { to_user_id: authUser.id }),
       },
     });
 
@@ -400,6 +407,102 @@ export class TaskService {
     });
     return {
       data: { updatedCount: result.count },
+    };
+  }
+
+  async listTaskRole(
+    request: any,
+  ): Promise<WebResponse<any[]>> {
+    const {
+      sortBy,
+      sortOrder,
+      page = 1,
+      limit = 10,
+    } = request;
+
+    const where: any = {};
+
+    let orderBy: any = {
+      created_at: 'desc', // default jika tidak ada sortBy
+    };
+
+    if (sortBy) {
+      orderBy = {
+        [camelToSnakeCase(sortBy)]: sortOrder ?? 'asc',
+      };
+    }
+
+    const total = await this.prisma.task_types.count({ where });
+    const totalPages = Math.ceil(total / limit);
+
+    const taskTypes = await this.prisma.task_types.findMany({
+      where,
+      orderBy,
+      include: {
+        role: {
+          select: {
+            name: true,
+            type: true,
+          }
+        }
+      },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return {
+      data: taskTypes.map((item) => ({
+        id: item.id,
+        code: item.code,
+        name: item.name,
+        roleId: item.role_id,
+        roleName: item.role.name,
+        roleType: item.role.type,
+        description: item.description,
+        isActive: item.isActive,
+        createdAt: item.created_at,
+      })),
+      paging: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
+  }
+
+  async updateTaskTypeRole(
+    taskTypeId: number,
+    roleId: number,
+  ): Promise<WebResponse<any>> {
+    // Validasi apakah task_type dan role ada
+    const taskType = await this.prisma.task_types.findUnique({
+      where: { id: taskTypeId },
+    });
+
+    if (!taskType) {
+      throw new NotFoundException('Task type tidak ditemukan');
+    }
+
+    const role = await this.prisma.roles.findUnique({
+      where: { id: roleId },
+    });
+
+    if (!role) {
+      throw new NotFoundException('Role tidak ditemukan');
+    }
+
+    // Update roleId
+    const updated = await this.prisma.task_types.update({
+      where: { id: taskTypeId },
+      data: {
+        role_id: roleId,
+        updated_at: new Date(),
+      },
+    });
+
+    return {
+      data: updated,
     };
   }
 }

@@ -13,6 +13,7 @@ import snakeToCamelObject from 'src/common/utils/snakeToCamelObject';
 import { Logger } from 'winston';
 import { SseService } from 'src/sse/sse.service';
 import { AuthUser } from 'src/common/auth.middleware';
+import { TASK_ROLE } from 'src/common/constants/task-role.constant';
 
 @Injectable()
 export class UmrohService {
@@ -53,11 +54,12 @@ export class UmrohService {
           // 🔁 Ambil task_type berdasarkan code
           const taskType = await tx.task_types.findFirst({
             where: {
-              code: 'VALIDASI_JAMAAH',
+              code: TASK_ROLE.VALIDATE_NEW_JAMAAH,
+              isActive: true
             },
           });
 
-          if (!taskType) throw new Error(`Task type 'VALIDASI_JAMAAH' not found`);
+          if (!taskType) throw new Error(`Task type ${TASK_ROLE.VALIDATE_NEW_JAMAAH} not found`);
 
           const roleId = taskType.role_id;
 

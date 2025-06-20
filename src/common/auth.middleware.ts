@@ -79,7 +79,7 @@ export interface AuthUser {
   name: string;
   type: string;
   isDefaultPassword: boolean;
-  menuIds: number[];
+  menuIds: string[];
   roleNames: string[];
 }
 
