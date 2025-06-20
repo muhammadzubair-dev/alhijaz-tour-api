@@ -174,7 +174,22 @@ INSERT INTO airport (code, name, status, created_by, created_at, updated_by, upd
 
 INSERT INTO menus (id, name, "desc")
 VALUES
-('DASH', 'Dashboard', 'Dashboard'),
+('DASH', 'Dashboard', 'Ringkasan informasi dan statistik utama sistem'),
+
+('TASK', 'Task', 'Fitur untuk mengelola dan memantau tugas pengguna'),
+
+('TASK|MYTK', 'My Task', 'Tugas yang ditugaskan kepada Anda secara langsung'),
+('TASK|MYTK|LIST', 'List Task Saya', 'Menampilkan daftar tugas yang menjadi tanggung jawab Anda'),
+('TASK|MYTK|STTS', 'Update Status Task Saya', 'Mengubah status tugas pribadi sesuai progres penyelesaian'),
+
+('TASK|ALL', 'All Task', 'Tugas yang tersedia untuk seluruh pengguna dalam sistem'),
+('TASK|ALL|LIST', 'List Semua Task', 'Menampilkan seluruh tugas tanpa membatasi pengguna tertentu'),
+('TASK|ALL|STTS', 'Update Status Task', 'Mengelola status tugas dari seluruh pengguna sesuai kebutuhan'),
+
+('TASK|ASRL', 'Role Assignment', 'Mengatur mekanisme dan aturan penugasan tugas'),
+('TASK|ASRL|LIST', 'Daftar Konfigurasi Penugasan', 'Menampilkan daftar tugas dan role yang diassign'),
+('TASK|ASRL|EDIT', 'Ubah Aturan Penugasan', 'Menentukan kepada role mana tugas akan ditugaskan secara otomatis'),
+
 ('RGST', 'Pendaftaran', 'Menu pendaftaran utama'),
 ('RGST|UMRH', 'Pendaftaran Umroh', 'Submenu pendaftaran untuk umroh'),
 ('RGST|UMRH|LIST', 'List Umroh', 'Melihat daftar pendaftaran umroh'),

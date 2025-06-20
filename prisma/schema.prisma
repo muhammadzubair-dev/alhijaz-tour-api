@@ -324,7 +324,7 @@ model user_roles_menu {
 model menus {
   id         String    @id @db.VarChar(50)
   name       String    @db.VarChar(50)
-  desc       String    @db.VarChar(50)
+  desc       String    @db.VarChar(200)
   created_by String?
   created_at DateTime? @default(now())
   updated_by String?

@@ -105,13 +105,13 @@ export class UmrohService {
             curr[1] < min[1] ? curr : min
           )[0];
 
-          const notes = `Anda telah menerima tugas dari ${authUser.username} [${authUser.roleNames[0]}] untuk melakukan validasi data jamaah atas nama "${dto.firstName} ${dto.lastName}". Harap segera diproses.`;
+          const notes = `Anda telah menerima tugas dari <b>${authUser.username} [${authUser.roleNames[0]}]</b> untuk melakukan validasi data jamaah atas nama <b>"${dto.firstName} ${dto.lastName}"</b>. Harap segera diproses.`;
 
           // 🔁 Simpan task
           const task = await tx.tasks.create({
             data: {
               task_type_id: taskType.id,
-              title: `Pendaftaran Jamaah Umroh "${dto.firstName} ${dto.lastName}"`,
+              title: `Jamaah Baru (${dto.firstName} ${dto.lastName})`,
               data: {
                 ...dto,
                 photoIdentity: uploadedFiles['photoIdentity'] ?? null,
@@ -218,7 +218,7 @@ export class UmrohService {
       throw error;
     }
   }
-  
+
   async listUmroh(
     request: ListUmrohRequest,
   ): Promise<WebResponse<any[]>> {

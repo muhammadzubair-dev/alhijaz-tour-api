@@ -21,6 +21,7 @@ export class TaskService {
   async listTask(
     authUser: users,
     request: ListTaskRequest,
+    onlyOwn: boolean = true,
   ): Promise<WebResponse<TaskResponse[]>> {
     const {
       id,
@@ -36,7 +37,7 @@ export class TaskService {
       ...(id && { id: Number(id) }), // exact match
       ...(title && { title: { contains: title, mode: 'insensitive' } }),
       ...(status && { status }),
-      to_user_id: authUser.id
+      ...(onlyOwn && { to_user_id: authUser.id }), // gunakan hanya jika onlyOwn true
     };
 
     let orderBy: any = {
@@ -107,6 +108,7 @@ export class TaskService {
         id: item.id,
         title: item.title,
         type: item.task_type.name,
+        assignedTo: item.to_user.username,
         notes: item.notes,
         status: item.status,
         isRead: item.is_read,
@@ -352,7 +354,52 @@ export class TaskService {
     });
   }
 
-  sendTestNotification(userId: string, payload: any) {
-    this.sse.sendToUser(userId, payload);
+  async markTasksAsRead(
+    authUser: users,
+    taskId?: number,
+  ): Promise<WebResponse<{ updatedCount: number }>> {
+
+    if (taskId) {
+      const task = await this.prisma.tasks.findFirst({
+        where: {
+          id: taskId,
+          to_user_id: authUser.id,
+        },
+      });
+      if (!task) {
+        throw new NotFoundException('Task tidak ditemukan atau tidak memiliki akses');
+      }
+      // Hanya update jika belum dibaca
+      if (!task.is_read) {
+        await this.prisma.tasks.update({
+          where: { id: taskId },
+          data: {
+            is_read: true,
+            updated_at: new Date(),
+          },
+        });
+        return {
+          data: { updatedCount: 1 },
+        };
+      }
+      return {
+        data: { updatedCount: 0 },
+      };
+    }
+
+    // ✅ Jika tidak ada taskId, update semua
+    const result = await this.prisma.tasks.updateMany({
+      where: {
+        to_user_id: authUser.id,
+        is_read: false,
+      },
+      data: {
+        is_read: true,
+        updated_at: new Date(),
+      },
+    });
+    return {
+      data: { updatedCount: result.count },
+    };
   }
 }

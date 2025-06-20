@@ -16,8 +16,27 @@ export class TaskController {
     @Auth() authUser: users,
     @Query() request: ListTaskRequest,
   ): Promise<WebResponse<TaskResponse[]>> {
+    const result = await this.taskService.listTask(authUser, request, false);
+    return result;
+  }
+
+  @Get('assigned')
+  @HttpCode(HttpStatus.OK)
+  async listTaskNotification(
+    @Auth() authUser: users,
+    @Query() request: ListTaskRequest,
+  ): Promise<WebResponse<TaskResponse[]>> {
     const result = await this.taskService.listTask(authUser, request);
     return result;
+  }
+
+  @Patch('read')
+  async markRead(
+    @Auth() authUser: users,
+    @Body('taskId') taskId: number,
+  ): Promise<WebResponse<any>> {
+    const result = await this.taskService.markTasksAsRead(authUser, taskId);
+    return result
   }
 
   @Get(':taskId')
@@ -38,16 +57,6 @@ export class TaskController {
     @Body('newStatus') newStatus: string,
   ): Promise<WebResponse<TaskResponse[]>> {
     const result = await this.taskService.updateTaskStatus(authUser, taskId, newStatus);
-    return result;
-  }
-
-  @Get('test')
-  @HttpCode(HttpStatus.OK)
-  async test() {
-    const result = await this.taskService.sendTestNotification(
-      'a0953db2-0a18-432b-8eec-a075a9ee2794',
-      { wadidaw: 'Mantapppppppp' }
-    );
     return result;
   }
 }
